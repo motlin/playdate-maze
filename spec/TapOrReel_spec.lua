@@ -35,6 +35,25 @@ describe("TapOrReel", function()
         assert.are.same({ 0, true }, { frame(button, "released") })
     end)
 
+    it("reels for a slow, steady crank, a degree a frame", function()
+        local button = TapOrReel.new()
+        frame(button, "pressed")
+        local reeled = 0
+        for _ = 1, 30 do reeled = reeled + frame(button, "held", -1) end
+        assert.are.equal(30, reeled)
+        assert.are.same({ 0, false }, { frame(button, "released") })
+    end)
+
+    it("still ignores a crank trembling back and forth, however long the button is held", function()
+        local button = TapOrReel.new()
+        frame(button, "pressed")
+        for _ = 1, 100 do
+            assert.are.equal(0, (frame(button, "held", -1)))
+            assert.are.equal(0, (frame(button, "held", 1)))
+        end
+        assert.are.same({ 0, true }, { frame(button, "released") })
+    end)
+
     it("ignores a crank that barely trembles, so a tap stays a tap", function()
         local button = TapOrReel.new()
         frame(button, "pressed")
