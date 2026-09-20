@@ -192,6 +192,11 @@ if playdate.isSimulator then
         press(pd.kButtonA, 2); shot("play-nothing-to-pick-up")
         press(pd.kButtonB, 2); shot("play-nothing-to-put-down")
 
+        -- Music off, as the system menu's Music item sets it: play carries on, silently
+        Settings.setMusicOn(false); frames(40)
+        expect(not Settings.isMusicOn(), "the music can be turned off")
+        Settings.setMusicOn(true); frames(40)
+
         -- Dock to dream: put the crank away and leave it, and the autopilot takes over
         docked = true
         frames(DockTimer.DELAY_FRAMES - 10)

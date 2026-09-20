@@ -102,7 +102,6 @@ end
 function PlayScene.restart()
     if PlayScene.mode ~= PlayScene.MODES.SCREENSAVER then SaveGame.delete() end
     newGame(PlayScene.game:isAutopilotOn())
-    SystemMenu.setAutopilot(PlayScene.game:isAutopilotOn())
 end
 
 local function isAnyButtonJustPressed()
@@ -119,19 +118,14 @@ local function isAnyButtonDown()
     return false
 end
 
-local function setAutopilot(isOn)
-    PlayScene.game:setAutopilot(isOn)
-    SystemMenu.setAutopilot(isOn)
-end
-
 local function dockToDream()
     local game = PlayScene.game
     local action = dockTimer:update(pd.isCrankDocked(), isAnyButtonDown() or isAnyButtonJustPressed())
     if action == DockTimer.ACTIONS.HAND_OVER and not game:isAutopilotOn() then
-        setAutopilot(true)
+        game:setAutopilot(true)
         game:say("Crank docked: autopilot")
     elseif action == DockTimer.ACTIONS.TAKE_BACK and game:isAutopilotOn() then
-        setAutopilot(false)
+        game:setAutopilot(false)
         game:say("You have the controls")
     end
 end
@@ -171,7 +165,7 @@ function PlayScene.update()
     local game = PlayScene.game
     dockToDream()
     if game:isAutopilotOn() and isAnyButtonJustPressed() then
-        setAutopilot(false)
+        game:setAutopilot(false)
         -- The press that takes over does nothing else, not even when it is let go
         readInput()
         bButton:ignoreThisPress()

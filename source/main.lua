@@ -1,6 +1,7 @@
 import "CoreLibs/graphics"
 
 import "SceneManager"
+import "Settings"
 import "Music"
 import "Sounds"
 import "SystemMenu"
@@ -33,6 +34,7 @@ playdate.deviceWillLock = saveRun
 playdate.gameWillTerminate = saveRun
 
 math.randomseed(pd.getSecondsSinceEpoch())
+Settings.load()
 
 pd.display.setRefreshRate(30)
 
