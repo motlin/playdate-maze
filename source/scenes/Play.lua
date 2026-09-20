@@ -95,6 +95,8 @@ local function readInput()
     input.forward = axis(pd.kButtonDown, pd.kButtonUp)
     -- While B is held the crank belongs to the thread, not the view
     input.turn = bButton:isHeld() and 0 or crankChange
+    -- The crank's own movement, which also works the gate; the D-pad's turning must not
+    input.crank = input.turn
     input.reel = reel
     input.strafe = 0
     -- With the crank out, it does the looking and the D-pad sidesteps. Docked, the D-pad turns.

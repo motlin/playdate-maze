@@ -18,6 +18,12 @@ Game.MESSAGE_FRAMES = Run.MESSAGE_FRAMES
 -- to follow the thread round a corner, in degrees a frame
 Game.REEL_DEGREES_PER_BLOCK = 180
 Game.REEL_TURN_SPEED = 12
+-- The gate: degrees of cranking to raise it all the way, how much it sags each frame it is left
+-- alone, and how near and how squarely the player must stand to work it
+Game.GATE_DEGREES = 720
+Game.GATE_SAG_DEGREES = 3
+Game.GATE_REACH = 1.5
+Game.GATE_FACING = 45
 
 local WALK_SPEED <const> = Game.WALK_SPEED
 local ANGLES <const> = { east = 0, south = 90, west = 180, north = 270 }
@@ -30,6 +36,12 @@ function Game.new(options)
     local game = setmetatable(Run.new(maze, Player.new(startX, startY, startAngle)), Game)
     game.autopilot = nil
     game.thread = Thread.new(startX, startY)
+    -- The gate over the exit unlocks when the puzzle is solved and is then cranked up by hand.
+    -- gateLift runs from 0, fully down, to 1, where the exit opens for good.
+    -- It is counted in degrees of cranking, because adding up fractions never quite reaches 1.
+    game.isGateUnlocked = false
+    game.gateDegrees = 0
+    game.gateLift = 0
     if options.hasPuzzle then
         game.puzzle = Puzzle.scatter(maze, options.random)
     else
@@ -46,9 +58,20 @@ function Game:setAutopilot(isOn)
     self.autopilot = isOn and Autopilot.new(self.maze, self.player) or nil
 end
 
--- One line for the bottom of the screen about what A or B would do here, or nil
+-- Whether the player is standing at the unlocked gate, looking at it, with it still to be raised
+function Game:canCrankGate()
+    if not self.isGateUnlocked or self.gateLift == 1 then return false end
+    local gateX, gateY = self.maze:blockCenter(self.maze.exitGridX, self.maze.exitGridY)
+    local offsetX, offsetY = gateX - self.player.x, gateY - self.player.y
+    if math.sqrt(offsetX * offsetX + offsetY * offsetY) > Game.GATE_REACH then return false end
+    local bearing = math.deg(math.atan(offsetY, offsetX))
+    return math.abs((bearing - self.player.angle + 180) % 360 - 180) <= Game.GATE_FACING
+end
+
+-- One line for the bottom of the screen about what the player could do here, or nil
 function Game:hint()
     if self.autopilot then return "Autopilot: press any button to take over" end
+    if self:canCrankGate() then return "Crank forwards to raise the gate" end
     local puzzle, player = self.puzzle, self.player
     if not puzzle then return nil end
     local item = puzzle:itemInReach(player.x, player.y)
@@ -77,8 +100,8 @@ local function drop(self)
         self:say("No room to put it down here")
     elseif result == Puzzle.RESULTS.PLACED then
         if self.puzzle:isSolved() then
-            self.maze:openExit()
-            self:say("The exit is open!")
+            self.isGateUnlocked = true
+            self:say("The gate is unlocked! Crank it open")
         else
             self:say("The " .. item.shape .. " fits!")
         end
@@ -101,20 +124,40 @@ local function reelIn(self, degrees)
     player:turn(math.max(-Game.REEL_TURN_SPEED, math.min(Game.REEL_TURN_SPEED, turn)))
 end
 
--- input = { turn (degrees), forward and strafe (-1 to 1), reel (degrees of thread to wind in),
--- pickUp, drop }, all optional
+-- Raises the gate by a forward crank, or lets it sag. Returns whether the crank was used on it.
+local function workGate(self, crank)
+    if self.gateLift == 1 then return false end
+    local isCranking = crank > 0 and self:canCrankGate()
+    if isCranking then
+        self.gateDegrees = math.min(Game.GATE_DEGREES, self.gateDegrees + crank)
+    else
+        self.gateDegrees = math.max(0, self.gateDegrees - Game.GATE_SAG_DEGREES)
+    end
+    self.gateLift = self.gateDegrees / Game.GATE_DEGREES
+    if self.gateLift == 1 then
+        self.maze:openExit()
+        self:say("The exit is open!")
+    end
+    return isCranking
+end
+
+-- input = { turn (degrees to turn the view, from the crank or the D-pad), crank (degrees the crank
+-- itself moved), forward and strafe (-1 to 1), reel (degrees of thread to wind in), pickUp, drop },
+-- all optional
 function Game:update(input)
     if self.hasEscaped then return end
     self:tick()
 
     local reel = input.reel or 0
+    local isCrankingGate = workGate(self, input.crank or 0)
     if self.autopilot then
         self.autopilot:update()
         self.thread:record(self.player.x, self.player.y)
     elseif reel > 0 then
         reelIn(self, reel)
     else
-        self.player:turn(input.turn or 0)
+        -- While the crank is lifting the gate it does not also swing the view
+        if not isCrankingGate then self.player:turn(input.turn or 0) end
         self.player:move(self.maze, (input.forward or 0) * WALK_SPEED, (input.strafe or 0) * WALK_SPEED)
         self.thread:record(self.player.x, self.player.y)
     end

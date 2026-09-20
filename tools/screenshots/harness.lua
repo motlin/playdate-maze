@@ -210,11 +210,26 @@ if playdate.isSimulator then
             expect(pedestal.isFilled, "B places the " .. item.shape .. " on its pedestal")
         end
         expect(puzzle:isSolved(), "all three shapes placed solves the puzzle")
+        expect(game.isGateUnlocked, "which unlocks the gate")
+        expect(not game.maze:hasPassage(game.maze.columns, game.maze.rows, "east"), "but does not raise it")
 
-        game.player.x, game.player.y = game.maze:cellCenter(game.maze.columns - 1, game.maze.rows)
+        -- Stand at the gate and winch it up with the crank
+        game.player.x, game.player.y = game.maze:cellCenter(game.maze.columns, game.maze.rows)
         game.player.angle = 0
-        frames(70); shot("exit-open-ahead")
-        hold(pd.kButtonUp, 20); shot("exit-close")
+        frames(70); shot("gate-unlocked")
+        for _ = 1, 12 do turnCrank(30); frames(1) end
+        shot("gate-half-raised")
+        expect(game.gateLift > 0.45 and game.gateLift < 0.55, "a full turn of the crank raises the gate half-way")
+        expect(game.player.angle == 0, "and does not swing the view")
+        frames(40); shot("gate-sagging")
+        expect(game.gateLift < 0.45, "left alone, the gate sags back down")
+        for _ = 1, 30 do
+            if game.gateLift == 1 then break end
+            turnCrank(30); frames(1)
+        end
+        expect(game.gateLift == 1, "cranking on raises it all the way")
+        expect(game.maze:hasPassage(game.maze.columns, game.maze.rows, "east"), "which opens the exit")
+        frames(2); shot("exit-open")
         hold(pd.kButtonUp, 40)
         expect(SceneManager.isCurrent(EscapedScene), "walking into the exit escapes")
         shot("escaped")

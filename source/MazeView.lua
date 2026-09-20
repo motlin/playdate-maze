@@ -91,22 +91,35 @@ local function projectAlongFace(run, along)
     return projectWallPoint(run.gridX - 1 + along, faceY)
 end
 
+-- How far the gate has been cranked up, from 0 to 1, for the frame being drawn
+local gateLift = 0
+
+-- The gate rises into the ceiling as one piece, leaving the light from outside beneath it
 local function drawGate(run, startTop, startHeight, endTop, endHeight)
     local startX, endX = run.startX, run.endX
+    local shown = 1 - gateLift
+    local startFoot, endFoot = startTop + startHeight * shown, endTop + endHeight * shown
     gfx.setColor(gfx.kColorWhite)
+    gfx.fillPolygon(startX, startFoot, endX, endFoot, endX, endTop + endHeight, startX, startTop + startHeight)
+
     for _, fraction in ipairs(GATE_CROSSBARS) do
-        gfx.setLineWidth(math.max(2, (startHeight + endHeight) // 60))
-        gfx.drawLine(startX, startTop + startHeight * fraction, endX, endTop + endHeight * fraction)
+        local height = fraction - gateLift
+        if height > 0 then
+            gfx.setLineWidth(math.max(2, (startHeight + endHeight) // 60))
+            gfx.drawLine(startX, startTop + startHeight * height, endX, endTop + endHeight * height)
+        end
     end
     for bar = 1, GATE_BARS do
         local x, height = projectAlongFace(run, bar / (GATE_BARS + 1))
         -- Only the part of the face inside the run is in view
         if x and x > startX and x < endX then
             gfx.setLineWidth(math.max(2, height // 30))
-            gfx.drawLine(x, HORIZON - height / 2, x, HORIZON + height / 2)
+            gfx.drawLine(x, HORIZON - height / 2, x, HORIZON - height / 2 + height * shown)
         end
     end
     gfx.setLineWidth(1)
+    gfx.setColor(gfx.kColorBlack)
+    gfx.drawLine(startX, startFoot, endX, endFoot)
 end
 
 local jointX, jointHeight = {}, {}
@@ -246,6 +259,7 @@ function MazeView.draw(game)
     local player = game.player
     local radians = math.rad(player.angle)
     viewX, viewY, forwardX, forwardY = player.x, player.y, math.cos(radians), math.sin(radians)
+    gateLift = game.gateLift
     local scan = Raycaster.scan(game.maze, player.x, player.y, player.angle, SCREEN)
     local runs = scan.runs
     for index = 1, #runs do drawRun(runs[index]) end

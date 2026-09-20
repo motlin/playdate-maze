@@ -223,11 +223,13 @@ describe("Game", function()
             assert.are.equal("The circle fits!", game.message)
         end)
 
-        it("opens the exit when the last shape is placed", function()
+        it("unlocks the gate when the last shape is placed, but leaves it down", function()
             local game = newGame()
+            assert.is_false(game.isGateUnlocked)
             solve(game)
-            assert.are.equal("The exit is open!", game.message)
-            assert.is_true(game.maze:hasPassage(6, 5, "east"))
+            assert.is_true(game.isGateUnlocked)
+            assert.are.equal("The gate is unlocked! Crank it open", game.message)
+            assert.is_false(game.maze:hasPassage(6, 5, "east"))
         end)
 
         it("clears a message after a couple of seconds", function()
@@ -269,16 +271,104 @@ describe("Game", function()
         end)
     end)
 
+    describe("the gate", function()
+        -- Solved, and standing in the last cell looking at the gate
+        local function atTheGate()
+            local game = newGame()
+            solve(game)
+            game.player.x, game.player.y = game.maze:cellCenter(6, 5)
+            game.player.angle = 0
+            return game
+        end
+
+        it("starts fully down", function()
+            assert.are.equal(0, newGame().gateLift)
+        end)
+
+        it("rises as the crank is turned forwards, taking two full turns to open", function()
+            local game = atTheGate()
+            for _ = 1, 12 do game:update({ crank = 30, turn = 30 }) end
+            assert.is_near(0.5, game.gateLift, 0.01)
+            assert.is_false(game.maze:hasPassage(6, 5, "east"))
+        end)
+
+        it("does not turn the view while the crank is lifting it", function()
+            local game = atTheGate()
+            game:update({ crank = 30, turn = 30 })
+            assert.are.equal(0, game.player.angle)
+        end)
+
+        it("opens the exit for good once it is all the way up", function()
+            local game = atTheGate()
+            for _ = 1, 24 do game:update({ crank = 30, turn = 30 }) end
+            assert.is_true(game.maze:hasPassage(6, 5, "east"))
+            assert.are.equal("The exit is open!", game.message)
+            assert.are.equal(1, game.gateLift)
+            for _ = 1, 200 do game:update({}) end
+            assert.are.equal(1, game.gateLift)
+        end)
+
+        it("sags back down when the cranking stops", function()
+            local game = atTheGate()
+            for _ = 1, 12 do game:update({ crank = 30, turn = 30 }) end
+            for _ = 1, 30 do game:update({}) end
+            assert.is_true(game.gateLift < 0.45 and game.gateLift > 0)
+            for _ = 1, 600 do game:update({}) end
+            assert.are.equal(0, game.gateLift)
+        end)
+
+        it("does not move for a backwards crank, which looks around as usual", function()
+            local game = atTheGate()
+            game:update({ crank = -20, turn = -20 })
+            assert.are.equal(0, game.gateLift)
+            assert.are.equal(340, game.player.angle)
+        end)
+
+        it("does not move for the D-pad's turning, only for the crank itself", function()
+            local game = atTheGate()
+            game:update({ turn = 5 })
+            assert.are.equal(0, game.gateLift)
+            assert.are.equal(5, game.player.angle)
+        end)
+
+        it("cannot be cranked while it is still locked", function()
+            local game = newGame()
+            game.player.x, game.player.y = game.maze:cellCenter(6, 5)
+            game.player.angle = 0
+            game:update({ crank = 30, turn = 30 })
+            assert.are.equal(0, game.gateLift)
+            assert.are.equal(30, game.player.angle)
+        end)
+
+        it("cannot be cranked from far away, or with your back to it", function()
+            local game = atTheGate()
+            game.player.angle = 180
+            game:update({ crank = 30, turn = 30 })
+            assert.are.equal(0, game.gateLift)
+
+            game.player.x, game.player.y = game.maze:cellCenter(1, 1)
+            game.player.angle = 0
+            game:update({ crank = 30, turn = 30 })
+            assert.are.equal(0, game.gateLift)
+        end)
+
+        it("tells the player what to do with it", function()
+            local game = atTheGate()
+            assert.are.equal("Crank forwards to raise the gate", game:hint())
+        end)
+    end)
+
     describe("escaping", function()
         it("has not escaped while inside the maze", function()
             assert.is_false(newGame().hasEscaped)
         end)
 
-        it("escapes by walking into the open exit", function()
+        it("escapes by walking out once the gate has been cranked open", function()
             local game = newGame()
             solve(game)
             game.player.x, game.player.y = game.maze:cellCenter(6, 5)
             game.player.angle = 0
+            for _ = 1, 24 do game:update({ crank = 30, turn = 30 }) end
             for _ = 1, 30 do game:update({ forward = 1 }) end
             assert.is_true(game.hasEscaped)
         end)
