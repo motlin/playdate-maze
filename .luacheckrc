@@ -3,9 +3,9 @@ include_files = { "source/**/*.lua", "spec/**/*.lua" }
 globals = {
     "playdate",
     "Maze", "Raycaster", "Player", "Autopilot", "Puzzle", "Game", "Run", "Tumble", "Slime", "Thread", "TapOrReel", "DockTimer", "Compass", "Bob", "Shades", "Sizes", "SeededRandom",
-    "ShapeArt", "MazeView", "SideView", "TumbleView", "Minimap", "Hud",
+    "ShapeArt", "MazeView", "SideView", "TumbleView", "SlimeView", "Minimap", "Hud",
     "SceneManager", "SystemMenu",
-    "TitleScene", "PlayScene", "TumbleScene", "EscapedScene",
+    "TitleScene", "PlayScene", "TumbleScene", "SlimeScene", "EscapedScene",
 }
 read_globals = { "import", "kTextAlignment" }
 max_line_length = false

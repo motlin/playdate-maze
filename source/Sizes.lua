@@ -2,10 +2,11 @@
 
 Sizes = {}
 
+-- Slime's corridors are three blocks wide, so it gets fewer cells to cover similar ground
 Sizes.ALL = {
-    { name = "Small", columns = 6, rows = 4 },
-    { name = "Medium", columns = 8, rows = 6 },
-    { name = "Large", columns = 12, rows = 9 },
+    { name = "Small", columns = 6, rows = 4, slimeColumns = 4, slimeRows = 3 },
+    { name = "Medium", columns = 8, rows = 6, slimeColumns = 6, slimeRows = 4 },
+    { name = "Large", columns = 12, rows = 9, slimeColumns = 8, slimeRows = 6 },
 }
 Sizes.DEFAULT = 2
 

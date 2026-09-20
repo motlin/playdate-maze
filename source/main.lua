@@ -5,6 +5,7 @@ import "SystemMenu"
 import "scenes/Title"
 import "scenes/Play"
 import "scenes/PlayTumble"
+import "scenes/PlaySlime"
 import "scenes/Escaped"
 
 local pd <const> = playdate

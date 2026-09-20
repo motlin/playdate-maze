@@ -26,6 +26,25 @@ describe("Sizes", function()
         end
     end)
 
+    describe("for Slime, whose corridors are three blocks wide", function()
+        it("has fewer cells at every size, so the maze is not enormous", function()
+            for _, size in ipairs(Sizes.ALL) do
+                assert.is_true(size.slimeColumns < size.columns)
+                assert.is_true(size.slimeRows < size.rows)
+            end
+        end)
+
+        it("still grows with each size and has room for the three shapes", function()
+            for index, size in ipairs(Sizes.ALL) do
+                assert.is_true(size.slimeColumns * size.slimeRows - 1 >= 3)
+                if index > 1 then
+                    assert.is_true(size.slimeColumns > Sizes.ALL[index - 1].slimeColumns)
+                    assert.is_true(size.slimeRows > Sizes.ALL[index - 1].slimeRows)
+                end
+            end
+        end)
+    end)
+
     describe("next", function()
         it("steps to the next size", function()
             assert.are.equal(2, Sizes.next(1))

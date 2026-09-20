@@ -16,8 +16,8 @@ local PANEL_TOP <const> = 16
 local PANEL_WIDTH <const> = 200
 local PANEL_HEIGHT <const> = 208
 local TITLE_SCALE <const> = 3
-local ROWS_TOP <const> = PANEL_TOP + 76
-local ROW_HEIGHT <const> = 26
+local ROWS_TOP <const> = PANEL_TOP + 72
+local ROW_HEIGHT <const> = 22
 
 local function play(mode)
     return function() SceneManager.switch(PlayScene, mode, TitleScene.sizeIndex) end
@@ -33,6 +33,10 @@ local ROWS <const> = {
     {
         label = function() return "Tumble" end,
         confirm = function() SceneManager.switch(TumbleScene, TitleScene.sizeIndex) end,
+    },
+    {
+        label = function() return "Slime" end,
+        confirm = function() SceneManager.switch(SlimeScene, TitleScene.sizeIndex) end,
     },
     { label = function() return "Screensaver" end, confirm = play("screensaver") },
     {
@@ -99,10 +103,10 @@ function TitleScene.update()
         local top = ROWS_TOP + (index - 1) * ROW_HEIGHT
         if index == TitleScene.selection then
             gfx.setColor(gfx.kColorBlack)
-            gfx.fillRoundRect(PANEL_LEFT + 20, top, PANEL_WIDTH - 40, ROW_HEIGHT - 4, 4)
+            gfx.fillRoundRect(PANEL_LEFT + 20, top, PANEL_WIDTH - 40, ROW_HEIGHT - 2, 4)
             gfx.setImageDrawMode(gfx.kDrawModeFillWhite)
         end
-        gfx.drawTextAligned(row.label(), PANEL_LEFT + PANEL_WIDTH / 2, top + 3, kTextAlignment.center)
+        gfx.drawTextAligned(row.label(), PANEL_LEFT + PANEL_WIDTH / 2, top + 2, kTextAlignment.center)
         gfx.setImageDrawMode(gfx.kDrawModeCopy)
     end
 end

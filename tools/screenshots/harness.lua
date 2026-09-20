@@ -31,6 +31,7 @@ if playdate.isSimulator then
         return change
     end
     pd.isCrankDocked = function() return docked end
+    pd.getCrankPosition = function() return crank end
     -- The daily maze is seeded from the date, so the date is pinned too
     local today = { year = 2026, month = 9, day = 19 }
     pd.getTime = function() return today end
@@ -76,9 +77,9 @@ if playdate.isSimulator then
     end
 
     -- Moves the title screen's highlight to a row by pressing up and down, as a player would
-    local TITLE_ROWS <const> = { explore = 1, daily = 2, tumble = 3, screensaver = 4, size = 5 }
+    local TITLE_ROWS <const> = { explore = 1, daily = 2, tumble = 3, slime = 4, screensaver = 5, size = 6 }
     local function titleRow(name)
-        for _ = 1, #TITLE_ROWS + 5 do press(pd.kButtonUp, 0) end
+        for _ = 1, 8 do press(pd.kButtonUp, 0) end
         for _ = 2, TITLE_ROWS[name] do press(pd.kButtonDown, 0) end
         frames(2)
         expect(TitleScene.selection == TITLE_ROWS[name], "the title highlight reaches the " .. name .. " row")
@@ -108,6 +109,7 @@ if playdate.isSimulator then
         frames(60); shot("title-backdrop-moved-on")
         titleRow("daily"); shot("title-daily-selected")
         titleRow("tumble"); shot("title-tumble-selected")
+        titleRow("slime"); shot("title-slime-selected")
         titleRow("screensaver"); shot("title-screensaver-selected")
         titleRow("size")
         expect(TitleScene.sizeIndex == Sizes.DEFAULT, "the size starts on medium")
@@ -355,6 +357,94 @@ if playdate.isSimulator then
         press(pd.kButtonA, 3)
         expect(SceneManager.isCurrent(TumbleScene) and TumbleScene.tumble ~= tumble, "A starts another Tumble maze")
         shot("another-maze")
+    end
+
+    -- The throwing mode: aim with the crank, throw, cling, slide, collect, and leave
+    scenarios.slime = function()
+        local STATES <const> = Slime.STATES
+        local function setCrank(degrees) crank = degrees % 360 end
+        local function holdA() justPressed[pd.kButtonA], held[pd.kButtonA] = true, true; coroutine.yield(); justPressed[pd.kButtonA] = nil end
+        local function waitUntilStuck(slime)
+            for _ = 1, 400 do
+                if slime.state ~= STATES.FLYING then return end
+                frames(1)
+            end
+            error("the slime never landed")
+        end
+
+        frames(5)
+        titleRow("slime")
+        press(pd.kButtonA, 3)
+        expect(SceneManager.isCurrent(SlimeScene), "the Slime row starts the throwing mode")
+        local slime = SlimeScene.slime
+        shot("dropping-in")
+        waitUntilStuck(slime); frames(2); shot("resting")
+        expect(slime.state == STATES.RESTING, "the slime drops to the floor of the first cell and rests")
+        docked = true; frames(2); shot("crank-docked"); docked = false
+
+        setCrank(40); frames(2); shot("pointer-before-aiming")
+        holdA(); frames(2); shot("aiming-up-right")
+        expect(slime.isAiming, "holding A aims")
+        setCrank(320); frames(2); shot("aiming-up-left")
+        press(pd.kButtonB, 1); shot("aim-cancelled")
+        expect(not slime.isAiming, "B calls off the aim")
+        release(pd.kButtonA); frames(2)
+        expect(slime.throws == 0 and slime.state == STATES.RESTING, "and letting go of A then throws nothing")
+
+        hold(pd.kButtonRight, 10)
+        expect(slime.player.x > 2.5, "right crawls along the floor")
+        hold(pd.kButtonLeft, 10)
+
+        -- Throw up and to the left, on to the first cell's outer wall
+        setCrank(300); holdA(); frames(1); release(pd.kButtonA)
+        expect(slime.state == STATES.FLYING and slime.throws == 1, "letting go of A throws")
+        frames(2); shot("flying")
+        waitUntilStuck(slime); shot("clinging")
+        expect(slime.state == STATES.CLINGING and slime.surface == "left", "it sticks to the wall it hits")
+        frames(30); shot("clinging-half-the-clock")
+        holdA(); setCrank(60); frames(3); shot("aiming-from-the-wall")
+        release(pd.kButtonA)
+        expect(slime.throws == 2, "and can throw itself off again")
+        frames(6)
+        setCrank(0); holdA(); frames(1); release(pd.kButtonA)
+        expect(slime.throws == 3, "with one more throw in mid-air")
+        frames(3); holdA(); frames(1)
+        expect(not slime.isAiming, "but not a second")
+        release(pd.kButtonA)
+        waitUntilStuck(slime); frames(2)
+
+        -- Let the clock run out on a wall
+        slime.player.x, slime.player.y = slime.maze:cellCenter(1, 1)
+        slime.state, slime.velocityX, slime.velocityY = STATES.FLYING, 0, 0
+        waitUntilStuck(slime)
+        setCrank(300); holdA(); frames(1); release(pd.kButtonA)
+        waitUntilStuck(slime)
+        frames(Slime.STICK_FRAMES + 5); shot("sliding")
+        expect(slime.state == STATES.SLIDING, "when the clock runs out it slides down the wall")
+        for _ = 1, 200 do
+            if slime.state == STATES.RESTING then break end
+            frames(1)
+        end
+        expect(slime.state == STATES.RESTING, "down to the floor")
+
+        -- Collect the shapes by dropping the slime on to each
+        for index, item in ipairs(slime.puzzle.items) do
+            slime.player.x, slime.player.y = slime.maze:blockCenter(item.gridX, item.gridY)
+            slime.state, slime.velocityX, slime.velocityY = STATES.FLYING, 0, 0
+            frames(2); shot("collected-" .. item.shape)
+            expect(item.state == Puzzle.STATES.PLACED, "touching the " .. item.shape .. " collects it")
+            local isLast = index == #slime.puzzle.items
+            expect(slime.maze:hasPassage(slime.maze.columns, slime.maze.rows, "east") == isLast, "the exit opens with the last shape")
+        end
+
+        slime.player.x, slime.player.y = slime.maze:cellCenter(slime.maze.columns, slime.maze.rows)
+        slime.state, slime.velocityX, slime.velocityY = STATES.FLYING, 0, 0
+        waitUntilStuck(slime); frames(2); shot("beside-the-open-exit")
+        hold(pd.kButtonRight, 80)
+        expect(SceneManager.isCurrent(EscapedScene), "crawling out of the exit escapes")
+        shot("escaped")
+        press(pd.kButtonA, 3)
+        expect(SceneManager.isCurrent(SlimeScene) and SlimeScene.slime ~= slime, "A starts another Slime maze")
     end
 
     -- Let the screensaver wander, then take over
