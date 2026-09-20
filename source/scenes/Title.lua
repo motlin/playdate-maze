@@ -3,28 +3,46 @@
 import "Game"
 import "MazeView"
 import "SceneManager"
+import "Sizes"
 
 local pd <const> = playdate
 local gfx <const> = playdate.graphics
 
-TitleScene = { selection = 1 }
+TitleScene = { selection = 1, sizeIndex = Sizes.DEFAULT }
 
-local OPTIONS <const> = {
-    { label = "Explore", mode = "explore" },
-    { label = "Screensaver", mode = "screensaver" },
-}
 local PANEL_LEFT <const> = 100
-local PANEL_TOP <const> = 40
+local PANEL_TOP <const> = 16
 local PANEL_WIDTH <const> = 200
-local PANEL_HEIGHT <const> = 160
+local PANEL_HEIGHT <const> = 208
 local TITLE_SCALE <const> = 3
-local ROW_HEIGHT <const> = 28
+local ROWS_TOP <const> = PANEL_TOP + 76
+local ROW_HEIGHT <const> = 26
+
+local function play(mode)
+    return function() SceneManager.switch(PlayScene, mode, TitleScene.sizeIndex) end
+end
+
+local function nextSize() TitleScene.sizeIndex = Sizes.next(TitleScene.sizeIndex) end
+local function previousSize() TitleScene.sizeIndex = Sizes.previous(TitleScene.sizeIndex) end
+
+-- Each row has a label and what A does; left and right are optional
+local ROWS <const> = {
+    { label = function() return "Explore" end, confirm = play("explore") },
+    { label = function() return "Screensaver" end, confirm = play("screensaver") },
+    {
+        label = function() return "Size: " .. Sizes.ALL[TitleScene.sizeIndex].name end,
+        confirm = nextSize,
+        left = previousSize,
+        right = nextSize,
+    },
+}
 
 local backdrop
 local titleImage
 
 local function newBackdrop()
-    backdrop = Game.new({ columns = 8, rows = 6, hasPuzzle = false, random = math.random })
+    local size = Sizes.ALL[Sizes.DEFAULT]
+    backdrop = Game.new({ columns = size.columns, rows = size.rows, hasPuzzle = false, random = math.random })
     backdrop:setAutopilot(true)
 end
 
@@ -42,13 +60,18 @@ function TitleScene.enter()
     titleImage = titleImage or drawTitleImage()
 end
 
-function TitleScene.update()
+local function handleInput()
+    local row = ROWS[TitleScene.selection]
     if pd.buttonJustPressed(pd.kButtonUp) then TitleScene.selection = math.max(1, TitleScene.selection - 1) end
-    if pd.buttonJustPressed(pd.kButtonDown) then TitleScene.selection = math.min(#OPTIONS, TitleScene.selection + 1) end
-    if pd.buttonJustPressed(pd.kButtonA) then
-        SceneManager.switch(PlayScene, OPTIONS[TitleScene.selection].mode)
-        return
-    end
+    if pd.buttonJustPressed(pd.kButtonDown) then TitleScene.selection = math.min(#ROWS, TitleScene.selection + 1) end
+    if pd.buttonJustPressed(pd.kButtonLeft) and row.left then row.left() end
+    if pd.buttonJustPressed(pd.kButtonRight) and row.right then row.right() end
+    if pd.buttonJustPressed(pd.kButtonA) then row.confirm() end
+end
+
+function TitleScene.update()
+    handleInput()
+    if not SceneManager.isCurrent(TitleScene) then return end
 
     backdrop:update({})
     if backdrop.hasEscaped then newBackdrop() end
@@ -62,16 +85,16 @@ function TitleScene.update()
     gfx.setLineWidth(1)
 
     local titleWidth = titleImage.width * TITLE_SCALE
-    titleImage:drawScaled(PANEL_LEFT + (PANEL_WIDTH - titleWidth) / 2, PANEL_TOP + 14, TITLE_SCALE)
+    titleImage:drawScaled(PANEL_LEFT + (PANEL_WIDTH - titleWidth) / 2, PANEL_TOP + 10, TITLE_SCALE)
 
-    for index, option in ipairs(OPTIONS) do
-        local top = PANEL_TOP + 78 + (index - 1) * ROW_HEIGHT
+    for index, row in ipairs(ROWS) do
+        local top = ROWS_TOP + (index - 1) * ROW_HEIGHT
         if index == TitleScene.selection then
             gfx.setColor(gfx.kColorBlack)
             gfx.fillRoundRect(PANEL_LEFT + 20, top, PANEL_WIDTH - 40, ROW_HEIGHT - 4, 4)
             gfx.setImageDrawMode(gfx.kDrawModeFillWhite)
         end
-        gfx.drawTextAligned(option.label, PANEL_LEFT + PANEL_WIDTH / 2, top + 4, kTextAlignment.center)
+        gfx.drawTextAligned(row.label(), PANEL_LEFT + PANEL_WIDTH / 2, top + 3, kTextAlignment.center)
         gfx.setImageDrawMode(gfx.kDrawModeCopy)
     end
 end

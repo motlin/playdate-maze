@@ -6,15 +6,15 @@ import "Game"
 import "Hud"
 import "MazeView"
 import "SceneManager"
+import "Sizes"
 
 local pd <const> = playdate
 
 PlayScene = {
     MODES = { EXPLORE = "explore", SCREENSAVER = "screensaver" },
-    COLUMNS = 8,
-    ROWS = 6,
     game = nil,
     mode = nil,
+    sizeIndex = Sizes.DEFAULT,
 }
 
 -- Degrees a frame when turning with the D-pad, which only happens while the crank is docked
@@ -26,9 +26,10 @@ local BUTTONS <const> = {
 local input = {}
 
 local function newGame(isAutopilotOn)
+    local size = Sizes.ALL[PlayScene.sizeIndex]
     local game = Game.new({
-        columns = PlayScene.COLUMNS,
-        rows = PlayScene.ROWS,
+        columns = size.columns,
+        rows = size.rows,
         hasPuzzle = PlayScene.mode == PlayScene.MODES.EXPLORE,
         random = math.random,
     })
@@ -36,8 +37,9 @@ local function newGame(isAutopilotOn)
     PlayScene.game = game
 end
 
-function PlayScene.enter(mode)
+function PlayScene.enter(mode, sizeIndex)
     PlayScene.mode = mode
+    PlayScene.sizeIndex = sizeIndex
     newGame(mode == PlayScene.MODES.SCREENSAVER)
 end
 

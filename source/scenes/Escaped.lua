@@ -27,7 +27,7 @@ end
 
 function EscapedScene.update()
     if pd.buttonJustPressed(pd.kButtonA) then
-        SceneManager.switch(PlayScene, PlayScene.MODES.EXPLORE)
+        SceneManager.switch(PlayScene, PlayScene.MODES.EXPLORE, PlayScene.sizeIndex)
         return
     end
     if pd.buttonJustPressed(pd.kButtonB) then

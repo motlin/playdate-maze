@@ -84,12 +84,28 @@ if playdate.isSimulator then
         frames(10); shot("title")
         frames(60); shot("title-backdrop-moved-on")
         press(pd.kButtonDown); shot("title-screensaver-selected")
-        press(pd.kButtonUp)
+        press(pd.kButtonDown)
+        expect(TitleScene.sizeIndex == Sizes.DEFAULT, "the size starts on medium")
+        press(pd.kButtonRight); shot("title-size-large")
+        expect(Sizes.ALL[TitleScene.sizeIndex].name == "Large", "right picks the next size up")
+        press(pd.kButtonA); press(pd.kButtonA)
+        expect(Sizes.ALL[TitleScene.sizeIndex].name == "Medium", "A cycles the size, wrapping round")
+        press(pd.kButtonLeft); press(pd.kButtonLeft)
+        expect(Sizes.ALL[TitleScene.sizeIndex].name == "Large", "left wraps from small to large")
+        press(pd.kButtonUp); press(pd.kButtonUp)
+        press(pd.kButtonA, 3)
+        expect(PlayScene.game.maze.columns == 12 and PlayScene.game.maze.rows == 9, "Explore starts a maze of the chosen size")
+        shot("play-large")
+        PlayScene.game.player.x, PlayScene.game.player.y = PlayScene.game.maze:cellCenter(12, 9)
+        frames(2); shot("play-large-far-corner-on-map")
+        SceneManager.switch(TitleScene)
+        TitleScene.sizeIndex = Sizes.DEFAULT
+        frames(2)
         press(pd.kButtonA, 3)
         expect(SceneManager.isCurrent(PlayScene), "A on Explore starts the game")
         shot("play-start")
         expect(PlayScene.game.visitedCount == 1, "the map starts with only the first cell revealed")
-        expect(not PlayScene.game:isRevealed(PlayScene.COLUMNS, PlayScene.ROWS), "the far corner starts hidden in fog")
+        expect(not PlayScene.game:isRevealed(PlayScene.game.maze.columns, PlayScene.game.maze.rows), "the far corner starts hidden in fog")
 
         local player = PlayScene.game.player
         local startAngle = player.angle
@@ -150,7 +166,7 @@ if playdate.isSimulator then
         end
         expect(puzzle:isSolved(), "all three shapes placed solves the puzzle")
 
-        game.player.x, game.player.y = game.maze:cellCenter(PlayScene.COLUMNS - 1, PlayScene.ROWS)
+        game.player.x, game.player.y = game.maze:cellCenter(game.maze.columns - 1, game.maze.rows)
         game.player.angle = 0
         frames(70); shot("exit-open-ahead")
         hold(pd.kButtonUp, 20); shot("exit-close")
@@ -171,7 +187,7 @@ if playdate.isSimulator then
         press(pd.kButtonDown)
         press(pd.kButtonA, 3)
         expect(PlayScene.game:isAutopilotOn(), "the screensaver starts on autopilot")
-        expect(PlayScene.game:isRevealed(PlayScene.COLUMNS, PlayScene.ROWS), "the screensaver shows the whole map")
+        expect(PlayScene.game:isRevealed(PlayScene.game.maze.columns, PlayScene.game.maze.rows), "the screensaver shows the whole map")
         for index = 1, 8 do
             frames(40); shot("wandering-" .. index)
         end
