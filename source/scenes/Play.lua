@@ -8,6 +8,7 @@ import "DockTimer"
 import "Game"
 import "Hud"
 import "MazeView"
+import "Music"
 import "SceneManager"
 import "SeededRandom"
 import "Sounds"
@@ -29,6 +30,8 @@ local BUTTONS <const> = {
     pd.kButtonUp, pd.kButtonDown, pd.kButtonLeft, pd.kButtonRight, pd.kButtonA, pd.kButtonB,
 }
 
+-- Where the screensaver's music sits between far from the exit (0) and beside it (1)
+local SCREENSAVER_MUSIC <const> = 0.3
 local MONTHS <const> = { "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" }
 
 local input = {}
@@ -77,6 +80,7 @@ end
 
 function PlayScene.exit()
     Sounds.stopHum()
+    Music.stop()
 end
 
 function PlayScene.restart()
@@ -162,6 +166,8 @@ function PlayScene.update()
 
     Sounds.play(game.events)
     Sounds.hum(game)
+    -- The screensaver's music stays calm and level; otherwise it follows the way to the exit
+    Music.update(game, PlayScene.mode == PlayScene.MODES.SCREENSAVER and SCREENSAVER_MUSIC or nil)
     if game.hasEscaped then
         if PlayScene.mode == PlayScene.MODES.SCREENSAVER then
             PlayScene.restart()

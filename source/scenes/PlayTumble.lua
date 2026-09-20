@@ -4,6 +4,7 @@
 import "CoreLibs/ui"
 
 import "Hud"
+import "Music"
 import "SceneManager"
 import "Sizes"
 import "Sounds"
@@ -24,6 +25,10 @@ end
 function TumbleScene.enter(sizeIndex)
     TumbleScene.sizeIndex = sizeIndex
     newTumble()
+end
+
+function TumbleScene.exit()
+    Music.stop()
 end
 
 function TumbleScene.restart()
@@ -47,6 +52,7 @@ function TumbleScene.update()
     local tumble = TumbleScene.tumble
     tumble:update(readInput())
     Sounds.play(tumble.events)
+    Music.update(tumble)
     if tumble.hasEscaped then
         SceneManager.switch(EscapedScene, tumble.frames, playAgain)
         return

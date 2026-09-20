@@ -4,6 +4,7 @@
 import "CoreLibs/ui"
 
 import "Hud"
+import "Music"
 import "SceneManager"
 import "Sizes"
 import "Slime"
@@ -24,6 +25,10 @@ end
 function SlimeScene.enter(sizeIndex)
     SlimeScene.sizeIndex = sizeIndex
     newSlime()
+end
+
+function SlimeScene.exit()
+    Music.stop()
 end
 
 function SlimeScene.restart()
@@ -48,6 +53,7 @@ function SlimeScene.update()
     local slime = SlimeScene.slime
     slime:update(readInput())
     Sounds.play(slime.events)
+    Music.update(slime)
     if slime.hasEscaped then
         SceneManager.switch(EscapedScene, slime.frames, playAgain, slime.throws .. " throws")
         return

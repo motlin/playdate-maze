@@ -18,6 +18,7 @@ if playdate.isSimulator then
 
     -- Silent, but still playing every note, so that the sound code runs here as it will for a player
     Sounds.setVolume(0)
+    Music.setVolume(0)
 
     -- Deterministic runs: the same mazes every time, so two runs of the same code produce
     -- byte-identical screenshots.
