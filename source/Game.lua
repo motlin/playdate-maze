@@ -50,6 +50,11 @@ function Game.new(options)
     return game
 end
 
+-- The compass bearing of the view, which a mode only has if looking around means something in it
+function Game:heading()
+    return self.player.angle
+end
+
 function Game:isAutopilotOn()
     return self.autopilot ~= nil
 end

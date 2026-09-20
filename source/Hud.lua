@@ -1,6 +1,7 @@
 -- Everything drawn over the 3D view: the minimap, which shapes are home, what is being carried,
 -- and one line at the bottom that is either the game's latest message or a hint about A and B.
 
+import "Compass"
 import "Minimap"
 import "Puzzle"
 import "ShapeArt"
@@ -17,6 +18,11 @@ local PROGRESS_ICON_SPACING <const> = 18
 local CARRIED_BOX_SIZE <const> = 40
 local CARRIED_ICON_SIZE <const> = 24
 local LINE_HEIGHT <const> = 22
+-- The compass sits top centre, between the progress icons and the widest minimap
+local COMPASS_WIDTH <const> = 120
+local COMPASS_HEIGHT <const> = 20
+local COMPASS_SPAN <const> = 120
+local COMPASS_TICK <const> = 4
 local LINE_PADDING <const> = 8
 
 local function drawPanel(left, top, width, height)
@@ -47,6 +53,24 @@ local function drawCarried(item)
     ShapeArt.drawSolid(item.shape, EDGE + CARRIED_BOX_SIZE / 2, top + CARRIED_BOX_SIZE / 2, CARRIED_ICON_SIZE)
 end
 
+local function drawCompass(heading)
+    local left = (SCREEN_WIDTH - COMPASS_WIDTH) / 2
+    drawPanel(left, EDGE, COMPASS_WIDTH, COMPASS_HEIGHT)
+    gfx.setClipRect(left + 2, EDGE, COMPASS_WIDTH - 4, COMPASS_HEIGHT)
+    gfx.setColor(gfx.kColorBlack)
+    for _, mark in ipairs(Compass.marks(heading, COMPASS_WIDTH, COMPASS_SPAN)) do
+        if mark.label then
+            gfx.drawTextAligned(mark.label, left + mark.x, EDGE + 2, kTextAlignment.center)
+        else
+            gfx.drawLine(left + mark.x, EDGE + COMPASS_HEIGHT - COMPASS_TICK, left + mark.x, EDGE + COMPASS_HEIGHT - 1)
+        end
+    end
+    gfx.clearClipRect()
+    -- A notch marks dead ahead
+    local middle = SCREEN_WIDTH / 2
+    gfx.fillTriangle(middle - 4, EDGE + COMPASS_HEIGHT, middle + 4, EDGE + COMPASS_HEIGHT, middle, EDGE + COMPASS_HEIGHT - 5)
+end
+
 -- White text on a black pill, centred along the bottom
 function Hud.drawLine(text)
     local width = gfx.getTextSize(text) + 2 * LINE_PADDING
@@ -63,6 +87,7 @@ end
 function Hud.draw(game)
     local mapWidth = Minimap.size(game.maze)
     Minimap.draw(game, SCREEN_WIDTH - EDGE - mapWidth, EDGE)
+    if game.heading then drawCompass(game:heading()) end
     if game.puzzle then
         Hud.drawProgress(game.puzzle)
         if game.puzzle.carried then drawCarried(game.puzzle.carried) end

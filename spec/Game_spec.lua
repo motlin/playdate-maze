@@ -69,6 +69,13 @@ describe("Game", function()
             assert.is_near(Game.WALK_SPEED, distance, 0.0001)
         end)
 
+        it("has a compass heading that follows the view", function()
+            local game = newGame()
+            game.player.angle = 0
+            game:update({ turn = 270 })
+            assert.are.equal(270, game:heading())
+        end)
+
         it("counts the frames played", function()
             local game = newGame()
             for _ = 1, 45 do game:update({}) end

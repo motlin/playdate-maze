@@ -192,6 +192,10 @@ if playdate.isSimulator then
         docked = false
         frames(2)
 
+        -- The compass: north in the middle, and the letters carry on across 359 to 0 degrees
+        player.angle = 270; frames(1); shot("play-compass-north")
+        player.angle = 352; frames(1); shot("play-compass-across-the-join")
+
         -- Look around from the middle of the maze
         player.x, player.y = PlayScene.game.maze:cellCenter(4, 3)
         for quarter = 0, 3 do
