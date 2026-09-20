@@ -1,9 +1,10 @@
 -- The maze as a side-on throwing game. You are a slime: hold A and the crank handle points the
--- way you will throw yourself, along the arc shown; let go to fly, always at full power. You stick
--- to whatever you hit. A floor is safe, but a wall or ceiling only holds you for a couple of
--- seconds, and the clock runs while you aim. Then you slide down the wall, or drop from the
--- ceiling. One more throw is allowed in mid-air, the D-pad crawls along floors, and B calls off
--- an aim. Touch all three shapes to open the exit.
+-- way you will throw yourself, along the arc shown; let go to fly, always at full power. There is
+-- no throwing in mid-air: a throw commits you until you stick to something. A floor is safe, but
+-- a wall or ceiling only holds you for a second, and the clock runs while you aim. Then you slide
+-- down the wall, or drop from the ceiling. B calls off an aim, or, when not aiming, lets go of a
+-- wall or ceiling to drop straight down. The D-pad crawls along floors. Touch all three shapes to
+-- open the exit.
 --
 -- The maze stays upright, with corridors wide enough to throw in. Aim angles are the crank's:
 -- 0 points up the screen and they grow clockwise. Speeds are in blocks a frame.
@@ -24,7 +25,8 @@ Slime.GRAVITY = 0.012
 Slime.THROW_SPEED = math.sqrt(2 * Slime.GRAVITY * 4)
 -- Less than the body's width, so one frame's move can never step over a wall
 Slime.MAX_SPEED = 0.35
-Slime.STICK_FRAMES = 60
+-- One second of grip on a wall or ceiling
+Slime.STICK_FRAMES = 30
 Slime.SLIDE_SPEED = 0.03
 Slime.CRAWL_SPEED = 0.04
 
@@ -54,7 +56,6 @@ function Slime.inMaze(maze, puzzle)
     slime.stickFrames = 0
     slime.flightFrames = 0
     slime.velocityX, slime.velocityY = 0, 0
-    slime.hasAirThrow = true
     slime.aimAngle = 0
     slime.isAiming = false
     slime.isAimCancelled = false
@@ -76,8 +77,9 @@ function Slime:hint()
     return nil
 end
 
+-- Only from something it is stuck to: there is no throwing in mid-air
 function Slime:canThrow()
-    return self.state ~= FLYING or self.hasAirThrow
+    return self.state ~= FLYING
 end
 
 local function throwVelocity(angle)
@@ -135,7 +137,6 @@ local function stick(self, surface)
     if self.state == FLYING then self:emit("splat") end
     local isSameSurfaceAgain = surface == self.surface and self.flightFrames < SHORTEST_REAL_FLIGHT
     self.velocityX, self.velocityY = 0, 0
-    self.hasAirThrow = true
     self.surface = surface
     if surface == "floor" then
         self.state = RESTING
@@ -146,7 +147,6 @@ local function stick(self, surface)
 end
 
 local function launch(self)
-    if self.state == FLYING then self.hasAirThrow = false end
     self:emit("throw")
     self.velocityX, self.velocityY = throwVelocity(self.aimAngle)
     self.state = FLYING
@@ -154,10 +154,22 @@ local function launch(self)
     self.throws = self.throws + 1
 end
 
--- Holding A aims, B calls it off, and letting go of A throws
+local function fall(self)
+    self.state = FLYING
+    self.velocityX, self.velocityY = 0, 0
+    self.flightFrames = SHORTEST_REAL_FLIGHT
+end
+
+-- Holding A aims and letting go of A throws. B calls off an aim; with no aim to call off, it
+-- lets go of a wall or ceiling.
 local function aim(self, input)
-    if input.cancel and self.isAiming then
-        self.isAiming, self.isAimCancelled = false, true
+    if input.cancel then
+        if self.isAiming then
+            self.isAiming, self.isAimCancelled = false, true
+        elseif self.state == CLINGING or self.state == SLIDING then
+            self:emit("letGo")
+            fall(self)
+        end
     end
     if not input.isAimHeld then
         if self.isAiming then launch(self) end
@@ -165,12 +177,6 @@ local function aim(self, input)
     elseif not self.isAimCancelled then
         self.isAiming = self:canThrow()
     end
-end
-
-local function fall(self)
-    self.state = FLYING
-    self.velocityX, self.velocityY = 0, 0
-    self.flightFrames = SHORTEST_REAL_FLIGHT
 end
 
 local function move(self, input)

@@ -48,6 +48,7 @@ local BOOK <const> = {
     throw = run("sine", { 220, 330, 520 }, 0.4, 0.04),
     splat = { note("noise", 260, 0.4, 0.06), note("sine", 120, 0.35, 0.08) },
     slip = run("sine", { 420, 300, 210 }, 0.3, 0.07),
+    letGo = run("sine", { 330, 240 }, 0.3, 0.05),
 }
 
 function SoundBook.notes(event)

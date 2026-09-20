@@ -462,17 +462,28 @@ if playdate.isSimulator then
         frames(2); shot("flying")
         waitUntilStuck(slime); shot("clinging")
         expect(slime.state == STATES.CLINGING and slime.surface == "left", "it sticks to the wall it hits")
-        frames(30); shot("clinging-half-the-clock")
+        frames(Slime.STICK_FRAMES // 2 - 3); shot("clinging-half-the-clock")
         holdA(); setCrank(60); frames(3); shot("aiming-from-the-wall")
         release(pd.kButtonA)
         expect(slime.throws == 2, "and can throw itself off again")
         frames(6)
-        setCrank(0); holdA(); frames(1); release(pd.kButtonA)
-        expect(slime.throws == 3, "with one more throw in mid-air")
-        frames(3); holdA(); frames(1)
-        expect(not slime.isAiming, "but not a second")
+        setCrank(0); holdA(); frames(1)
+        expect(not slime.isAiming, "but there is no aiming in mid-air")
         release(pd.kButtonA)
+        expect(slime.throws == 2, "and no throwing either")
         waitUntilStuck(slime); frames(2)
+
+        -- B lets go of a wall
+        slime.player.x, slime.player.y = slime.maze:cellCenter(1, 1)
+        slime.state, slime.velocityX, slime.velocityY = STATES.FLYING, 0, 0
+        waitUntilStuck(slime)
+        setCrank(300); holdA(); frames(1); release(pd.kButtonA)
+        waitUntilStuck(slime)
+        expect(slime.state == STATES.CLINGING, "it is on the wall again")
+        press(pd.kButtonB, 1); shot("let-go-with-b")
+        expect(slime.state == STATES.FLYING, "B lets go of the wall")
+        waitUntilStuck(slime)
+        expect(slime.state == STATES.RESTING, "and it drops to the floor")
 
         -- Let the clock run out on a wall
         slime.player.x, slime.player.y = slime.maze:cellCenter(1, 1)
