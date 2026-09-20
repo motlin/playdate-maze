@@ -28,6 +28,7 @@ local function previousSize() TitleScene.sizeIndex = Sizes.previous(TitleScene.s
 -- Each row has a label and what A does; left and right are optional
 local ROWS <const> = {
     { label = function() return "Explore" end, confirm = play("explore") },
+    { label = function() return "Daily maze" end, confirm = play("daily") },
     { label = function() return "Screensaver" end, confirm = play("screensaver") },
     {
         label = function() return "Size: " .. Sizes.ALL[TitleScene.sizeIndex].name end,

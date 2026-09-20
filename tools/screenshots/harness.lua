@@ -29,6 +29,9 @@ if playdate.isSimulator then
         return change
     end
     pd.isCrankDocked = function() return docked end
+    -- The daily maze is seeded from the date, so the date is pinned too
+    local today = { year = 2026, month = 9, day = 19 }
+    pd.getTime = function() return today end
 
     local function log(message)
         print("[harness] " .. message)
@@ -83,6 +86,7 @@ if playdate.isSimulator then
     scenarios.tour = function()
         frames(10); shot("title")
         frames(60); shot("title-backdrop-moved-on")
+        press(pd.kButtonDown); shot("title-daily-selected")
         press(pd.kButtonDown); shot("title-screensaver-selected")
         press(pd.kButtonDown)
         expect(TitleScene.sizeIndex == Sizes.DEFAULT, "the size starts on medium")
@@ -92,7 +96,7 @@ if playdate.isSimulator then
         expect(Sizes.ALL[TitleScene.sizeIndex].name == "Medium", "A cycles the size, wrapping round")
         press(pd.kButtonLeft); press(pd.kButtonLeft)
         expect(Sizes.ALL[TitleScene.sizeIndex].name == "Large", "left wraps from small to large")
-        press(pd.kButtonUp); press(pd.kButtonUp)
+        press(pd.kButtonUp); press(pd.kButtonUp); press(pd.kButtonUp)
         press(pd.kButtonA, 3)
         expect(PlayScene.game.maze.columns == 12 and PlayScene.game.maze.rows == 9, "Explore starts a maze of the chosen size")
         shot("play-large")
@@ -181,9 +185,45 @@ if playdate.isSimulator then
         hold(pd.kButtonDown, 12); frames(1); shot("exit-locked-from-further-back")
     end
 
+    -- The daily maze is the same all day and different the next day
+    scenarios.daily = function()
+        frames(5)
+        TitleScene.sizeIndex = 3
+        press(pd.kButtonDown)
+        press(pd.kButtonA, 3)
+        expect(PlayScene.mode == PlayScene.MODES.DAILY, "the second row starts the daily maze")
+        shot("daily-start")
+        expect(PlayScene.game.message == "Daily maze: 19 Sep", "the daily maze says which day it is for")
+        expect(PlayScene.game.maze.columns == 8, "the daily maze is medium whatever size is selected")
+        expect(PlayScene.game.puzzle ~= nil, "the daily maze has the puzzle")
+        local blocks, firstItem = PlayScene.game.maze.blocks, PlayScene.game.puzzle.items[1]
+
+        local function isSameMaze(other)
+            for gridY, line in ipairs(blocks) do
+                for gridX, block in ipairs(line) do
+                    if other[gridY][gridX] ~= block then return false end
+                end
+            end
+            return true
+        end
+
+        math.random(100)
+        PlayScene.restart(); frames(2)
+        expect(PlayScene.game.maze.blocks ~= blocks and isSameMaze(PlayScene.game.maze.blocks), "the same day gives the same maze")
+        local sameItem = PlayScene.game.puzzle.items[1]
+        expect(sameItem.gridX == firstItem.gridX and sameItem.gridY == firstItem.gridY, "and the same hiding places")
+
+        today.day = 20
+        PlayScene.restart(); frames(2); shot("daily-next-day")
+        expect(not isSameMaze(PlayScene.game.maze.blocks), "the next day gives a different maze")
+    end
+
     -- Let the screensaver wander, then take over
     scenarios.screensaver = function()
         frames(5)
+        -- A small maze, so the wall-follower reaches the exit well inside run.sh's time limit
+        TitleScene.sizeIndex = 1
+        press(pd.kButtonDown)
         press(pd.kButtonDown)
         press(pd.kButtonA, 3)
         expect(PlayScene.game:isAutopilotOn(), "the screensaver starts on autopilot")
@@ -197,7 +237,13 @@ if playdate.isSimulator then
             frames(1)
         end
         expect(PlayScene.game ~= game, "the screensaver finds the exit and starts a new maze")
-        expect(PlayScene.game:isAutopilotOn(), "and keeps wandering")
+        expect(
+            PlayScene.game:isAutopilotOn(),
+            string.format(
+                "and keeps wandering (mode %s, old maze escaped %s after %d frames, in play scene %s)",
+                PlayScene.mode, tostring(game.hasEscaped), game.frames, tostring(SceneManager.isCurrent(PlayScene))
+            )
+        )
         shot("next-maze")
 
         press(pd.kButtonB, 2); shot("taken-over")
