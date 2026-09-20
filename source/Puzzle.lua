@@ -42,8 +42,9 @@ local function shuffledCells(maze, random)
     return cells
 end
 
-local function inCell(shape, cell)
-    return { shape = shape, gridX = 2 * cell[1], gridY = 2 * cell[2] }
+local function inCell(maze, shape, cell)
+    local gridX, gridY = maze:cellBlock(cell[1], cell[2])
+    return { shape = shape, gridX = gridX, gridY = gridY }
 end
 
 -- A shape and a pedestal for each of Puzzle.SHAPES, every one in a cell of its own
@@ -52,8 +53,8 @@ function Puzzle.scatter(maze, random)
     assert(#cells >= 2 * #Puzzle.SHAPES, "the maze is too small to hold every shape and pedestal")
     local items, pedestals = {}, {}
     for index, shape in ipairs(Puzzle.SHAPES) do
-        items[index] = inCell(shape, cells[2 * index - 1])
-        pedestals[index] = inCell(shape, cells[2 * index])
+        items[index] = inCell(maze, shape, cells[2 * index - 1])
+        pedestals[index] = inCell(maze, shape, cells[2 * index])
     end
     return Puzzle.new(items, pedestals)
 end
@@ -63,7 +64,7 @@ function Puzzle.scatterItems(maze, random)
     local cells = shuffledCells(maze, random)
     assert(#cells >= #Puzzle.SHAPES, "the maze is too small to hold every shape")
     local items = {}
-    for index, shape in ipairs(Puzzle.SHAPES) do items[index] = inCell(shape, cells[index]) end
+    for index, shape in ipairs(Puzzle.SHAPES) do items[index] = inCell(maze, shape, cells[index]) end
     return Puzzle.new(items, {})
 end
 

@@ -18,8 +18,10 @@ local FOG_SHADE <const> = 11
 
 local wallsImage, wallsMaze, wallsHasOpenExit, wallsVisitedCount
 
--- Pixels per cell for the maze being drawn: wide mazes get smaller cells. Set by Minimap.draw.
+-- Pixels per cell for the maze being drawn: wide mazes get smaller cells. Set by Minimap.draw,
+-- with how many blocks of the world one cell of the map stands for.
 local cellSize
+local blocksPerCell
 
 function Minimap.size(maze)
     local cell = Sizes.mapCellSize(maze.columns)
@@ -76,9 +78,11 @@ local function drawWalls(game)
     return image
 end
 
--- Blocks are half a cell wide on the map: world x = 1.5 is the middle of the first cell
+-- A cell and the wall after it are one cell of the map: with one-block corridors that is two
+-- blocks, and world x = 1.5 is the middle of the first cell
 local function toMap(left, top, worldX, worldY)
-    return left + MARGIN + (worldX - 0.5) * cellSize / 2, top + MARGIN + (worldY - 0.5) * cellSize / 2
+    local scale = cellSize / blocksPerCell
+    return left + MARGIN + (worldX - 0.5) * scale, top + MARGIN + (worldY - 0.5) * scale
 end
 
 local function isRevealed(game, thing)
@@ -122,6 +126,7 @@ end
 function Minimap.draw(game, left, top)
     local maze = game.maze
     cellSize = Sizes.mapCellSize(maze.columns)
+    blocksPerCell = maze.corridorWidth + 1
     local hasOpenExit = maze:blockValue(maze.exitGridX, maze.exitGridY) == Maze.BLOCKS.EXIT
     if wallsMaze ~= maze or wallsHasOpenExit ~= hasOpenExit or wallsVisitedCount ~= game.visitedCount then
         wallsImage, wallsMaze = drawWalls(game), maze

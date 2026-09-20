@@ -162,6 +162,78 @@ describe("Maze", function()
         end)
     end)
 
+    describe("with wide corridors", function()
+        it("makes every cell and passage that many blocks across, with one-block walls between", function()
+            local maze = Maze.new(3, 2, 3)
+            assert.are.equal(3, maze.corridorWidth)
+            assert.are.equal(13, maze.gridWidth)
+            assert.are.equal(9, maze.gridHeight)
+            for gridY = 2, 4 do
+                for gridX = 2, 4 do assert.is_false(maze:isWall(gridX, gridY)) end
+            end
+            assert.is_true(maze:isWall(5, 3))
+            assert.is_true(maze:isWall(3, 5))
+            assert.is_true(maze:isWall(1, 3))
+        end)
+
+        it("carves a passage as wide as the corridor", function()
+            local maze = Maze.new(3, 2, 3)
+            maze:carve(1, 1, "east")
+            for gridY = 2, 4 do assert.is_false(maze:isWall(5, gridY)) end
+            assert.is_true(maze:isWall(5, 1))
+            assert.is_true(maze:isWall(5, 5))
+            assert.is_true(maze:hasPassage(1, 1, "east"))
+            assert.is_true(maze:hasPassage(2, 1, "west"))
+            assert.is_false(maze:hasPassage(1, 1, "south"))
+
+            maze:carve(1, 1, "south")
+            for gridX = 2, 4 do assert.is_false(maze:isWall(gridX, 5)) end
+            assert.is_true(maze:hasPassage(1, 2, "north"))
+        end)
+
+        it("knows where the middle of a cell is, in the world and as a block", function()
+            local maze = Maze.new(3, 2, 3)
+            assert.are.same({ 2.5, 2.5 }, { maze:cellCenter(1, 1) })
+            assert.are.same({ 10.5, 6.5 }, { maze:cellCenter(3, 2) })
+            assert.are.same({ 3, 3 }, { maze:cellBlock(1, 1) })
+            assert.are.same({ 11, 7 }, { maze:cellBlock(3, 2) })
+        end)
+
+        it("finds the nearest cell from anywhere in a cell or passage", function()
+            local maze = Maze.new(3, 2, 3)
+            assert.are.same({ 1, 1 }, { maze:nearestCell(1.2, 3.8) })
+            assert.are.same({ 2, 1 }, { maze:nearestCell(7.9, 1.1) })
+            assert.are.same({ 3, 2 }, { maze:nearestCell(11.5, 7.5) })
+        end)
+
+        it("still generates a maze that connects every cell without loops", function()
+            local maze = Maze.generate(6, 4, seededRandom(4), 3)
+            assert.are.equal(24, countReachableCells(maze))
+            assert.are.equal(23, countPassages(maze))
+        end)
+
+        it("puts the exit door at floor level in the east wall of the last cell", function()
+            local maze = Maze.generate(6, 4, seededRandom(4), 3)
+            assert.are.same({ 25, 16 }, { maze.exitGridX, maze.exitGridY })
+            assert.are.equal(Maze.BLOCKS.DOOR, maze:blockValue(25, 16))
+            assert.are.equal(Maze.BLOCKS.WALL, maze:blockValue(25, 15))
+            maze:openExit()
+            assert.is_true(maze:isExit(24.5, 15.5))
+        end)
+    end)
+
+    describe("with the usual one-block corridors", function()
+        it("has a corridor width of one unless told otherwise", function()
+            assert.are.equal(1, Maze.new(3, 2).corridorWidth)
+            assert.are.equal(1, Maze.generate(3, 2, seededRandom(1)).corridorWidth)
+        end)
+
+        it("gives the block of a cell", function()
+            assert.are.same({ 2, 2 }, { Maze.new(3, 2):cellBlock(1, 1) })
+            assert.are.same({ 6, 4 }, { Maze.new(3, 2):cellBlock(3, 2) })
+        end)
+    end)
+
     describe("openRuns", function()
         it("joins the open blocks of each row into runs", function()
             local maze = Maze.new(3, 2)

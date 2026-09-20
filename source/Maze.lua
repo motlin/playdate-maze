@@ -1,8 +1,8 @@
--- A perfect maze of cells, stored as a grid of unit blocks so it can be raycast.
--- Cell (column, row) is the open block at grid (2 * column, 2 * row); the blocks between cells
--- are either wall or a carved passage. Block (gridX, gridY) covers world x in
--- [gridX - 1, gridX) and y in [gridY - 1, gridY). North is -y, east is +x.
--- The exit is a door in the east wall of the last cell.
+-- A perfect maze of cells, stored as a grid of unit blocks so it can be raycast or drawn.
+-- Walls are one block thick and corridors are corridorWidth blocks across: usually 1, so that
+-- cell (column, row) is the single open block at grid (2 * column, 2 * row). Block (gridX, gridY)
+-- covers world x in [gridX - 1, gridX) and y in [gridY - 1, gridY). North is -y, east is +x.
+-- The exit is a door one block big, at floor level in the east wall of the last cell.
 
 Maze = {}
 Maze.__index = Maze
@@ -21,18 +21,28 @@ local WALL <const> = Maze.BLOCKS.WALL
 local DOOR <const> = Maze.BLOCKS.DOOR
 local EXIT <const> = Maze.BLOCKS.EXIT
 
-function Maze.new(columns, rows)
+-- The first and last grid index a cell spans along one axis; `number` is its column or row
+local function cellSpan(maze, number)
+    local pitch = maze.corridorWidth + 1
+    return (number - 1) * pitch + 2, number * pitch
+end
+
+function Maze.new(columns, rows, corridorWidth)
+    corridorWidth = corridorWidth or 1
     local maze = setmetatable({
         columns = columns,
         rows = rows,
-        gridWidth = 2 * columns + 1,
-        gridHeight = 2 * rows + 1,
+        corridorWidth = corridorWidth,
+        gridWidth = columns * (corridorWidth + 1) + 1,
+        gridHeight = rows * (corridorWidth + 1) + 1,
         blocks = {},
     }, Maze)
+    local pitch = corridorWidth + 1
     for gridY = 1, maze.gridHeight do
         local line = {}
         for gridX = 1, maze.gridWidth do
-            local isCell = gridX % 2 == 0 and gridY % 2 == 0
+            -- Wall lines run along every grid index that is one more than a multiple of the pitch
+            local isCell = gridX % pitch ~= 1 and gridY % pitch ~= 1
             line[gridX] = isCell and OPEN or WALL
         end
         maze.blocks[gridY] = line
@@ -41,8 +51,8 @@ function Maze.new(columns, rows)
 end
 
 -- random(n) returns an integer from 1 to n, like math.random
-function Maze.generate(columns, rows, random)
-    local maze = Maze.new(columns, rows)
+function Maze.generate(columns, rows, random, corridorWidth)
+    local maze = Maze.new(columns, rows, corridorWidth)
     local visited = { [1] = true }
     local stack = { { 1, 1 } }
     while #stack > 0 do
@@ -67,10 +77,24 @@ function Maze.generate(columns, rows, random)
             stack[#stack + 1] = { nextColumn, nextRow }
         end
     end
+    local _, lastRowBottom = cellSpan(maze, rows)
     maze.exitGridX = maze.gridWidth
-    maze.exitGridY = 2 * rows
+    maze.exitGridY = lastRowBottom
     maze.blocks[maze.exitGridY][maze.exitGridX] = DOOR
     return maze
+end
+
+-- The blocks of the wall between a cell and its neighbour: x from, x to, y from, y to
+local function wallBetween(maze, column, row, direction)
+    local offset = Maze.OFFSETS[direction]
+    local left, right = cellSpan(maze, column)
+    local top, bottom = cellSpan(maze, row)
+    if offset[1] ~= 0 then
+        local gridX = offset[1] > 0 and right + 1 or left - 1
+        return gridX, gridX, top, bottom
+    end
+    local gridY = offset[2] > 0 and bottom + 1 or top - 1
+    return left, right, gridY, gridY
 end
 
 function Maze:carve(column, row, direction)
@@ -80,7 +104,10 @@ function Maze:carve(column, row, direction)
         nextColumn >= 1 and nextColumn <= self.columns and nextRow >= 1 and nextRow <= self.rows,
         "cannot carve through the outer wall"
     )
-    self.blocks[2 * row + offset[2]][2 * column + offset[1]] = OPEN
+    local fromX, toX, fromY, toY = wallBetween(self, column, row, direction)
+    for gridY = fromY, toY do
+        for gridX = fromX, toX do self.blocks[gridY][gridX] = OPEN end
+    end
 end
 
 function Maze:blockValue(gridX, gridY)
@@ -93,9 +120,11 @@ function Maze:isWall(gridX, gridY)
     return value == WALL or value == DOOR
 end
 
+-- A passage is as wide as the corridor, except the exit, which is only its last block: so look
+-- at the last block of the wall, which is the bottom one of an east or west wall
 function Maze:hasPassage(column, row, direction)
-    local offset = Maze.OFFSETS[direction]
-    return not self:isWall(2 * column + offset[1], 2 * row + offset[2])
+    local _, toX, _, toY = wallBetween(self, column, row, direction)
+    return not self:isWall(toX, toY)
 end
 
 function Maze:openExit()
@@ -107,7 +136,16 @@ function Maze:isExit(x, y)
 end
 
 function Maze:cellCenter(column, row)
-    return 2 * column - 0.5, 2 * row - 0.5
+    local left, right = cellSpan(self, column)
+    local top, bottom = cellSpan(self, row)
+    return (left - 1 + right) / 2, (top - 1 + bottom) / 2
+end
+
+-- The block in the middle of a cell
+function Maze:cellBlock(column, row)
+    local left, right = cellSpan(self, column)
+    local top, bottom = cellSpan(self, row)
+    return (left + right) // 2, (top + bottom) // 2
 end
 
 function Maze:blockCenter(gridX, gridY)
@@ -118,9 +156,11 @@ function Maze:blockAt(x, y)
     return math.floor(x) + 1, math.floor(y) + 1
 end
 
+-- A wall or passage belongs with the cell before it up to its middle, and the next cell after
 function Maze:nearestCell(x, y)
-    local column = math.floor((x + 0.5) / 2 + 0.5)
-    local row = math.floor((y + 0.5) / 2 + 0.5)
+    local pitch = self.corridorWidth + 1
+    local column = math.floor((x - 0.5) / pitch) + 1
+    local row = math.floor((y - 0.5) / pitch) + 1
     return math.max(1, math.min(self.columns, column)), math.max(1, math.min(self.rows, row))
 end
 

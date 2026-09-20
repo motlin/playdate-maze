@@ -183,6 +183,18 @@ describe("Puzzle", function()
         end)
     end)
 
+    describe("in a maze with wide corridors", function()
+        it("puts each shape in the middle block of its cell", function()
+            local maze = Maze.generate(6, 4, seededRandom(5), 3)
+            local puzzle = Puzzle.scatterItems(maze, seededRandom(6))
+            for _, item in ipairs(puzzle.items) do
+                assert.are.equal(3, item.gridX % 4)
+                assert.are.equal(3, item.gridY % 4)
+                assert.is_false(maze:isWall(item.gridX, item.gridY))
+            end
+        end)
+    end)
+
     describe("scatter", function()
         it("hides each shape and stands each pedestal in a cell of its own, away from the start", function()
             local maze = Maze.generate(10, 8, seededRandom(5))
