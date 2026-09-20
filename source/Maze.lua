@@ -195,3 +195,21 @@ function Maze:openRuns()
     end
     return runs
 end
+
+-- What is needed to build this maze again, in a form that can be saved
+function Maze:toSave()
+    return {
+        columns = self.columns,
+        rows = self.rows,
+        corridorWidth = self.corridorWidth,
+        blocks = self.blocks,
+        exitGridX = self.exitGridX,
+        exitGridY = self.exitGridY,
+    }
+end
+
+function Maze.fromSave(save)
+    local maze = Maze.new(save.columns, save.rows, save.corridorWidth)
+    maze.blocks, maze.exitGridX, maze.exitGridY = save.blocks, save.exitGridX, save.exitGridY
+    return maze
+end

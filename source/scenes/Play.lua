@@ -9,6 +9,7 @@ import "Game"
 import "Hud"
 import "MazeView"
 import "Music"
+import "SaveGame"
 import "SceneManager"
 import "SeededRandom"
 import "Sounds"
@@ -64,13 +65,27 @@ local function newGame(isAutopilotOn)
     PlayScene.game = game
 end
 
-function PlayScene.enter(mode, sizeIndex)
+-- savedGame, if given, is a game from SaveGame to carry on with instead of starting a new one
+function PlayScene.enter(mode, sizeIndex, savedGame)
     PlayScene.mode = mode
     dockTimer = DockTimer.new()
     headBob = Bob.new()
     -- The daily maze is the same size for everyone
     PlayScene.sizeIndex = mode == PlayScene.MODES.DAILY and Sizes.DEFAULT or sizeIndex
+    if savedGame then
+        PlayScene.game = savedGame
+        return
+    end
+    -- A new maze with a puzzle replaces whatever was saved; the screensaver leaves it be
+    if mode ~= PlayScene.MODES.SCREENSAVER then SaveGame.delete() end
     newGame(mode == PlayScene.MODES.SCREENSAVER)
+end
+
+-- Keeps the run on disk so that it can be continued. Called when the game pauses, sleeps,
+-- quits, or is left for the title screen.
+function PlayScene.save()
+    local game = PlayScene.game
+    if game.puzzle and not game.hasEscaped then SaveGame.write(game, PlayScene.mode, PlayScene.sizeIndex) end
 end
 
 -- After escaping, the next maze is always a fresh random one, even after the daily maze
@@ -79,11 +94,13 @@ function PlayScene.playAgain()
 end
 
 function PlayScene.exit()
+    PlayScene.save()
     Sounds.stopHum()
     Music.stop()
 end
 
 function PlayScene.restart()
+    if PlayScene.mode ~= PlayScene.MODES.SCREENSAVER then SaveGame.delete() end
     newGame(PlayScene.game:isAutopilotOn())
     SystemMenu.setAutopilot(PlayScene.game:isAutopilotOn())
 end
@@ -172,6 +189,7 @@ function PlayScene.update()
         if PlayScene.mode == PlayScene.MODES.SCREENSAVER then
             PlayScene.restart()
         else
+            SaveGame.delete()
             SceneManager.switch(EscapedScene, game.frames, PlayScene.playAgain)
             return
         end

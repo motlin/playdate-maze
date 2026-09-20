@@ -85,3 +85,16 @@ end
 function Landmarks:pictureOn(gridX, gridY, face)
     return self.pictures[faceKey(gridX, gridY, face)]
 end
+
+-- Landmarks again from their saved list, which is `all`
+function Landmarks.fromSave(all)
+    local landmarks = setmetatable({ all = all, marks = {}, pictures = {} }, Landmarks)
+    for _, landmark in ipairs(all) do
+        if landmark.kind == "picture" then
+            landmarks.pictures[faceKey(landmark.gridX, landmark.gridY, landmark.face)] = landmark.motif
+        else
+            landmarks.marks[#landmarks.marks + 1] = landmark
+        end
+    end
+    return landmarks
+end

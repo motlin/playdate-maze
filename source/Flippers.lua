@@ -50,3 +50,8 @@ function Flippers:touch(x, y)
     end
     return wasTouched
 end
+
+-- Flippers again from their saved list, which is `all`
+function Flippers.fromSave(all)
+    return setmetatable({ all = all }, Flippers)
+end

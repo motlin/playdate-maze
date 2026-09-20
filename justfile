@@ -37,6 +37,7 @@ screenshots output="builds/screenshots":
     tools/screenshots/run.sh daily "{{output}}"
     tools/screenshots/run.sh tumble "{{output}}"
     tools/screenshots/run.sh slime "{{output}}"
+    tools/screenshots/run.sh resume "{{output}}"
 
 # 💨 Play through the game in the Simulator and fail on any crash
 smoke: screenshots

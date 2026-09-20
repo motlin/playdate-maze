@@ -80,13 +80,17 @@ if playdate.isSimulator then
         if not condition then error("expectation failed: " .. message, 2) end
     end
 
-    -- Moves the title screen's highlight to a row by pressing up and down, as a player would
-    local TITLE_ROWS <const> = { explore = 1, daily = 2, tumble = 3, slime = 4, screensaver = 5, size = 6 }
+    -- Moves the title screen's highlight to a named row by pressing up and down, as a player would
     local function titleRow(name)
-        for _ = 1, 8 do press(pd.kButtonUp, 0) end
-        for _ = 2, TITLE_ROWS[name] do press(pd.kButtonDown, 0) end
+        local wanted
+        for index, row in ipairs(TitleScene.rows) do
+            if row.name == name then wanted = index end
+        end
+        expect(wanted, "the title screen has a " .. name .. " row")
+        for _ = 1, #TitleScene.rows do press(pd.kButtonUp, 0) end
+        for _ = 2, wanted do press(pd.kButtonDown, 0) end
         frames(2)
-        expect(TitleScene.selection == TITLE_ROWS[name], "the title highlight reaches the " .. name .. " row")
+        expect(TitleScene.selection == wanted, "the title highlight reaches the " .. name .. " row")
     end
 
     -- Stands the player one block away from a shape or pedestal, looking at it
@@ -502,6 +506,42 @@ if playdate.isSimulator then
         shot("escaped")
         press(pd.kButtonA, 3)
         expect(SceneManager.isCurrent(SlimeScene) and SlimeScene.slime ~= slime, "A starts another Slime maze")
+    end
+
+    -- Leave a game part-way through, and carry on with it from the title screen
+    scenarios.resume = function()
+        frames(5)
+        expect(TitleScene.rows[1].name == "explore", "with nothing saved, the title does not offer Continue")
+        titleRow("explore")
+        press(pd.kButtonA, 3)
+        local game = PlayScene.game
+        hold(pd.kButtonUp, 25)
+        local item = game.puzzle.items[2]
+        standFacing(item); frames(2)
+        press(pd.kButtonA, 2)
+        expect(game.puzzle.carried == item, "a shape is in hand")
+        turnCrank(40); frames(2)
+        local x, y, angle, played = game.player.x, game.player.y, game.player.angle, game.frames
+        shot("before-leaving")
+
+        SceneManager.switch(TitleScene); frames(3)
+        shot("title-offers-continue")
+        expect(TitleScene.rows[1].name == "continue" and TitleScene.selection == 1, "the title now offers Continue, first and selected")
+        press(pd.kButtonA, 3)
+        expect(SceneManager.isCurrent(PlayScene) and PlayScene.game ~= game, "Continue loads the game from disk")
+        local resumed = PlayScene.game
+        shot("after-continuing")
+        expect(math.abs(resumed.player.x - x) < 0.001 and math.abs(resumed.player.y - y) < 0.001, "in the same place")
+        expect(math.abs(resumed.player.angle - angle) < 0.001, "looking the same way")
+        expect(resumed.puzzle.carried and resumed.puzzle.carried.shape == item.shape, "holding the same shape")
+        expect(resumed.frames >= played and resumed.frames < played + 10, "with the clock where it was")
+        expect(resumed.visitedCount == game.visitedCount, "and the same map uncovered")
+        expect(PlayScene.mode == PlayScene.MODES.EXPLORE, "as the same kind of game")
+
+        PlayScene.restart(); frames(2)
+        expect(not SaveGame.exists(), "starting a new maze throws the old save away")
+        SceneManager.switch(TitleScene); frames(3)
+        expect(TitleScene.rows[1].name == "continue", "and leaving that one saves it in turn")
     end
 
     -- Let the screensaver wander, then take over

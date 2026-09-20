@@ -237,3 +237,49 @@ function Game:update(input)
     self.hasEscaped = self.maze:isExit(self.player.x, self.player.y)
     if self.hasEscaped then self:emit("escape") end
 end
+
+Game.SAVE_VERSION = 1
+
+-- Everything needed to carry on later, as lists and named entries only, so it can be written as
+-- JSON. The autopilot is not kept: a resumed game is in the player's hands.
+function Game:toSave()
+    assert(self.puzzle, "only a maze with a puzzle is worth saving")
+    local visited = {}
+    for key in pairs(self.visited) do visited[#visited + 1] = key end
+    table.sort(visited)
+    return {
+        version = Game.SAVE_VERSION,
+        maze = self.maze:toSave(),
+        player = { x = self.player.x, y = self.player.y, angle = self.player.angle },
+        puzzle = self.puzzle:toSave(),
+        landmarks = self.landmarks.all,
+        flippers = self.flippers.all,
+        thread = self.thread.points,
+        visited = visited,
+        frames = self.frames,
+        isFlipped = self.isFlipped,
+        isGateUnlocked = self.isGateUnlocked,
+        gateDegrees = self.gateDegrees,
+    }
+end
+
+function Game.fromSave(save)
+    assert(save.version == Game.SAVE_VERSION, "this save is version " .. tostring(save.version) .. ", which this game cannot load")
+    local maze = Maze.fromSave(save.maze)
+    local game = setmetatable(Run.new(maze, Player.new(save.player.x, save.player.y, save.player.angle)), Game)
+    game.autopilot = nil
+    game.puzzle = Puzzle.fromSave(save.puzzle)
+    game.landmarks = Landmarks.fromSave(save.landmarks)
+    game.flippers = Flippers.fromSave(save.flippers)
+    game.thread = Thread.fromSave(save.thread)
+    game.frames = save.frames
+    game.visited, game.visitedCount = {}, #save.visited
+    for _, key in ipairs(save.visited) do game.visited[key] = true end
+    game.isFlipped = save.isFlipped
+    game.isGateUnlocked = save.isGateUnlocked
+    game.gateDegrees = save.gateDegrees
+    game.gateLift = save.gateDegrees / Game.GATE_DEGREES
+    game.distanceWalked, game.blocksSinceStep, game.blocksSinceReelTick = 0, 0, 0
+    game.lastBumpFrame = save.frames - Game.BUMP_FRAMES_APART
+    return game
+end

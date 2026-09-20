@@ -155,3 +155,19 @@ function Puzzle:isSolved()
     end
     return true
 end
+
+-- What is needed to build this puzzle again, in a form that can be saved
+function Puzzle:toSave()
+    local carriedIndex = 0
+    for index, item in ipairs(self.items) do
+        if item == self.carried then carriedIndex = index end
+    end
+    -- 0 means nothing is being carried, as a saved table cannot hold a nil
+    return { items = self.items, pedestals = self.pedestals, carriedIndex = carriedIndex }
+end
+
+function Puzzle.fromSave(save)
+    local puzzle = setmetatable({ items = save.items, pedestals = save.pedestals, carried = nil }, Puzzle)
+    if save.carriedIndex > 0 then puzzle.carried = save.items[save.carriedIndex] end
+    return puzzle
+end

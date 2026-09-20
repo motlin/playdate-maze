@@ -3,20 +3,22 @@
 import "Bob"
 import "Game"
 import "MazeView"
+import "SaveGame"
 import "SceneManager"
 import "Sizes"
 
 local pd <const> = playdate
 local gfx <const> = playdate.graphics
 
-TitleScene = { selection = 1, sizeIndex = Sizes.DEFAULT }
+-- rows is the menu as it stands: it starts with Continue only when there is a game to continue
+TitleScene = { selection = 1, sizeIndex = Sizes.DEFAULT, rows = {} }
 
 local PANEL_LEFT <const> = 100
 local PANEL_TOP <const> = 16
 local PANEL_WIDTH <const> = 200
 local PANEL_HEIGHT <const> = 208
-local TITLE_SCALE <const> = 3
-local ROWS_TOP <const> = PANEL_TOP + 72
+local TITLE_SCALE <const> = 2
+local ROWS_TOP <const> = PANEL_TOP + 50
 local ROW_HEIGHT <const> = 22
 
 local function play(mode)
@@ -26,26 +28,47 @@ end
 local function nextSize() TitleScene.sizeIndex = Sizes.next(TitleScene.sizeIndex) end
 local function previousSize() TitleScene.sizeIndex = Sizes.previous(TitleScene.sizeIndex) end
 
--- Each row has a label and what A does; left and right are optional
-local ROWS <const> = {
-    { label = function() return "Explore" end, confirm = play("explore") },
-    { label = function() return "Daily maze" end, confirm = play("daily") },
+local function continueSavedGame()
+    local game, mode, sizeIndex = SaveGame.read()
+    -- A save this version cannot read has just been thrown away: show the menu without it
+    if not game then
+        TitleScene.enter()
+        return
+    end
+    SceneManager.switch(PlayScene, mode, sizeIndex, game)
+end
+
+-- Each row has a name, a label, and what A does; left and right are optional
+local CONTINUE_ROW <const> = { name = "continue", label = function() return "Continue" end, confirm = continueSavedGame }
+local PLAY_ROWS <const> = {
+    { name = "explore", label = function() return "Explore" end, confirm = play("explore") },
+    { name = "daily", label = function() return "Daily maze" end, confirm = play("daily") },
     {
+        name = "tumble",
         label = function() return "Tumble" end,
         confirm = function() SceneManager.switch(TumbleScene, TitleScene.sizeIndex) end,
     },
     {
+        name = "slime",
         label = function() return "Slime" end,
         confirm = function() SceneManager.switch(SlimeScene, TitleScene.sizeIndex) end,
     },
-    { label = function() return "Screensaver" end, confirm = play("screensaver") },
+    { name = "screensaver", label = function() return "Screensaver" end, confirm = play("screensaver") },
     {
+        name = "size",
         label = function() return "Size: " .. Sizes.ALL[TitleScene.sizeIndex].name end,
         confirm = nextSize,
         left = previousSize,
         right = nextSize,
     },
 }
+
+local function buildRows()
+    local rows = {}
+    if SaveGame.exists() then rows[1] = CONTINUE_ROW end
+    for _, row in ipairs(PLAY_ROWS) do rows[#rows + 1] = row end
+    return rows
+end
 
 local backdrop
 local headBob = Bob.new()
@@ -67,14 +90,17 @@ local function drawTitleImage()
 end
 
 function TitleScene.enter()
+    TitleScene.rows = buildRows()
+    TitleScene.selection = 1
     newBackdrop()
     titleImage = titleImage or drawTitleImage()
 end
 
 local function handleInput()
-    local row = ROWS[TitleScene.selection]
+    local rows = TitleScene.rows
+    local row = rows[TitleScene.selection]
     if pd.buttonJustPressed(pd.kButtonUp) then TitleScene.selection = math.max(1, TitleScene.selection - 1) end
-    if pd.buttonJustPressed(pd.kButtonDown) then TitleScene.selection = math.min(#ROWS, TitleScene.selection + 1) end
+    if pd.buttonJustPressed(pd.kButtonDown) then TitleScene.selection = math.min(#rows, TitleScene.selection + 1) end
     if pd.buttonJustPressed(pd.kButtonLeft) and row.left then row.left() end
     if pd.buttonJustPressed(pd.kButtonRight) and row.right then row.right() end
     if pd.buttonJustPressed(pd.kButtonA) then row.confirm() end
@@ -97,9 +123,9 @@ function TitleScene.update()
     gfx.setLineWidth(1)
 
     local titleWidth = titleImage.width * TITLE_SCALE
-    titleImage:drawScaled(PANEL_LEFT + (PANEL_WIDTH - titleWidth) / 2, PANEL_TOP + 10, TITLE_SCALE)
+    titleImage:drawScaled(PANEL_LEFT + (PANEL_WIDTH - titleWidth) / 2, PANEL_TOP + 6, TITLE_SCALE)
 
-    for index, row in ipairs(ROWS) do
+    for index, row in ipairs(TitleScene.rows) do
         local top = ROWS_TOP + (index - 1) * ROW_HEIGHT
         if index == TitleScene.selection then
             gfx.setColor(gfx.kColorBlack)

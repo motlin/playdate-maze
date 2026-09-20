@@ -72,3 +72,9 @@ function Thread:rewindFrom(x, y, distance)
         points[#points] = nil
     end
 end
+
+-- A thread again from its saved points
+function Thread.fromSave(points)
+    assert(#points >= 1, "a thread has at least the point it started from")
+    return setmetatable({ points = points }, Thread)
+end
