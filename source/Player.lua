@@ -43,13 +43,25 @@ local function slide(from, to, isBlockedAt)
     return from
 end
 
+-- Moves by an offset in the world. Returns whether the way was blocked along x and along y.
+function Player:moveBy(maze, offsetX, offsetY)
+    local targetX, targetY = self.x + offsetX, self.y + offsetY
+    self.x = slide(self.x, targetX, function(x) return isBlocked(maze, x, self.y) end)
+    local isBlockedX = self.x ~= targetX
+    self.y = slide(self.y, targetY, function(y) return isBlocked(maze, self.x, y) end)
+    return isBlockedX, self.y ~= targetY
+end
+
+-- Whether the body would overlap a wall if it were this far from where it is
+function Player:wouldHit(maze, offsetX, offsetY)
+    return isBlocked(maze, self.x + offsetX, self.y + offsetY)
+end
+
+-- Moves relative to the way the player faces
 function Player:move(maze, forward, strafe)
     local radians = math.rad(self.angle)
     local cosine, sine = math.cos(radians), math.sin(radians)
-    local targetX = self.x + cosine * forward - sine * strafe
-    local targetY = self.y + sine * forward + cosine * strafe
-    self.x = slide(self.x, targetX, function(x) return isBlocked(maze, x, self.y) end)
-    self.y = slide(self.y, targetY, function(y) return isBlocked(maze, self.x, y) end)
+    self:moveBy(maze, cosine * forward - sine * strafe, sine * forward + cosine * strafe)
 end
 
 function Player:facing()

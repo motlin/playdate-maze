@@ -162,6 +162,29 @@ describe("Maze", function()
         end)
     end)
 
+    describe("openRuns", function()
+        it("joins the open blocks of each row into runs", function()
+            local maze = Maze.new(3, 2)
+            maze:carve(1, 1, "east")
+            maze:carve(1, 1, "south")
+            assert.are.same({
+                { startGridX = 2, endGridX = 4, gridY = 2 },
+                { startGridX = 6, endGridX = 6, gridY = 2 },
+                { startGridX = 2, endGridX = 2, gridY = 3 },
+                { startGridX = 2, endGridX = 2, gridY = 4 },
+                { startGridX = 4, endGridX = 4, gridY = 4 },
+                { startGridX = 6, endGridX = 6, gridY = 4 },
+            }, maze:openRuns())
+        end)
+
+        it("leaves out the locked exit and takes in the open one", function()
+            local maze = Maze.generate(2, 1, function() return 1 end)
+            assert.are.same({ { startGridX = 2, endGridX = 4, gridY = 2 } }, maze:openRuns())
+            maze:openExit()
+            assert.are.same({ { startGridX = 2, endGridX = 5, gridY = 2 } }, maze:openRuns())
+        end)
+    end)
+
     describe("deadEnds", function()
         it("lists cells with a single passage", function()
             local maze = Maze.new(3, 1)

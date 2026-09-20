@@ -137,3 +137,21 @@ function Maze:deadEnds()
     end
     return deadEnds
 end
+
+-- Every stretch of blocks along a row that can be walked through, as { startGridX, endGridX, gridY },
+-- for drawing the maze from above or from the side with few shapes
+function Maze:openRuns()
+    local runs = {}
+    for gridY = 1, self.gridHeight do
+        local startGridX
+        for gridX = 1, self.gridWidth + 1 do
+            local isOpen = not self:isWall(gridX, gridY)
+            if isOpen and not startGridX then startGridX = gridX end
+            if not isOpen and startGridX then
+                runs[#runs + 1] = { startGridX = startGridX, endGridX = gridX - 1, gridY = gridY }
+                startGridX = nil
+            end
+        end
+    end
+    return runs
+end

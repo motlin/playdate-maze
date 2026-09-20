@@ -5,7 +5,7 @@ import "SceneManager"
 local pd <const> = playdate
 local gfx <const> = playdate.graphics
 
-EscapedScene = { seconds = 0 }
+EscapedScene = { seconds = 0, playAgain = nil }
 
 local FRAMES_PER_SECOND <const> = 30
 local titleImage
@@ -20,14 +20,16 @@ local function drawTitleImage()
     return image
 end
 
-function EscapedScene.enter(frames)
+-- playAgain() starts a new maze of whatever kind was just escaped
+function EscapedScene.enter(frames, playAgain)
     EscapedScene.seconds = frames // FRAMES_PER_SECOND
+    EscapedScene.playAgain = playAgain
     titleImage = titleImage or drawTitleImage()
 end
 
 function EscapedScene.update()
     if pd.buttonJustPressed(pd.kButtonA) then
-        SceneManager.switch(PlayScene, PlayScene.MODES.EXPLORE, PlayScene.sizeIndex)
+        EscapedScene.playAgain()
         return
     end
     if pd.buttonJustPressed(pd.kButtonB) then

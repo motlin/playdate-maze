@@ -64,6 +64,15 @@ if playdate.isSimulator then
         if not condition then error("expectation failed: " .. message, 2) end
     end
 
+    -- Moves the title screen's highlight to a row by pressing up and down, as a player would
+    local TITLE_ROWS <const> = { explore = 1, daily = 2, tumble = 3, screensaver = 4, size = 5 }
+    local function titleRow(name)
+        for _ = 1, #TITLE_ROWS + 5 do press(pd.kButtonUp, 0) end
+        for _ = 2, TITLE_ROWS[name] do press(pd.kButtonDown, 0) end
+        frames(2)
+        expect(TitleScene.selection == TITLE_ROWS[name], "the title highlight reaches the " .. name .. " row")
+    end
+
     -- Stands the player one block away from a shape or pedestal, looking at it
     local ANGLE_TOWARDS <const> = { north = 90, east = 180, south = 270, west = 0 }
     local function standFacing(thing)
@@ -86,9 +95,10 @@ if playdate.isSimulator then
     scenarios.tour = function()
         frames(10); shot("title")
         frames(60); shot("title-backdrop-moved-on")
-        press(pd.kButtonDown); shot("title-daily-selected")
-        press(pd.kButtonDown); shot("title-screensaver-selected")
-        press(pd.kButtonDown)
+        titleRow("daily"); shot("title-daily-selected")
+        titleRow("tumble"); shot("title-tumble-selected")
+        titleRow("screensaver"); shot("title-screensaver-selected")
+        titleRow("size")
         expect(TitleScene.sizeIndex == Sizes.DEFAULT, "the size starts on medium")
         press(pd.kButtonRight); shot("title-size-large")
         expect(Sizes.ALL[TitleScene.sizeIndex].name == "Large", "right picks the next size up")
@@ -96,7 +106,7 @@ if playdate.isSimulator then
         expect(Sizes.ALL[TitleScene.sizeIndex].name == "Medium", "A cycles the size, wrapping round")
         press(pd.kButtonLeft); press(pd.kButtonLeft)
         expect(Sizes.ALL[TitleScene.sizeIndex].name == "Large", "left wraps from small to large")
-        press(pd.kButtonUp); press(pd.kButtonUp); press(pd.kButtonUp)
+        titleRow("explore")
         press(pd.kButtonA, 3)
         expect(PlayScene.game.maze.columns == 12 and PlayScene.game.maze.rows == 9, "Explore starts a maze of the chosen size")
         shot("play-large")
@@ -105,6 +115,7 @@ if playdate.isSimulator then
         SceneManager.switch(TitleScene)
         TitleScene.sizeIndex = Sizes.DEFAULT
         frames(2)
+        titleRow("explore")
         press(pd.kButtonA, 3)
         expect(SceneManager.isCurrent(PlayScene), "A on Explore starts the game")
         shot("play-start")
@@ -189,9 +200,9 @@ if playdate.isSimulator then
     scenarios.daily = function()
         frames(5)
         TitleScene.sizeIndex = 3
-        press(pd.kButtonDown)
+        titleRow("daily")
         press(pd.kButtonA, 3)
-        expect(PlayScene.mode == PlayScene.MODES.DAILY, "the second row starts the daily maze")
+        expect(PlayScene.mode == PlayScene.MODES.DAILY, "the daily row starts the daily maze")
         shot("daily-start")
         expect(PlayScene.game.message == "Daily maze: 19 Sep", "the daily maze says which day it is for")
         expect(PlayScene.game.maze.columns == 8, "the daily maze is medium whatever size is selected")
@@ -218,13 +229,67 @@ if playdate.isSimulator then
         expect(not isSameMaze(PlayScene.game.maze.blocks), "the next day gives a different maze")
     end
 
+    -- The platformer: fall, walk, jump, turn the maze, collect the shapes, and leave
+    scenarios.tumble = function()
+        frames(5)
+        titleRow("tumble")
+        press(pd.kButtonA, 3)
+        expect(SceneManager.isCurrent(TumbleScene), "the Tumble row starts the platformer")
+        local tumble = TumbleScene.tumble
+        shot("start")
+        frames(40); shot("landed")
+        expect(tumble.isGrounded, "the player falls to the floor of the first cell")
+
+        docked = true; frames(2); shot("crank-docked"); docked = false
+
+        local x, y = tumble.player.x, tumble.player.y
+        press(pd.kButtonA, 4); shot("jumping")
+        expect(not tumble.isGrounded, "A jumps")
+        frames(40)
+        expect(tumble.isGrounded, "and comes back down")
+
+        for step = 1, 9 do
+            turnCrank(10); frames(1)
+            if step == 3 or step == 6 then shot("turning-" .. step * 10) end
+        end
+        expect(tumble.angle == 90, "the crank turns the maze degree for degree")
+        frames(60); shot("turned-90-settled")
+        expect(tumble.isGrounded, "the player settles on what is now the floor")
+
+        hold(pd.kButtonRight, 15); shot("walking-right")
+        hold(pd.kButtonLeft, 15); shot("walking-left")
+        expect(tumble.facing == -1, "the player faces the way it walks")
+        expect(tumble.player.x ~= x or tumble.player.y ~= y, "and has moved")
+
+        -- Collect the shapes by dropping the player next to each one
+        for index, item in ipairs(tumble.puzzle.items) do
+            tumble.player.x, tumble.player.y = tumble.maze:blockCenter(item.gridX, item.gridY)
+            tumble.velocityX, tumble.velocityY = 0, 0
+            frames(2); shot("collected-" .. item.shape)
+            expect(item.state == Puzzle.STATES.PLACED, "touching the " .. item.shape .. " collects it")
+            local isLast = index == #tumble.puzzle.items
+            expect(tumble.maze:hasPassage(tumble.maze.columns, tumble.maze.rows, "east") == isLast, "the exit opens with the last shape")
+        end
+
+        -- Stand in the last cell with the exit to the right of the screen and walk out
+        turnCrank(-tumble.angle); frames(2)
+        tumble.player.x, tumble.player.y = tumble.maze:cellCenter(tumble.maze.columns, tumble.maze.rows)
+        tumble.velocityX, tumble.velocityY = 0, 0
+        frames(30); shot("beside-the-open-exit")
+        hold(pd.kButtonRight, 40)
+        expect(SceneManager.isCurrent(EscapedScene), "walking out of the exit escapes")
+        shot("escaped")
+        press(pd.kButtonA, 3)
+        expect(SceneManager.isCurrent(TumbleScene) and TumbleScene.tumble ~= tumble, "A starts another Tumble maze")
+        shot("another-maze")
+    end
+
     -- Let the screensaver wander, then take over
     scenarios.screensaver = function()
         frames(5)
         -- A small maze, so the wall-follower reaches the exit well inside run.sh's time limit
         TitleScene.sizeIndex = 1
-        press(pd.kButtonDown)
-        press(pd.kButtonDown)
+        titleRow("screensaver")
         press(pd.kButtonA, 3)
         expect(PlayScene.game:isAutopilotOn(), "the screensaver starts on autopilot")
         expect(PlayScene.game:isRevealed(PlayScene.game.maze.columns, PlayScene.game.maze.rows), "the screensaver shows the whole map")

@@ -2,10 +2,10 @@ std = "lua54"
 include_files = { "source/**/*.lua", "spec/**/*.lua" }
 globals = {
     "playdate",
-    "Maze", "Raycaster", "Player", "Autopilot", "Puzzle", "Game", "Run", "Shades", "Sizes", "SeededRandom",
-    "ShapeArt", "MazeView", "Minimap", "Hud",
+    "Maze", "Raycaster", "Player", "Autopilot", "Puzzle", "Game", "Run", "Tumble", "Shades", "Sizes", "SeededRandom",
+    "ShapeArt", "MazeView", "TumbleView", "Minimap", "Hud",
     "SceneManager", "SystemMenu",
-    "TitleScene", "PlayScene", "EscapedScene",
+    "TitleScene", "PlayScene", "TumbleScene", "EscapedScene",
 }
 read_globals = { "import", "kTextAlignment" }
 max_line_length = false

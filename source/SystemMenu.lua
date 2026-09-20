@@ -20,6 +20,8 @@ function SystemMenu.refresh(scene)
         menu:addMenuItem("New maze", PlayScene.restart)
     end
 
+    if scene == TumbleScene then menu:addMenuItem("New maze", TumbleScene.restart) end
+
     if scene ~= TitleScene then
         menu:addMenuItem("Title screen", function() SceneManager.switch(TitleScene) end)
     end

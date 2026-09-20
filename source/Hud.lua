@@ -2,6 +2,7 @@
 -- and one line at the bottom that is either the game's latest message or a hint about A and B.
 
 import "Minimap"
+import "Puzzle"
 import "ShapeArt"
 
 local gfx <const> = playdate.graphics
@@ -27,15 +28,15 @@ end
 
 -- Which shapes are home: a hollow icon for each one still missing, a black one for each in place
 function Hud.drawProgress(puzzle)
-    local width = #puzzle.pedestals * PROGRESS_ICON_SPACING + 6
+    local width = #puzzle.items * PROGRESS_ICON_SPACING + 6
     drawPanel(EDGE, EDGE, width, PROGRESS_ICON_SPACING + 4)
-    for index, pedestal in ipairs(puzzle.pedestals) do
+    for index, item in ipairs(puzzle.items) do
         local x = EDGE + 3 + (index - 0.5) * PROGRESS_ICON_SPACING
         local y = EDGE + 2 + PROGRESS_ICON_SPACING / 2
-        if pedestal.isFilled then
-            ShapeArt.drawBlack(pedestal.shape, x, y, PROGRESS_ICON_SIZE)
+        if item.state == Puzzle.STATES.PLACED then
+            ShapeArt.drawBlack(item.shape, x, y, PROGRESS_ICON_SIZE)
         else
-            ShapeArt.drawHollow(pedestal.shape, x, y, PROGRESS_ICON_SIZE)
+            ShapeArt.drawHollow(item.shape, x, y, PROGRESS_ICON_SIZE)
         end
     end
 end

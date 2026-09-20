@@ -55,6 +55,11 @@ function PlayScene.enter(mode, sizeIndex)
     newGame(mode == PlayScene.MODES.SCREENSAVER)
 end
 
+-- After escaping, the next maze is always a fresh random one, even after the daily maze
+function PlayScene.playAgain()
+    SceneManager.switch(PlayScene, PlayScene.MODES.EXPLORE, PlayScene.sizeIndex)
+end
+
 function PlayScene.restart()
     newGame(PlayScene.game:isAutopilotOn())
     SystemMenu.setAutopilot(PlayScene.game:isAutopilotOn())
@@ -107,7 +112,7 @@ function PlayScene.update()
         if PlayScene.mode == PlayScene.MODES.SCREENSAVER then
             PlayScene.restart()
         else
-            SceneManager.switch(EscapedScene, game.frames)
+            SceneManager.switch(EscapedScene, game.frames, PlayScene.playAgain)
             return
         end
     end

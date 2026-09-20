@@ -131,6 +131,58 @@ describe("Puzzle", function()
         end)
     end)
 
+    describe("collect", function()
+        it("takes a shape out of the maze for good", function()
+            local puzzle = corridorPuzzle()
+            local item = puzzle.items[1]
+            puzzle:collect(item)
+            assert.are.equal(Puzzle.STATES.PLACED, item.state)
+            assert.is_nil(puzzle:itemInReach(3.5, 1.5))
+        end)
+
+        it("solves a puzzle that has no pedestals once every shape is collected", function()
+            local puzzle = Puzzle.new({
+                { shape = "circle", gridX = 4, gridY = 2 },
+                { shape = "square", gridX = 6, gridY = 2 },
+            }, {})
+            assert.is_false(puzzle:isSolved())
+            puzzle:collect(puzzle.items[1])
+            assert.is_false(puzzle:isSolved())
+            puzzle:collect(puzzle.items[2])
+            assert.is_true(puzzle:isSolved())
+        end)
+
+        it("refuses to collect a shape twice", function()
+            local puzzle = corridorPuzzle()
+            puzzle:collect(puzzle.items[1])
+            assert.has_error(function() puzzle:collect(puzzle.items[1]) end)
+        end)
+    end)
+
+    describe("itemTouching", function()
+        it("finds the shape the player is touching", function()
+            local puzzle = corridorPuzzle()
+            assert.are.equal("circle", puzzle:itemTouching(3.3, 1.6).shape)
+        end)
+
+        it("finds nothing from merely nearby", function()
+            assert.is_nil(corridorPuzzle():itemTouching(2.8, 1.5))
+        end)
+    end)
+
+    describe("scatterItems", function()
+        it("hides the three shapes and stands no pedestals", function()
+            local maze = Maze.generate(6, 4, seededRandom(5))
+            local puzzle = Puzzle.scatterItems(maze, seededRandom(6))
+            assert.are.equal(3, #puzzle.items)
+            assert.are.equal(0, #puzzle.pedestals)
+            for _, item in ipairs(puzzle.items) do
+                assert.is_true(item.gridX % 2 == 0 and item.gridY % 2 == 0)
+                assert.is_false(item.gridX == 2 and item.gridY == 2)
+            end
+        end)
+    end)
+
     describe("scatter", function()
         it("hides each shape and stands each pedestal in a cell of its own, away from the start", function()
             local maze = Maze.generate(10, 8, seededRandom(5))
