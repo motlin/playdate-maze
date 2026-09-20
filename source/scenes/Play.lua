@@ -9,6 +9,7 @@ import "MazeView"
 import "SceneManager"
 import "SeededRandom"
 import "Sizes"
+import "TapOrReel"
 
 local pd <const> = playdate
 
@@ -28,6 +29,8 @@ local BUTTONS <const> = {
 local MONTHS <const> = { "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" }
 
 local input = {}
+-- B is tapped to put a shape down, or held while cranking backwards to reel in the thread
+local bButton = TapOrReel.new()
 
 local function newGame(isAutopilotOn)
     local size = Sizes.ALL[PlayScene.sizeIndex]
@@ -44,7 +47,11 @@ local function newGame(isAutopilotOn)
         random = random,
     })
     game:setAutopilot(isAutopilotOn)
-    if today then game:say("Daily maze: " .. today.day .. " " .. MONTHS[today.month]) end
+    if today then
+        game:say("Daily maze: " .. today.day .. " " .. MONTHS[today.month])
+    elseif game.puzzle then
+        game:say("Lost? Hold Ⓑ and crank backwards")
+    end
     PlayScene.game = game
 end
 
@@ -81,8 +88,14 @@ end
 
 local function readInput()
     local sideways = axis(pd.kButtonLeft, pd.kButtonRight)
+    local crankChange = pd.getCrankChange()
+    local reel, isBTapped = bButton:update(
+        pd.buttonJustPressed(pd.kButtonB), pd.buttonIsPressed(pd.kButtonB), pd.buttonJustReleased(pd.kButtonB), crankChange
+    )
     input.forward = axis(pd.kButtonDown, pd.kButtonUp)
-    input.turn = pd.getCrankChange()
+    -- While B is held the crank belongs to the thread, not the view
+    input.turn = bButton:isHeld() and 0 or crankChange
+    input.reel = reel
     input.strafe = 0
     -- With the crank out, it does the looking and the D-pad sidesteps. Docked, the D-pad turns.
     if pd.isCrankDocked() then
@@ -91,7 +104,7 @@ local function readInput()
         input.strafe = sideways
     end
     input.pickUp = pd.buttonJustPressed(pd.kButtonA)
-    input.drop = pd.buttonJustPressed(pd.kButtonB)
+    input.drop = isBTapped
     return input
 end
 
@@ -100,9 +113,10 @@ function PlayScene.update()
     if game:isAutopilotOn() and isAnyButtonJustPressed() then
         game:setAutopilot(false)
         SystemMenu.setAutopilot(false)
-        -- The press that takes over does nothing else
+        -- The press that takes over does nothing else, not even when it is let go
         readInput()
-        input.pickUp, input.drop = false, false
+        bButton:ignoreThisPress()
+        input.pickUp, input.drop, input.reel = false, false, 0
         game:update(input)
     else
         game:update(readInput())

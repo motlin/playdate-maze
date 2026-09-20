@@ -9,6 +9,7 @@ if playdate.isSimulator then
     local SCENARIO <const> = HARNESS_SCENARIO
     local realUpdate = playdate.update
     local justPressed = {}
+    local justReleased = {}
     local held = {}
     local crank = 0
     local docked = false
@@ -21,6 +22,7 @@ if playdate.isSimulator then
 
     pd.buttonJustPressed = function(button) return justPressed[button] == true end
     pd.buttonIsPressed = function(button) return held[button] == true end
+    pd.buttonJustReleased = function(button) return justReleased[button] == true end
     -- Like the device: travel since the previous call, taking the short way round
     local reportedCrank = 0
     pd.getCrankChange = function()
@@ -43,16 +45,25 @@ if playdate.isSimulator then
     end
 
     local function frames(count) for _ = 1, (count or 1) do coroutine.yield() end end
+    -- The frame after a button comes up, the game is told it was just released
+    local function release(button)
+        justPressed[button], held[button] = nil, nil
+        justReleased[button] = true
+        coroutine.yield()
+        justReleased[button] = nil
+    end
     local function press(button, settle)
         justPressed[button], held[button] = true, true
         coroutine.yield()
-        justPressed[button], held[button] = nil, nil
+        release(button)
         frames(settle or 2)
     end
     local function hold(button, count)
-        held[button] = true
-        frames(count)
-        held[button] = nil
+        justPressed[button], held[button] = true, true
+        coroutine.yield()
+        justPressed[button] = nil
+        frames(count - 1)
+        release(button)
     end
     local function shot(name)
         shotCount = shotCount + 1
@@ -134,6 +145,25 @@ if playdate.isSimulator then
         expect(PlayScene.game.visitedCount == 2, "walking into the next cell reveals it on the map")
         hold(pd.kButtonDown, 20)
         expect(math.abs(player.x - startX) < 0.001 and math.abs(player.y - startY) < 0.001, "holding down walks back")
+
+        -- Ariadne's thread: walk away, then hold B and crank backwards to be reeled back
+        hold(pd.kButtonUp, 25)
+        local walkedX, walkedY = player.x, player.y
+        expect(PlayScene.game.thread:length() > 1.5, "walking lays the thread")
+        shot("play-thread-laid")
+        justPressed[pd.kButtonB], held[pd.kButtonB] = true, true
+        coroutine.yield()
+        justPressed[pd.kButtonB] = nil
+        local angleBeforeReeling = player.angle
+        for _ = 1, 12 do turnCrank(-30); frames(1) end
+        shot("play-thread-reeled-in")
+        release(pd.kButtonB); frames(2)
+        local reeled = math.sqrt((player.x - walkedX) ^ 2 + (player.y - walkedY) ^ 2)
+        expect(reeled > 1.5, "holding B and cranking backwards reels the player back along the thread")
+        expect(player.angle == angleBeforeReeling, "and the crank does not turn the view meanwhile")
+        expect(PlayScene.game.message ~= "Nothing to put down", "letting go of B after reeling is not a drop")
+        hold(pd.kButtonUp, 1)
+        player.x, player.y = startX, startY
 
         hold(pd.kButtonRight, 5); shot("play-strafed-right")
         expect(player.angle == startAngle, "with the crank out, left and right sidestep")

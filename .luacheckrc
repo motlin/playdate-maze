@@ -2,7 +2,7 @@ std = "lua54"
 include_files = { "source/**/*.lua", "spec/**/*.lua" }
 globals = {
     "playdate",
-    "Maze", "Raycaster", "Player", "Autopilot", "Puzzle", "Game", "Run", "Tumble", "Shades", "Sizes", "SeededRandom",
+    "Maze", "Raycaster", "Player", "Autopilot", "Puzzle", "Game", "Run", "Tumble", "Thread", "TapOrReel", "Shades", "Sizes", "SeededRandom",
     "ShapeArt", "MazeView", "TumbleView", "Minimap", "Hud",
     "SceneManager", "SystemMenu",
     "TitleScene", "PlayScene", "TumbleScene", "EscapedScene",

@@ -7,12 +7,17 @@ import "Player"
 import "Puzzle"
 import "Autopilot"
 import "Run"
+import "Thread"
 
 Game = setmetatable({}, { __index = Run })
 Game.__index = Game
 
 Game.WALK_SPEED = 0.08
 Game.MESSAGE_FRAMES = Run.MESSAGE_FRAMES
+-- Reeling in the thread: how far the crank turns for each block, and how fast the view may turn
+-- to follow the thread round a corner, in degrees a frame
+Game.REEL_DEGREES_PER_BLOCK = 180
+Game.REEL_TURN_SPEED = 12
 
 local WALK_SPEED <const> = Game.WALK_SPEED
 local ANGLES <const> = { east = 0, south = 90, west = 180, north = 270 }
@@ -24,6 +29,7 @@ function Game.new(options)
     local startAngle = maze:hasPassage(1, 1, "east") and ANGLES.east or ANGLES.south
     local game = setmetatable(Run.new(maze, Player.new(startX, startY, startAngle)), Game)
     game.autopilot = nil
+    game.thread = Thread.new(startX, startY)
     if options.hasPuzzle then
         game.puzzle = Puzzle.scatter(maze, options.random)
     else
@@ -81,16 +87,36 @@ local function drop(self)
     end
 end
 
--- input = { turn (degrees), forward and strafe (-1 to 1), pickUp, drop }, all optional
+-- Pulls the player back along the thread, looking the way they were walking when it was laid,
+-- like a film run backwards
+local function reelIn(self, degrees)
+    local player = self.player
+    local x, y, heading = self.thread:rewindFrom(player.x, player.y, degrees / Game.REEL_DEGREES_PER_BLOCK)
+    if not x then
+        self:say("The thread begins here")
+        return
+    end
+    player.x, player.y = x, y
+    local turn = (heading - player.angle + 180) % 360 - 180
+    player:turn(math.max(-Game.REEL_TURN_SPEED, math.min(Game.REEL_TURN_SPEED, turn)))
+end
+
+-- input = { turn (degrees), forward and strafe (-1 to 1), reel (degrees of thread to wind in),
+-- pickUp, drop }, all optional
 function Game:update(input)
     if self.hasEscaped then return end
     self:tick()
 
+    local reel = input.reel or 0
     if self.autopilot then
         self.autopilot:update()
+        self.thread:record(self.player.x, self.player.y)
+    elseif reel > 0 then
+        reelIn(self, reel)
     else
         self.player:turn(input.turn or 0)
         self.player:move(self.maze, (input.forward or 0) * WALK_SPEED, (input.strafe or 0) * WALK_SPEED)
+        self.thread:record(self.player.x, self.player.y)
     end
     self:visit()
     if self.puzzle and input.pickUp then pickUp(self) end

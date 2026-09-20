@@ -118,6 +118,69 @@ describe("Game", function()
         end)
     end)
 
+    describe("the thread", function()
+        local function distanceFromStart(game)
+            return math.sqrt((game.player.x - 1.5) ^ 2 + (game.player.y - 1.5) ^ 2)
+        end
+
+        it("is laid as the player walks", function()
+            local game = newGame()
+            assert.are.equal(0, game.thread:length())
+            for _ = 1, 25 do game:update({ forward = 1 }) end
+            assert.is_near(2, game.thread:length(), 0.3)
+        end)
+
+        it("is laid by the autopilot too", function()
+            local game = newGame()
+            game:setAutopilot(true)
+            for _ = 1, 100 do game:update({}) end
+            assert.is_true(game.thread:length() > 1)
+        end)
+
+        it("reels the player back along it, a block for every half turn of the crank", function()
+            local game = newGame()
+            for _ = 1, 25 do game:update({ forward = 1 }) end
+            local before = distanceFromStart(game)
+            game:update({ reel = 90 })
+            game:update({ reel = 90 })
+            assert.is_near(before - 1, distanceFromStart(game), 0.05)
+        end)
+
+        it("ignores the D-pad and the crank's turning while reeling", function()
+            local game = newGame()
+            for _ = 1, 25 do game:update({ forward = 1 }) end
+            local before = distanceFromStart(game)
+            game:update({ reel = 90, forward = 1, turn = 45 })
+            assert.is_true(distanceFromStart(game) < before)
+        end)
+
+        it("keeps the player looking the way they originally walked, like a film run backwards", function()
+            local game = newGame()
+            local angle = game.player.angle
+            for _ = 1, 25 do game:update({ forward = 1 }) end
+            for _ = 1, 10 do game:update({ reel = 20 }) end
+            assert.is_near(angle, game.player.angle, 0.001)
+        end)
+
+        it("turns the view gradually when the thread goes round a corner", function()
+            local game = newGame()
+            for _ = 1, 25 do game:update({ forward = 1 }) end
+            game.player.angle = (game.player.angle + 90) % 360
+            local angle = game.player.angle
+            game:update({ reel = 10 })
+            local turned = math.abs((game.player.angle - angle + 180) % 360 - 180)
+            assert.is_true(turned > 0 and turned <= Game.REEL_TURN_SPEED + 0.0001)
+        end)
+
+        it("stops at the start and says so", function()
+            local game = newGame()
+            for _ = 1, 25 do game:update({ forward = 1 }) end
+            for _ = 1, 10 do game:update({ reel = 180 }) end
+            assert.is_near(0, distanceFromStart(game), 0.0001)
+            assert.are.equal("The thread begins here", game.message)
+        end)
+    end)
+
     describe("the puzzle", function()
         it("picks up and says what was picked up", function()
             local game = newGame()

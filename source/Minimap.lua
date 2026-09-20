@@ -104,6 +104,21 @@ local function drawPuzzle(game, left, top)
     end
 end
 
+-- Every few points is plenty at this size, and keeps the number of lines down
+local THREAD_STRIDE <const> = 4
+
+local function drawThread(thread, left, top)
+    local points = thread.points
+    gfx.setColor(gfx.kColorBlack)
+    local fromX, fromY = toMap(left, top, points[1].x, points[1].y)
+    for index = 1 + THREAD_STRIDE, #points + THREAD_STRIDE - 1, THREAD_STRIDE do
+        local point = points[math.min(index, #points)]
+        local toX, toY = toMap(left, top, point.x, point.y)
+        gfx.drawLine(fromX, fromY, toX, toY)
+        fromX, fromY = toX, toY
+    end
+end
+
 function Minimap.draw(game, left, top)
     local maze = game.maze
     cellSize = Sizes.mapCellSize(maze.columns)
@@ -114,6 +129,7 @@ function Minimap.draw(game, left, top)
     end
     wallsImage:draw(left, top)
 
+    if game.thread then drawThread(game.thread, left, top) end
     if game.puzzle then drawPuzzle(game, left, top) end
 
     local player = game.player
