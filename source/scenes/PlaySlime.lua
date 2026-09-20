@@ -8,6 +8,7 @@ import "SceneManager"
 import "Sizes"
 import "Slime"
 import "SlimeView"
+import "Sounds"
 
 local pd <const> = playdate
 
@@ -46,6 +47,7 @@ end
 function SlimeScene.update()
     local slime = SlimeScene.slime
     slime:update(readInput())
+    Sounds.play(slime.events)
     if slime.hasEscaped then
         SceneManager.switch(EscapedScene, slime.frames, playAgain, slime.throws .. " throws")
         return

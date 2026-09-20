@@ -132,6 +132,7 @@ function Slime:arc()
 end
 
 local function stick(self, surface)
+    if self.state == FLYING then self:emit("splat") end
     local isSameSurfaceAgain = surface == self.surface and self.flightFrames < SHORTEST_REAL_FLIGHT
     self.velocityX, self.velocityY = 0, 0
     self.hasAirThrow = true
@@ -146,6 +147,7 @@ end
 
 local function launch(self)
     if self.state == FLYING then self.hasAirThrow = false end
+    self:emit("throw")
     self.velocityX, self.velocityY = throwVelocity(self.aimAngle)
     self.state = FLYING
     self.flightFrames = 0
@@ -184,6 +186,7 @@ local function move(self, input)
     elseif self.state == CLINGING then
         self.stickFrames = self.stickFrames - 1
         if self.stickFrames == 0 then
+            self:emit("slip")
             if self.surface == "ceiling" then fall(self) else self.state = SLIDING end
         end
     else
@@ -199,12 +202,14 @@ end
 
 local function collect(self, item)
     self.puzzle:collect(item)
+    self:emit("collect")
     local remaining = 0
     for _, other in ipairs(self.puzzle.items) do
         if other.state ~= Puzzle.STATES.PLACED then remaining = remaining + 1 end
     end
     if remaining == 0 then
         self.maze:openExit()
+        self:emit("exitOpen")
         self:say("Got the " .. item.shape .. "! The exit is open")
     else
         self:say("Got the " .. item.shape .. "! " .. remaining .. " to go")
@@ -214,7 +219,10 @@ end
 -- input = { aim (the crank's position in degrees), isAimHeld (A is down), cancel (B was pressed),
 -- move (-1 to 1, crawling) }; all but aim are optional
 function Slime:update(input)
-    if self.hasEscaped then return end
+    if self.hasEscaped then
+        self:clearEvents()
+        return
+    end
     self:tick()
     self.aimAngle = input.aim
     aim(self, input)
@@ -224,4 +232,5 @@ function Slime:update(input)
     local item = self.puzzle:itemTouching(self.player.x, self.player.y)
     if item then collect(self, item) end
     self.hasEscaped = self.maze:isExit(self.player.x, self.player.y)
+    if self.hasEscaped then self:emit("escape") end
 end

@@ -16,6 +16,9 @@ if playdate.isSimulator then
     local pendingShot = nil
     local shotCount = 0
 
+    -- Silent, but still playing every note, so that the sound code runs here as it will for a player
+    Sounds.setVolume(0)
+
     -- Deterministic runs: the same mazes every time, so two runs of the same code produce
     -- byte-identical screenshots.
     math.randomseed(1995)

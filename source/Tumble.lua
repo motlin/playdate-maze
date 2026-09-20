@@ -59,12 +59,14 @@ end
 
 local function collect(self, item)
     self.puzzle:collect(item)
+    self:emit("collect")
     local remaining = 0
     for _, other in ipairs(self.puzzle.items) do
         if other.state ~= Puzzle.STATES.PLACED then remaining = remaining + 1 end
     end
     if remaining == 0 then
         self.maze:openExit()
+        self:emit("exitOpen")
         self:say("Got the " .. item.shape .. "! The exit is open")
     else
         self:say("Got the " .. item.shape .. "! " .. remaining .. " to go")
@@ -73,7 +75,10 @@ end
 
 -- input = { turn (degrees), move (-1 to 1, along the screen), jump }, all optional
 function Tumble:update(input)
-    if self.hasEscaped then return end
+    if self.hasEscaped then
+        self:clearEvents()
+        return
+    end
     self:tick()
 
     self.angle = (self.angle + (input.turn or 0)) % 360
@@ -98,6 +103,7 @@ function Tumble:update(input)
     velocityX, velocityY = velocityX + rightX * (wanted - along), velocityY + rightY * (wanted - along)
 
     if input.jump and self.isGrounded then
+        self:emit("jump")
         local falling = velocityX * downX + velocityY * downY
         velocityX, velocityY = velocityX - downX * (falling + JUMP_SPEED), velocityY - downY * (falling + JUMP_SPEED)
     end
@@ -110,10 +116,13 @@ function Tumble:update(input)
     local isBlockedX, isBlockedY = self.player:moveBy(self.maze, velocityX, velocityY)
     self.velocityX = isBlockedX and 0 or velocityX
     self.velocityY = isBlockedY and 0 or velocityY
+    local wasGrounded = self.isGrounded
     self.isGrounded = self.player:wouldHit(self.maze, downX * GROUND_PROBE, downY * GROUND_PROBE)
+    if self.isGrounded and not wasGrounded then self:emit("land") end
 
     self:visit()
     local item = self.puzzle:itemTouching(self.player.x, self.player.y)
     if item then collect(self, item) end
     self.hasEscaped = self.maze:isExit(self.player.x, self.player.y)
+    if self.hasEscaped then self:emit("escape") end
 end

@@ -24,6 +24,18 @@ local function standOn(game, thing)
     game.player.x, game.player.y = game.maze:blockCenter(thing.gridX, thing.gridY)
 end
 
+-- Places whichever shapes are not yet home
+local function solveRest(game)
+    for index, item in ipairs(game.puzzle.items) do
+        if item.state ~= Puzzle.STATES.PLACED then
+            standOn(game, item)
+            game:update({ pickUp = true })
+            standOn(game, game.puzzle.pedestals[index])
+            game:update({ drop = true })
+        end
+    end
+end
+
 local function solve(game)
     for index, item in ipairs(game.puzzle.items) do
         standOn(game, item)
@@ -164,6 +176,94 @@ describe("Game", function()
             game:setAutopilot(true)
             for _ = 1, 600 do game:update({}) end
             assert.is_true(game.visitedCount > 3)
+        end)
+    end)
+
+    describe("events, for the sounds", function()
+        local function count(game, frames, input, event)
+            local total = 0
+            for _ = 1, frames do
+                game:update(input)
+                for _, name in ipairs(game.events) do
+                    if name == event then total = total + 1 end
+                end
+            end
+            return total
+        end
+
+        local function has(game, event)
+            for _, name in ipairs(game.events) do
+                if name == event then return true end
+            end
+            return false
+        end
+
+        it("reports a footstep for every stride walked", function()
+            local game = newGame()
+            local strides = math.floor(25 * Game.WALK_SPEED / Game.STEP_BLOCKS)
+            assert.are.equal(strides, count(game, 25, { forward = 1 }, "step"))
+        end)
+
+        it("reports no footsteps while standing still", function()
+            assert.are.equal(0, count(newGame(), 100, {}, "step"))
+        end)
+
+        it("reports a bump when a wall stops the player, but not on every frame they keep pushing", function()
+            local game = newGame()
+            game.player.angle = (game.player.angle + 180) % 360
+            local bumps = count(game, 60, { forward = 1 }, "bump")
+            assert.is_true(bumps >= 2 and bumps <= 60 / Game.BUMP_FRAMES_APART)
+        end)
+
+        it("reports picking up, putting down, and being refused", function()
+            local game = newGame()
+            game:update({ pickUp = true })
+            assert.is_true(has(game, "blocked"))
+            standOn(game, game.puzzle.items[1])
+            game:update({ pickUp = true })
+            assert.is_true(has(game, "pickUp"))
+            game.player.x, game.player.y = 1.5, 1.5
+            game:update({ drop = true })
+            assert.is_true(has(game, "drop"))
+        end)
+
+        it("reports a shape going home, and the gate unlocking with the last one", function()
+            local game = newGame()
+            standOn(game, game.puzzle.items[1])
+            game:update({ pickUp = true })
+            standOn(game, game.puzzle.pedestals[1])
+            game:update({ drop = true })
+            assert.is_true(has(game, "place"))
+            assert.is_false(has(game, "unlock"))
+            solveRest(game)
+            assert.is_true(has(game, "unlock"))
+        end)
+
+        it("reports the gate's ratchet as it is cranked, then its opening, then the escape", function()
+            local game = newGame()
+            solve(game)
+            game.player.x, game.player.y = game.maze:cellCenter(6, 5)
+            game.player.angle = 0
+            local notches = count(game, 23, { crank = 30, turn = 30 }, "gateNotch")
+            assert.are.equal(23 * 30 // Game.GATE_NOTCH_DEGREES, notches)
+            game:update({ crank = 30, turn = 30 })
+            assert.is_true(has(game, "gateOpen"))
+            local escapes = count(game, 40, { forward = 1 }, "escape")
+            assert.are.equal(1, escapes)
+        end)
+
+        it("reports the world turning over", function()
+            local game = newGame()
+            local flipper = game.flippers.all[1]
+            game.player.x, game.player.y = flipper.gridX - 0.5, flipper.gridY - 0.5
+            game:update({})
+            assert.is_true(has(game, "flip"))
+        end)
+
+        it("reports the thread ticking in as it is reeled", function()
+            local game = newGame()
+            for _ = 1, 25 do game:update({ forward = 1 }) end
+            assert.is_true(count(game, 10, { reel = 45 }, "reel") >= 3)
         end)
     end)
 

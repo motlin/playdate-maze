@@ -10,6 +10,7 @@ import "Hud"
 import "MazeView"
 import "SceneManager"
 import "SeededRandom"
+import "Sounds"
 import "Sizes"
 import "TapOrReel"
 
@@ -155,6 +156,7 @@ function PlayScene.update()
         game:update(readInput())
     end
 
+    Sounds.play(game.events)
     if game.hasEscaped then
         if PlayScene.mode == PlayScene.MODES.SCREENSAVER then
             PlayScene.restart()

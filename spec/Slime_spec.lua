@@ -394,6 +394,43 @@ describe("Slime", function()
         end)
     end)
 
+    describe("events, for the sounds", function()
+        local function eventsOver(slime, frames, input)
+            local seen = {}
+            for _ = 1, frames do
+                slime:update(input or { aim = slime.aimAngle })
+                for _, name in ipairs(slime.events) do seen[name] = (seen[name] or 0) + 1 end
+            end
+            return seen
+        end
+
+        it("reports a throw and the splat at the end of it", function()
+            local slime = room()
+            restAt(slime, 6)
+            slime:update({ aim = 30, isAimHeld = true })
+            local seen = eventsOver(slime, 200)
+            assert.are.equal(1, seen.throw)
+            assert.are.equal(1, seen.splat)
+        end)
+
+        it("reports losing its grip on a wall", function()
+            local slime = cell()
+            restAt(slime, 2.5, 4)
+            slime:update({ aim = 60, isAimHeld = true })
+            local seen = eventsOver(slime, Slime.STICK_FRAMES + 30)
+            assert.are.equal(1, seen.slip)
+        end)
+
+        it("reports collecting a shape, the exit opening, and the escape", function()
+            local slime = room({ { shape = "circle", gridX = 8, gridY = 12 } })
+            restAt(slime, 6)
+            local seen = eventsOver(slime, 300, { aim = 0, move = 1 })
+            assert.are.equal(1, seen.collect)
+            assert.are.equal(1, seen.exitOpen)
+            assert.are.equal(1, seen.escape)
+        end)
+    end)
+
     describe("hint", function()
         it("teaches the throw until the first one has been made", function()
             local slime = room()

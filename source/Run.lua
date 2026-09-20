@@ -18,6 +18,8 @@ function Run.new(maze, player)
         messageFrames = 0,
         visited = {},
         visitedCount = 0,
+        -- What happened this frame, by name, for whoever makes the sounds
+        events = {},
     }, Run)
     run:visit()
     return run
@@ -47,8 +49,17 @@ function Run:say(message)
     self.messageFrames = Run.MESSAGE_FRAMES
 end
 
--- Call once at the start of every frame
+function Run:emit(event)
+    self.events[#self.events + 1] = event
+end
+
+function Run:clearEvents()
+    for index = #self.events, 1, -1 do self.events[index] = nil end
+end
+
+-- Call once at the start of every frame that is played
 function Run:tick()
+    self:clearEvents()
     self.frames = self.frames + 1
     if self.messageFrames > 0 then
         self.messageFrames = self.messageFrames - 1

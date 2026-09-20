@@ -26,6 +26,12 @@ Game.GATE_DEGREES = 720
 Game.GATE_SAG_DEGREES = 3
 Game.GATE_REACH = 1.5
 Game.GATE_FACING = 45
+-- For the sounds: a footstep every so many blocks, a bump no more often than every so many
+-- frames, a ratchet click every so many degrees of gate, and a tick every so many blocks reeled
+Game.STEP_BLOCKS = 0.7
+Game.BUMP_FRAMES_APART = 12
+Game.GATE_NOTCH_DEGREES = 60
+Game.REEL_TICK_BLOCKS = 0.5
 
 local WALK_SPEED <const> = Game.WALK_SPEED
 local ANGLES <const> = { east = 0, south = 90, west = 180, north = 270 }
@@ -43,6 +49,9 @@ function Game.new(options)
     -- It is counted in degrees of cranking, because adding up fractions never quite reaches 1.
     -- How far the player walked in the latest frame, for the view's head bob
     game.distanceWalked = 0
+    game.blocksSinceStep = 0
+    game.blocksSinceReelTick = 0
+    game.lastBumpFrame = -Game.BUMP_FRAMES_APART
     game.isGateUnlocked = false
     game.gateDegrees = 0
     game.gateLift = 0
@@ -103,10 +112,13 @@ end
 local function pickUp(self)
     local item = self.puzzle:pickUp(self.player.x, self.player.y)
     if item then
+        self:emit("pickUp")
         self:say("Picked up the " .. item.shape)
     elseif self.puzzle.carried then
+        self:emit("blocked")
         self:say("Your hands are full")
     else
+        self:emit("blocked")
         self:say("Nothing here to pick up")
     end
 end
@@ -115,17 +127,22 @@ local function drop(self)
     local item = self.puzzle.carried
     local result = self.puzzle:drop(self.player.x, self.player.y)
     if result == Puzzle.RESULTS.DROPPED then
+        self:emit("drop")
         self:say("Dropped the " .. item.shape)
     elseif result == Puzzle.RESULTS.BLOCKED then
+        self:emit("blocked")
         self:say("No room to put it down here")
     elseif result == Puzzle.RESULTS.PLACED then
+        self:emit("place")
         if self.puzzle:isSolved() then
             self.isGateUnlocked = true
+            self:emit("unlock")
             self:say("The gate is unlocked! Crank it open")
         else
             self:say("The " .. item.shape .. " fits!")
         end
     else
+        self:emit("blocked")
         self:say("Nothing to put down")
     end
 end
@@ -139,6 +156,11 @@ local function reelIn(self, degrees)
         self:say("The thread begins here")
         return
     end
+    self.blocksSinceReelTick = self.blocksSinceReelTick + degrees / Game.REEL_DEGREES_PER_BLOCK
+    if self.blocksSinceReelTick >= Game.REEL_TICK_BLOCKS then
+        self.blocksSinceReelTick = self.blocksSinceReelTick - Game.REEL_TICK_BLOCKS
+        self:emit("reel")
+    end
     player.x, player.y = x, y
     local turn = (heading - player.angle + 180) % 360 - 180
     player:turn(math.max(-Game.REEL_TURN_SPEED, math.min(Game.REEL_TURN_SPEED, turn)))
@@ -149,13 +171,18 @@ local function workGate(self, crank)
     if self.gateLift == 1 then return false end
     local isCranking = crank > 0 and self:canCrankGate()
     if isCranking then
+        local notchesBefore = self.gateDegrees // Game.GATE_NOTCH_DEGREES
         self.gateDegrees = math.min(Game.GATE_DEGREES, self.gateDegrees + crank)
+        if self.gateDegrees < Game.GATE_DEGREES and self.gateDegrees // Game.GATE_NOTCH_DEGREES > notchesBefore then
+            self:emit("gateNotch")
+        end
     else
         self.gateDegrees = math.max(0, self.gateDegrees - Game.GATE_SAG_DEGREES)
     end
     self.gateLift = self.gateDegrees / Game.GATE_DEGREES
     if self.gateLift == 1 then
         self.maze:openExit()
+        self:emit("gateOpen")
         self:say("The exit is open!")
     end
     return isCranking
@@ -165,7 +192,10 @@ end
 -- itself moved), forward and strafe (-1 to 1), reel (degrees of thread to wind in), pickUp, drop },
 -- all optional
 function Game:update(input)
-    if self.hasEscaped then return end
+    if self.hasEscaped then
+        self:clearEvents()
+        return
+    end
     self:tick()
 
     local reel = input.reel or 0
@@ -185,13 +215,25 @@ function Game:update(input)
     end
     local walkedX, walkedY = self.player.x - fromX, self.player.y - fromY
     self.distanceWalked = math.sqrt(walkedX * walkedX + walkedY * walkedY)
+    self.blocksSinceStep = self.blocksSinceStep + self.distanceWalked
+    if self.blocksSinceStep >= Game.STEP_BLOCKS then
+        self.blocksSinceStep = self.blocksSinceStep - Game.STEP_BLOCKS
+        self:emit("step")
+    end
+    local isPushing = not self.autopilot and reel == 0 and ((input.forward or 0) ~= 0 or (input.strafe or 0) ~= 0)
+    if isPushing and self.distanceWalked == 0 and self.frames - self.lastBumpFrame >= Game.BUMP_FRAMES_APART then
+        self.lastBumpFrame = self.frames
+        self:emit("bump")
+    end
     self:visit()
     if self.flippers:touch(self.player.x, self.player.y) then
         self.isFlipped = not self.isFlipped
+        self:emit("flip")
         self:say("The world turns over!")
     end
     if self.puzzle and input.pickUp then pickUp(self) end
     if self.puzzle and input.drop then drop(self) end
 
     self.hasEscaped = self.maze:isExit(self.player.x, self.player.y)
+    if self.hasEscaped then self:emit("escape") end
 end

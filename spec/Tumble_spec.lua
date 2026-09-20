@@ -227,6 +227,48 @@ describe("Tumble", function()
         end)
     end)
 
+    describe("events, for the sounds", function()
+        local function has(tumble, event)
+            for _, name in ipairs(tumble.events) do
+                if name == event then return true end
+            end
+            return false
+        end
+
+        it("reports a jump, and the landing after it", function()
+            local tumble = room()
+            standOnFloor(tumble, 3.5)
+            tumble:update({ jump = true })
+            assert.is_true(has(tumble, "jump"))
+            local landings = 0
+            for _ = 1, 60 do
+                tumble:update({})
+                if has(tumble, "land") then landings = landings + 1 end
+            end
+            assert.are.equal(1, landings)
+        end)
+
+        it("does not report a jump that did not happen", function()
+            local tumble = room()
+            tumble.player.x, tumble.player.y = 3.5, 3.5
+            tumble:update({ jump = true })
+            assert.is_false(has(tumble, "jump"))
+        end)
+
+        it("reports collecting a shape, the exit opening, and the escape", function()
+            local tumble = room({ { shape = "circle", gridX = 4, gridY = 6 } })
+            standOnFloor(tumble, 2.5)
+            local seen = {}
+            for _ = 1, 200 do
+                tumble:update({ move = 1 })
+                for _, name in ipairs(tumble.events) do seen[name] = (seen[name] or 0) + 1 end
+            end
+            assert.are.equal(1, seen.collect)
+            assert.are.equal(1, seen.exitOpen)
+            assert.are.equal(1, seen.escape)
+        end)
+    end)
+
     describe("hint", function()
         it("has nothing to suggest", function()
             assert.is_nil(room():hint())

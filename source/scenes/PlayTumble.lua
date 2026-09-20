@@ -6,6 +6,7 @@ import "CoreLibs/ui"
 import "Hud"
 import "SceneManager"
 import "Sizes"
+import "Sounds"
 import "Tumble"
 import "TumbleView"
 
@@ -45,6 +46,7 @@ end
 function TumbleScene.update()
     local tumble = TumbleScene.tumble
     tumble:update(readInput())
+    Sounds.play(tumble.events)
     if tumble.hasEscaped then
         SceneManager.switch(EscapedScene, tumble.frames, playAgain)
         return
