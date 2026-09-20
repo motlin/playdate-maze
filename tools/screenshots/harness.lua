@@ -88,6 +88,8 @@ if playdate.isSimulator then
         press(pd.kButtonA, 3)
         expect(SceneManager.isCurrent(PlayScene), "A on Explore starts the game")
         shot("play-start")
+        expect(PlayScene.game.visitedCount == 1, "the map starts with only the first cell revealed")
+        expect(not PlayScene.game:isRevealed(PlayScene.COLUMNS, PlayScene.ROWS), "the far corner starts hidden in fog")
 
         local player = PlayScene.game.player
         local startAngle = player.angle
@@ -98,6 +100,7 @@ if playdate.isSimulator then
         local startX, startY = player.x, player.y
         hold(pd.kButtonUp, 20); shot("play-walked-forward")
         expect(player.x ~= startX or player.y ~= startY, "holding up walks forward")
+        expect(PlayScene.game.visitedCount == 2, "walking into the next cell reveals it on the map")
         hold(pd.kButtonDown, 20)
         expect(math.abs(player.x - startX) < 0.001 and math.abs(player.y - startY) < 0.001, "holding down walks back")
 
@@ -168,6 +171,7 @@ if playdate.isSimulator then
         press(pd.kButtonDown)
         press(pd.kButtonA, 3)
         expect(PlayScene.game:isAutopilotOn(), "the screensaver starts on autopilot")
+        expect(PlayScene.game:isRevealed(PlayScene.COLUMNS, PlayScene.ROWS), "the screensaver shows the whole map")
         for index = 1, 8 do
             frames(40); shot("wandering-" .. index)
         end

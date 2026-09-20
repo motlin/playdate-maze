@@ -30,13 +30,35 @@ function Game.new(options)
         hasEscaped = false,
         message = nil,
         messageFrames = 0,
+        visited = {},
+        visitedCount = 0,
     }, Game)
+    game:visit()
     if options.hasPuzzle then
         game.puzzle = Puzzle.scatter(maze, options.random)
     else
         maze:openExit()
     end
     return game
+end
+
+-- Remembers the cell the player is in, for the map's fog of war
+function Game:visit()
+    local column, row = self.maze:nearestCell(self.player.x, self.player.y)
+    local key = (row - 1) * self.maze.columns + column
+    if not self.visited[key] then
+        self.visited[key] = true
+        self.visitedCount = self.visitedCount + 1
+    end
+end
+
+function Game:hasVisited(column, row)
+    return self.visited[(row - 1) * self.maze.columns + column] == true
+end
+
+-- Whether the map shows this cell. Without a puzzle there is nothing to find, so nothing is hidden.
+function Game:isRevealed(column, row)
+    return self.puzzle == nil or self:hasVisited(column, row)
 end
 
 function Game:say(message)
@@ -97,6 +119,7 @@ function Game:update(input)
         self.player:turn(input.turn or 0)
         self.player:move(self.maze, (input.forward or 0) * WALK_SPEED, (input.strafe or 0) * WALK_SPEED)
     end
+    self:visit()
     if self.puzzle and input.pickUp then pickUp(self) end
     if self.puzzle and input.drop then drop(self) end
 

@@ -76,6 +76,48 @@ describe("Game", function()
         end)
     end)
 
+    describe("exploring", function()
+        it("has visited only the first cell to begin with", function()
+            local game = newGame()
+            assert.is_true(game:hasVisited(1, 1))
+            assert.is_false(game:hasVisited(2, 1))
+            assert.is_false(game:hasVisited(1, 2))
+            assert.are.equal(1, game.visitedCount)
+        end)
+
+        it("marks a cell as visited when the player walks into it", function()
+            local game = newGame()
+            local offset = Maze.OFFSETS[game.player:facing()]
+            for _ = 1, 30 do game:update({ forward = 1 }) end
+            assert.is_true(game:hasVisited(1 + offset[1], 1 + offset[2]))
+            assert.are.equal(2, game.visitedCount)
+        end)
+
+        it("counts a cell once however long the player stays in it", function()
+            local game = newGame()
+            for _ = 1, 50 do game:update({ turn = 5 }) end
+            assert.are.equal(1, game.visitedCount)
+        end)
+
+        it("reveals on the map only what has been visited", function()
+            local game = newGame()
+            assert.is_true(game:isRevealed(1, 1))
+            assert.is_false(game:isRevealed(6, 5))
+        end)
+
+        it("reveals the whole map when there is no puzzle, as the screensaver has nothing to hide", function()
+            local game = newGame({ hasPuzzle = false })
+            assert.is_true(game:isRevealed(6, 5))
+        end)
+
+        it("marks the cells the autopilot walks through", function()
+            local game = newGame()
+            game:setAutopilot(true)
+            for _ = 1, 600 do game:update({}) end
+            assert.is_true(game.visitedCount > 3)
+        end)
+    end)
+
     describe("the puzzle", function()
         it("picks up and says what was picked up", function()
             local game = newGame()
