@@ -115,6 +115,20 @@ if playdate.isSimulator then
     scenarios.tour = function()
         frames(10); shot("title")
         frames(60); shot("title-backdrop-moved-on")
+        -- The crank scrolls the menu: an eighth of a turn a row, stopping at the ends
+        titleRow("explore")
+        local firstRow = TitleScene.selection
+        turnCrank(30); frames(1)
+        expect(TitleScene.selection == firstRow, "a small turn of the crank does not move the highlight")
+        turnCrank(20); frames(1); shot("title-cranked-down-one")
+        expect(TitleScene.selection == firstRow + 1, "an eighth of a turn moves it down a row")
+        for _ = 1, 3 do turnCrank(30); frames(1) end
+        expect(TitleScene.selection == firstRow + 3, "and it keeps going as the crank keeps turning")
+        for _ = 1, 20 do turnCrank(30); frames(1) end
+        expect(TitleScene.selection == #TitleScene.rows, "stopping at the last row")
+        for _ = 1, 30 do turnCrank(-30); frames(1) end
+        expect(TitleScene.selection == 1, "and cranking backwards goes up, stopping at the first")
+
         titleRow("daily"); shot("title-daily-selected")
         titleRow("tumble"); shot("title-tumble-selected")
         titleRow("slime"); shot("title-slime-selected")

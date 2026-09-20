@@ -1,6 +1,7 @@
 -- The title screen: a menu over a maze that wanders by itself in the background.
 
 import "Bob"
+import "CrankSteps"
 import "Game"
 import "MazeView"
 import "SaveGame"
@@ -20,6 +21,8 @@ local PANEL_HEIGHT <const> = 208
 local TITLE_SCALE <const> = 2
 local ROWS_TOP <const> = PANEL_TOP + 50
 local ROW_HEIGHT <const> = 22
+-- An eighth of a turn of the crank moves the highlight one row
+local CRANK_DEGREES_PER_ROW <const> = 45
 
 local function play(mode)
     return function() SceneManager.switch(PlayScene, mode, TitleScene.sizeIndex) end
@@ -72,6 +75,7 @@ end
 
 local backdrop
 local headBob = Bob.new()
+local crankSteps = CrankSteps.new(CRANK_DEGREES_PER_ROW)
 local titleImage
 
 local function newBackdrop()
@@ -92,6 +96,7 @@ end
 function TitleScene.enter()
     TitleScene.rows = buildRows()
     TitleScene.selection = 1
+    crankSteps:reset()
     newBackdrop()
     titleImage = titleImage or drawTitleImage()
 end
@@ -99,8 +104,12 @@ end
 local function handleInput()
     local rows = TitleScene.rows
     local row = rows[TitleScene.selection]
-    if pd.buttonJustPressed(pd.kButtonUp) then TitleScene.selection = math.max(1, TitleScene.selection - 1) end
-    if pd.buttonJustPressed(pd.kButtonDown) then TitleScene.selection = math.min(#rows, TitleScene.selection + 1) end
+    local move = crankSteps:turn(pd.getCrankChange())
+    if pd.buttonJustPressed(pd.kButtonUp) then move = -1 end
+    if pd.buttonJustPressed(pd.kButtonDown) then move = 1 end
+    -- A press of the D-pad is a fresh start for the crank
+    if move ~= 0 and (pd.buttonJustPressed(pd.kButtonUp) or pd.buttonJustPressed(pd.kButtonDown)) then crankSteps:reset() end
+    TitleScene.selection = math.max(1, math.min(#rows, TitleScene.selection + move))
     if pd.buttonJustPressed(pd.kButtonLeft) and row.left then row.left() end
     if pd.buttonJustPressed(pd.kButtonRight) and row.right then row.right() end
     if pd.buttonJustPressed(pd.kButtonA) then row.confirm() end
