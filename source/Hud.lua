@@ -25,7 +25,8 @@ local function drawPanel(left, top, width, height)
     gfx.drawRoundRect(left, top, width, height, 4)
 end
 
-local function drawProgress(puzzle)
+-- Which shapes are home: a hollow icon for each one still missing, a black one for each in place
+function Hud.drawProgress(puzzle)
     local width = #puzzle.pedestals * PROGRESS_ICON_SPACING + 6
     drawPanel(EDGE, EDGE, width, PROGRESS_ICON_SPACING + 4)
     for index, pedestal in ipairs(puzzle.pedestals) do
@@ -58,23 +59,13 @@ function Hud.drawLine(text)
     gfx.setImageDrawMode(gfx.kDrawModeCopy)
 end
 
-local function hint(game)
-    if game:isAutopilotOn() then return "Autopilot: press any button to take over" end
-    local puzzle, player = game.puzzle, game.player
-    if not puzzle then return nil end
-    local item = puzzle:itemInReach(player.x, player.y)
-    if item then return "Ⓐ Pick up the " .. item.shape end
-    if puzzle:pedestalInReach(player.x, player.y) then return "Ⓑ Place the " .. puzzle.carried.shape end
-    return nil
-end
-
 function Hud.draw(game)
     local mapWidth = Minimap.size(game.maze)
     Minimap.draw(game, SCREEN_WIDTH - EDGE - mapWidth, EDGE)
     if game.puzzle then
-        drawProgress(game.puzzle)
+        Hud.drawProgress(game.puzzle)
         if game.puzzle.carried then drawCarried(game.puzzle.carried) end
     end
-    local line = game.message or hint(game)
+    local line = game.message or game:hint()
     if line then Hud.drawLine(line) end
 end
