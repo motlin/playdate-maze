@@ -1,12 +1,9 @@
-"""Rebuild docs/walkthrough.html: python3 tools/walkthrough/build.py (requires Pygments).
+"""Build docs/walkthrough.html with python3 tools/walkthrough/build.py (Pygments required).
 
-Source excerpts are selected by exact boundary text, never copied by hand. Every
-excerpted file is also included in full, exceeding the requested 50 percent rule.
-The output embeds its styles, scripts, syntax highlighting, and screenshots.
+Every panel contains its complete Lua file. Step anchors resolve against unique
+source text so edits cannot silently shift the annotations onto unrelated lines.
 """
 from pathlib import Path
-import base64
-import hashlib
 import html
 import re
 from pygments import highlight
@@ -15,248 +12,141 @@ from pygments.formatters import HtmlFormatter
 
 ROOT = Path(__file__).resolve().parents[2]
 HERE = Path(__file__).resolve().parent
-files = {}
 formatter = HtmlFormatter(nowrap=True)
+sections = []
+LABS = {
+    'Maze.lua': ('maze', 'Watch the stack work', 'Step through carving and backtracking. Cyan marks the current stack; gold marks its last cell.'),
+    'Player.lua': ('movement', 'Direction and angle', 'Change the heading. Compare the forward vector with its horizontal and vertical components.'),
+    'Raycaster.lua': ('rays', 'Ray traversal', 'Turn the camera and select a ray. Compare its grid crossings, forward depth, and diagonal travel distance.'),
+    'MazeView.lua': ('projection', 'Wall height and distance', 'Double the depth to halve the projected height.'),
+    'Shades.lua': ('shading', 'Dither thresholds', 'Change the shade level. Compare the enlarged matrix with the resulting black-and-white pattern.'),
+}
 
 
-def identity(name):
-    return name.replace('/', '-').replace('.', '-')
+
+def step(anchor, count, title, text):
+    return anchor, count, title, text
 
 
-def source(name):
-    if name not in files:
-        files[name] = (ROOT / 'source' / name).read_text()
-    return files[name]
-
-
-def listing(name, start=None, stop=None):
-    content = source(name)
-    begin = content.index(start) if start else 0
-    end = content.index(stop, begin + len(start)) if stop else len(content)
-    text = content[begin:end].rstrip('\n') + '\n'
-    first = content[:begin].count('\n') + 1
-    last = first + text.count('\n') - 1
-    colored = highlight(text, LuaLexer(), formatter)
+def section(name, title, steps):
+    source = (ROOT / 'source' / name).read_text()
+    rows = source.splitlines()
+    annotations = []
+    section_index = len(sections) + 1
+    for index, (anchor, count, heading, text) in enumerate(steps):
+        assert source.count(anchor) == 1, (name, anchor)
+        first = source[:source.index(anchor)].count('\n') + 1
+        last = first + count - 1
+        assert last <= len(rows), (name, last)
+        annotations.append(f'''<article class="step" id="step-{section_index}-{index}" data-first="{first}" data-last="{last}">
+<p class="location">source/{name}<br><a href="#step-{section_index}-{index}">Lines {first}–{last}</a></p>
+<h3>{heading}</h3>{text}</article>''')
+    colored = highlight(source, LuaLexer(), formatter)
     colored = re.sub(r'<span class="(?:n|p|w)">([^<]*)</span>', r'\1', colored)
-    rows = colored.rstrip('\n').split('\n')
-    numbered = '\n'.join(f'<span class="line" data-line="{i}">{row}</span>' for i, row in enumerate(rows, first))
-    label = f'Whole file · {last} lines' if start is None else f'Lines {first}–{last}'
-    link = '' if start is None else f'<a href="#file-{identity(name)}">Read whole file ↗</a>'
-    return f'<figure class="code"><figcaption><span>source/{name} <small>Lua · {label}</small></span>{link}</figcaption><pre tabindex="0" aria-label="Lua source from {name}"><code class="language-lua">{numbered}</code></pre></figure>'
+    lines = '\n'.join(f'<span class="line" data-line="{index}">{row}</span>' for index, row in enumerate(colored.rstrip('\n').split('\n'), 1))
+    folder = 'source/' + (name.rsplit('/', 1)[0] + '/' if '/' in name else '')
+    filename = name.rsplit('/', 1)[-1]
+    initial_first = source[:source.index(steps[0][0])].count('\n') + 1
+    initial_last = initial_first + steps[0][1] - 1
+    panel = f'''<div class="code-panel"><header class="file-header"><div class="file-path"><span>{folder}</span><strong>{filename}</strong></div><div class="file-meta"><span>Lua · Complete file · {len(rows)} lines</span><output class="range">Lines {initial_first}–{initial_last}</output></div></header>
+<pre tabindex="0" aria-label="Complete source/{name}"><code class="language-lua">{lines}</code></pre>
+<footer class="code-footer"><span class="focus-label">Highlighted lines follow the explanation</span><button class="follow" type="button" aria-pressed="true">Follow scroll: on</button></footer></div>'''
+    markup = f'''<section class="section" id="section-{section_index}" data-title="{html.escape(title)}" data-file="source/{name}"><div class="explanations"><h2><span>{section_index:02d}</span> {title}</h2>{''.join(annotations)}</div>{panel}</section>'''
+    if name in LABS:
+        identifier, lab_title, explanation = LABS[name]
+        lab = (HERE / (identifier + '.html')).read_text()
+        markup += f'<section class="lab-section" id="lab-{identifier}"><div class="lab-intro"><p class="location">source/{name} · Interactive model</p><h2>{lab_title}</h2><p>{explanation}</p></div>{lab}</section>'
+    sections.append((name, title, markup))
 
 
-def excerpt(name, start, stop=None):
-    return listing(name, start, stop)
+section('main.lua', 'Game structure', [
+    step('function playdate.update()', 3, 'One update per frame', '<p>The scene reads controls, updates the game, and draws it. The maze is a 2D grid shared by the first-person, Tumble, and Slime modes.</p><p><code>SceneManager.update()</code> dispatches each frame to the current scene.</p>'),
+    step('pd.display.setRefreshRate(30)', 4, 'Start at the title screen', '<p>Request 30 frames per second, then enter <code>TitleScene</code>. Each frame has about 33 milliseconds available.</p><p><code>onSwitch</code> refreshes the system menu when the scene changes.</p>'),
+])
+section('SceneManager.lua', 'Scene changes', [
+    step('function SceneManager.switch(scene, ...)', 6, 'Exit, replace, enter', '<p>Let the old scene clean up, replace <code>currentScene</code>, then initialize the new scene. The <code>...</code> passes its arguments through.</p>'),
+    step('function SceneManager.update()', 3, 'Call the current scene', '<p>Only one scene receives updates. In first-person play, this calls <code>PlayScene.update()</code> in <code>source/scenes/Play.lua</code>.</p>'),
+])
+section('scenes/Play.lua', 'Controls and drawing', [
+    step('local function readInput()', 22, 'Translate controls into input', '<p>Up/down sets <code>forward</code>. Crank movement sets <code>turn</code>. With the crank out, left/right sets <code>strafe</code>; docked, it turns the view.</p><p>The scene reads hardware. The game receives ordinary numbers and booleans.</p>'),
+    step('function PlayScene.update()', 15, 'Advance the rules', '<p><code>game:update(readInput())</code> changes the game state. The other branch lets a button take control from autopilot without also picking up or dropping an item.</p>'),
+    step('    Sounds.play(game.events)', 18, 'Draw the result', '<p>Play sounds, check for escape, then draw the world and HUD. Drawing the HUD last keeps it above the 3D image.</p><p><code>distanceWalked</code> drives head bob from actual movement.</p>'),
+])
+section('Game.lua', 'First-person rules', [
+    step('function Game.new(options)', 9, 'Create the world', '<p>Generate a maze, place the player in its first cell, and combine them in a <code>Run</code>. Face an open passage at the start.</p><p>A Lua table holds state; <code>setmetatable</code> lets it find the module’s methods.</p>'),
+    step('    if self.autopilot then\n        self.autopilot:update()', 13, 'Choose one movement mode', '<p>Autopilot, thread reeling, and manual movement are exclusive branches. Manual movement scales input by <code>WALK_SPEED</code>: 0.08 blocks per frame.</p><p><code>player:move(...)</code> passes the player as <code>self</code>. The colon marks a method call.</p>'),
+    step('    local walkedX, walkedY', 12, 'Measure what moved', '<p>Subtract the old position and use √(dx² + dy²) for distance. Footsteps follow actual travel; a blocked push can produce a bump.</p>'),
+    step('    self:visit()\n    if self.flippers', 11, 'Check interactions', '<p>Record the visited cell, handle flippers and shapes, then check whether the player entered the exit block.</p><p>The drawing code reads this state after the update.</p>'),
+])
+section('Maze.lua', 'Grid and maze generation', [
+    step('function Maze:blockAt(x, y)', 3, 'World positions to grid indices', '<p>World x grows right; y grows down. Positions can be fractional. Grid indices start at 1.</p><p><code>(1.5, 1.5)</code> becomes block <code>(2, 2)</code>: floor each coordinate, then add one.</p>'),
+    step('    local pitch = corridorWidth + 1', 10, 'Rooms separated by walls', '<p><code>pitch</code> is corridor width plus one wall block. The remainder operator <code>%</code> places wall rows and columns.</p><p>With width 1, a 3 × 2-cell maze occupies 7 × 5 blocks. Slime uses wider corridors.</p>'),
+    step('    local visited = { [1] = true }', 13, 'Find unvisited neighbors', '<p>Start at cell (1, 1). The last entry of <code>stack</code> is the current cell; <code>#stack</code> is the list length.</p><p>The loop gathers neighboring cells that are inside the maze and have not been visited.</p>'),
+    step('        if #unvisited == 0 then', 10, 'Carve or backtrack', '<p>Choose a random unvisited neighbor, carve the wall, and push that cell. If none remain, remove the stack’s last entry by assigning <code>nil</code>.</p><p>This is depth-first search. Connecting only new cells prevents loops: N cells get N − 1 internal passages.</p>'),
+])
+section('Player.lua', 'Movement and collision', [
+    step('local function isBlocked', 6, 'Check the body’s four corners', '<p>The player is a square, 0.4 blocks wide. Test all four corners at the proposed position. Walls and closed doors block movement.</p>'),
+    step('local function slide', 13, 'Stop at the wall edge', '<p>Try the target first. If blocked, calculate a position just short of the wall. <code>GAP</code> avoids rounding a touching body into it.</p><p>This checks destinations, not the entire path. The game must use small movement steps.</p>'),
+    step('function Player:moveBy', 7, 'Slide along walls', '<p>Move x first, then y using the updated x. A wall can block one axis while allowing movement along the other.</p>'),
+    step('function Player:move(maze', 5, 'Rotate forward and sideways motion', '<p><code>cos(angle)</code> gives the horizontal part of forward; <code>sin(angle)</code> gives its vertical part. Lua takes radians, so convert degrees first.</p><p>Forward = (cos θ, sin θ). Right = (−sin θ, cos θ). At 90°, forward is down and right is left on the map.</p>'),
+])
+section('ExitDistance.lua', 'Shortest corridor distances', [
+    step('    local queue, head', 6, 'Start a queue at the exit', '<p>The exit cell has distance zero. Process the oldest queued cell first by advancing <code>head</code>.</p><p>This is breadth-first search: visit distance 0, then 1, then 2, and so on.</p>'),
+    step('            if isInside and not distances.byCell', 5, 'Visit each reachable neighbor once', '<p>Follow passages, assign the neighbor’s distance, and enqueue it. Every passage costs one step, so the first assigned distance is shortest.</p><p>Zero is true in Lua. The exit’s zero distance therefore still marks it as visited.</p>'),
+    step('function ExitDistance:proximity', 4, 'Convert distance to proximity', '<p>Proximity is 1 at the exit’s cell and 0 at the farthest cell. Music follows this corridor distance rather than straight-line distance through walls.</p>'),
+])
+section('Autopilot.lua', 'Wall-following navigation', [
+    step('local PREFERENCE', 9, 'Try left, ahead, right, back', '<p>The numbers are quarter-turn offsets from the current heading. Choose the first open passage.</p><p>This works for the game’s tree-shaped maze, but does not choose the shortest route.</p>'),
+    step('    local turn = (ANGLES', 5, 'Turn by the shorter angle', '<p>Wrap the turn into [−180°, 180°). From 350° to 10°, the result is +20°.</p><p>Limit turning to six degrees per frame before moving toward the next cell center.</p>'),
+])
+section('Thread.lua', 'Recording and reversing a path', [
+    step('function Thread:record', 15, 'Add points; remove retraced points', '<p>Record a point every 0.25 blocks. Moving closer to the previous point removes the last point.</p><p>The list is capped at 800 points; older trail positions are eventually forgotten.</p>'),
+    step('        if stretch > distance then', 7, 'Stop partway along a segment', '<p>If the segment is longer than the reel distance, move a fraction of the way toward its end.</p><p><code>share = distance / stretch</code>. Reeling 0.1 blocks along 0.25 blocks moves 40% of the segment.</p>'),
+])
+section('Tumble.lua', 'Rotating gravity', [
+    step('    self.angle = (self.angle', 9, 'Convert screen directions to maze directions', '<p>The view rotates clockwise by <code>angle</code>. Gravity must still point down the screen.</p><p>In maze coordinates, down = (sin θ, cos θ). At 90°, gravity points east. Right = (cos θ, −sin θ).</p>'),
+    step('    local along = velocityX', 10, 'Change the sideways velocity', '<p>The dot product measures velocity along the screen’s right direction: multiply corresponding components and add.</p><p>Walking changes that component toward the desired speed. With no input, friction reduces it.</p>'),
+    step('    if input.jump and self.isGrounded then', 10, 'Jump, then cap speed', '<p>Replace the downward velocity with an upward jump speed. Limit total speed to 0.35 blocks per frame before collision checks.</p>'),
+])
+section('SideView.lua', '2D drawing coordinates', [
+    step('function SideView.toScreen', 4, 'Translate, rotate, scale', '<p>Subtract the player position, rotate the offset, multiply by pixels per block, then add screen center (200, 120).</p><p>The player stays centered while the maze rotates around them.</p>'),
+    step('local function fillWorldRect', 7, 'A rotated rectangle becomes a polygon', '<p>Transform all four corners with the same function. Draw the resulting polygon to show a corridor.</p>'),
+])
+section('Slime.lua', 'Throwing and trajectory prediction', [
+    step('local function throwVelocity', 4, 'Convert the crank angle to velocity', '<p>Slime uses 0° up, unlike the first-person camera’s 0° east. Its launch direction is (sin θ, −cos θ).</p><p>Multiply by <code>THROW_SPEED</code> to get blocks per frame.</p>'),
+    step('local function fly', 17, 'Simulate one frame', '<p>Add gravity, cap speed, then call the shared collision method. A downward hit is a floor; other blocked directions identify walls or the ceiling.</p>'),
+    step('function Slime:arc()', 13, 'Preview with the same simulation', '<p>A spare player, <code>scout</code>, starts at the current position and repeats <code>fly</code> until collision or 240 frames.</p><p>The real flight uses this same function. The preview therefore includes the same gravity, speed cap, and collisions.</p>'),
+])
+section('Puzzle.lua', 'Shape states', [
+    step('function Puzzle:pickUp', 7, 'Ground → carried', '<p>Find an item within reach, change its state, and remember it in <code>self.carried</code>. Only one item can be carried.</p>'),
+    step('    local pedestal = self:pedestalInReach', 8, 'Carried → placed', '<p>A matching empty pedestal within reach receives the item. Mark both as filled or placed, then empty the player’s hands.</p>'),
+    step('function Puzzle:isSolved()', 6, 'Check all shapes', '<p>Any shape not placed means the puzzle is unfinished. In first-person play, solving it unlocks the gate; the player must still crank it open.</p>'),
+])
+section('Raycaster.lua', 'Rays and perspective', [
+    step('    local width, columnWidth = screen.width', 5, 'Build the camera directions', '<p>Forward = (cos θ, sin θ). The camera plane is perpendicular to forward and has half-width <code>tan(FOV / 2)</code>.</p><p>For 70° FOV, tan(35°) ≈ 0.700. Tangent is opposite ÷ adjacent: plane half-width divided by one unit forward.</p>'),
+    step('    local function castAt', 4, 'Aim one ray through the screen', '<p><code>cameraX</code> maps screen x to −1 at the left edge, 0 at center, and +1 at the right edge.</p><p>Add that share of the camera plane to forward. The resulting ray direction is deliberately not normalized.</p>'),
+    step('    local gridX, gridY = floor(x)', 3, 'Calculate grid-crossing intervals', '<p>Write a ray as position + t × direction. Crossing one block in x takes <code>abs(1 / directionX)</code> units of t.</p><p>A zero component gets infinity: an exactly horizontal ray never crosses a horizontal grid line.</p>'),
+    step('    if directionX < 0 then', 10, 'Find the first boundaries', '<p>Choose −1 or +1 for each grid direction. Multiply the distance to the first boundary by that axis’s interval.</p><p>From x = 1.5 pointing east with directionX = 1, the first x boundary is reached at t = 0.5.</p>'),
+    step('        if sideDistanceX < sideDistanceY then', 9, 'Visit the next crossed block', '<p>Advance whichever boundary comes first, then schedule its next crossing. This is DDA: digital differential analysis.</p><p>It jumps from boundary to boundary instead of taking tiny steps through empty space.</p>'),
+    step('        local block = blocks[gridY][gridX]', 5, 'Stop at the first nonempty block', '<p>Return the hit and t. Subtract the delta because the next boundary time was already advanced.</p><p>EXIT also stops a ray, although the player can enter it. The renderer draws it as white light.</p>'),
+    step('        return cast(maze, x, y, forwardX', 1, 'Why t is the correct depth', '<p>Forward has length 1; the plane is perpendicular to it. Thus dot(forward, ray) = 1, and a hit at t × ray has forward depth t.</p><p>A flat wall ahead keeps the same depth across the screen. Using diagonal travel distance would shrink its edges: the fisheye error.</p>'),
+    step('        if column <= columnCount then depths[column]', 7, 'Group samples by wall face', '<p>Save each column’s depth. Consecutive hits on the same block face form a run, drawn later as one trapezoid.</p><p>At 400 pixels with 4-pixel columns, there are 100 depth samples plus edge and refinement rays.</p>'),
+    step('            for _ = 1, screen.refinements do', 13, 'Refine the edge by bisection', '<p>Cast halfway between the two samples. Replace one endpoint, then repeat. Two refinements reduce the search interval to a quarter.</p><p>A thin third face can be folded into the boundary; this is sampled visibility.</p>'),
+    step('    local offsetX, offsetY = worldX - x', 6, 'Project an object onto the screen', '<p>Subtract camera position. Dot products measure forward depth and sideways offset. Reject points behind the camera.</p><p>For an object 2 blocks ahead and 0.5 right: screen x = 200 × (1 + 0.5 / (2 × 0.700)) ≈ 271.4.</p>'),
+])
+section('MazeView.lua', 'Drawing the 3D image', [
+    step('local PROJECTION <const>', 3, 'Set the perspective scale', '<p><code>PROJECTION = 200 / tan(35°)</code> ≈ 285.63 pixels for a one-block wall one block ahead.</p><p>Clamp very near depths to 0.1 so screen coordinates remain manageable.</p>'),
+    step('local function drawRun', 7, 'Divide by depth', '<p>Wall height = 285.63 ÷ depth. At depth 2, it is 142.81 pixels; at depth 4, 71.41 pixels.</p><p>Center both ends around the horizon. Their top and bottom edges form a trapezoid.</p>'),
+    step('        local distance = (run.startDistance', 6, 'Shade and fill each face', '<p>Darken with distance and make x-facing walls slightly darker. <code>fillPolygon</code> draws the four projected corners.</p>'),
+    step('    local firstColumn = math.max', 12, 'Hide sprites behind walls', '<p>Compare the sprite’s depth with each wall-column depth. Clip drawing between the first and last visible columns.</p><p>This single rectangle can include a hidden middle strip. It is approximate occlusion, not a per-pixel depth buffer.</p>'),
+    step('    local scan = Raycaster.scan', 7, 'Draw walls, marks, then sprites', '<p>Scan from the player’s position and draw the wall runs. Add floor and ceiling marks, then sprites sorted farthest first.</p><p>Nearby sprites paint over farther ones. The scene draws the HUD afterward.</p>'),
+])
+section('Shades.lua', 'Black-and-white shading', [
+    step('local BAYER <const>', 6, 'Use a repeating threshold pattern', '<p>Playdate pixels are black or white. The Bayer matrix orders which pixels turn white to imitate gray.</p><p>At level 8, eight of the sixteen pixels are white. At level 16, all are white.</p>'),
+    step('for level = 0, Shades.WHITE do', 13, 'Build the drawing patterns once', '<p>Repeat the matrix over an 8 × 8 tile. A pixel is white when its matrix value is below the shade level.</p><p><code>byte * 2</code> shifts the row’s bits left; adding 0 or 1 appends a pixel. Store the eight rows for <code>gfx.setPattern</code>.</p>'),
+])
 
-
-def image(name, alt):
-    data = base64.b64encode((ROOT / 'docs/walkthrough-assets' / name).read_bytes()).decode()
-    return f'<img width="400" height="240" src="data:image/png;base64,{data}" alt="{html.escape(alt)}">'
-
-
-chapters = []
-
-def chapter(anchor, title, eyebrow, body):
-    chapters.append((anchor, title, f'<section id="{anchor}" class="chapter"><p class="eyebrow">{eyebrow}</p><h2>{title}</h2>{body}</section>'))
-
-
-def question(prompt, answer):
-    return f'<details class="question"><summary>Predict it: {prompt}</summary><p>{answer}</p></details>'
-
-
-chapter('big-picture', 'One maze. Three ways to see it.', '01 / The big picture', '''
-<p class="lead">A maze is a list of walls and spaces. A game adds a player and rules. A renderer turns those numbers into a picture.</p>
-<p>That is the secret of this game: the first-person corridors, the rotating platformer, and the throwing slime all begin with the same kind of <strong>two-dimensional grid</strong>. We will start with the pieces you can name, then open them up until we reach the trigonometry that makes a wall look far away.</p>
-<div class="screens">'''+ ''.join(f'<figure>{image(name, alt)}<figcaption><strong>{title}</strong><br>{caption}</figcaption></figure>' for name, alt, title, caption in [
-('first-person.png','First-person maze with brick walls and a minimap','Explore','Walk inside a picture made from rays.'),
-('tumble.png','Tumble maze rotated thirty degrees','Tumble','Turn the maze; gravity stays down the screen.'),
-('slime.png','Slime aiming a dotted throw arc up and right','Slime','Aim a throw; predict where you will land.')])+'''
-</div><p class="caption">Existing Playdate Simulator captures from this project, embedded so they travel with the document.</p>
-<div class="flow"><div><b>INPUT</b>Buttons + crank</div><span>→</span><div><b>RULES</b>State + movement</div><span>→</span><div><b>PICTURE</b>Pixels + sound</div></div>
-<p><strong>Read together:</strong> follow the pictures and try the “Predict it” questions. Stop after any chapter. <strong>Dig deeper:</strong> read the Lua excerpts and unfold the full files at the end. You do not need to memorize the code to understand the ideas.</p>
-<table><thead><tr><th>Job</th><th>Where to look</th><th>What it owns</th></tr></thead><tbody>
-<tr><td>Choose a screen</td><td>main.lua → SceneManager → scenes/</td><td>Title, play, escaped; read the Playdate controls</td></tr>
-<tr><td>Describe the world</td><td>Maze, Player, Run</td><td>Walls, position, time, visited cells</td></tr>
-<tr><td>Decide what happens</td><td>Game, Tumble, Slime, Puzzle</td><td>Movement, physics, shapes, escape</td></tr>
-<tr><td>Draw it</td><td>Raycaster, MazeView, SideView, Minimap</td><td>Visibility, projection, geometry, map</td></tr>
-<tr><td>Remember and respond</td><td>SaveGame, Sounds, Music</td><td>Save a run; turn events and proximity into audio</td></tr>
-</tbody></table>
-<div class="note"><b>A useful distinction</b><p>The maze has width and depth but no stack of floors. The first-person renderer gives its walls height. This is often called <em>2.5D</em>: a convincing 3D view built from a simpler 2D world.</p></div>''')
-
-chapter('lua', 'Enough Lua to read the game', '02 / A small language toolkit', '''
-<p>Read code like a recipe: names are ingredients, functions are instructions, and tables keep related things together. Comments beginning with <code>--</code> are notes for people.</p>
-<table><thead><tr><th>Lua</th><th>Read it as</th></tr></thead><tbody>
-<tr><td><code>local radius = 0.2</code></td><td>Give a nearby piece of code a name for a number.</td></tr>
-<tr><td><code>{ x = 1.5, y = 1.5 }</code></td><td>A table with named entries; lists use entries numbered from 1.</td></tr>
-<tr><td><code>player:turn(5)</code></td><td>Call a method with the player as its <code>self</code>.</td></tr>
-<tr><td><code>#points</code></td><td>The length of a list.</td></tr>
-<tr><td><code>points[#points + 1] = point</code></td><td>Add an entry to the end.</td></tr>
-<tr><td><code>points[#points] = nil</code></td><td>Remove the last entry. <code>nil</code> means no value.</td></tr>
-<tr><td><code>%</code> and <code>//</code></td><td>Remainder (wrap a direction) and floor division (count whole groups).</td></tr>
-<tr><td><code>local value &lt;const&gt;</code></td><td>A local name that cannot be reassigned.</td></tr>
-<tr><td><code>setmetatable(..., Player)</code></td><td>Let a new table find methods in Player through <code>__index</code>.</td></tr>
-</tbody></table>
-<p>Only <code>false</code> and <code>nil</code> count as false in Lua. <strong>Zero counts as true.</strong> This matters when distance zero means “we are at the exit.” Multiple return values also matter: <code>maze:blockAt(x, y)</code> returns both grid coordinates.</p>
-''' + listing('SceneManager.lua') + '''
-<p>This entire file is a tiny switchboard. Switching screens first lets the old scene leave, then lets the new one enter. Every update goes to exactly one current scene. The three dots pass along whatever arguments the new scene needs.</p>''')
-
-chapter('frame', 'A game is a repeating conversation', '03 / One frame at a time', '''
-<p>The game requests <strong>30 frames each second</strong>. On each frame the scene reads your controls, the rules update the world, and the view draws the result. At that rate each frame has about <strong>33.3 milliseconds</strong> available. Requesting 30 FPS does not prove the hardware always reaches it.</p>
-''' + listing('main.lua') + '''
-<p><code>playdate.update()</code> is the front door. The rest of this file imports the pieces, chooses the title screen, and saves a playable run at important lifecycle moments. The Playdate SDK supplies <code>playdate</code>; these modules supply the game.</p>
-''' + excerpt('scenes/Play.lua','function PlayScene.update()') + '''
-<p>Follow the order: controls → <code>game:update</code> → sounds and music → escape check → head bob → world → HUD. Drawing the HUD last keeps the map and messages on top. The world flip is handled inside MazeView, so the HUD stays upright.</p>
-''' + excerpt('Game.lua','function Game:update(input)','Game.SAVE_VERSION') + '''
-<p>The long method is a list of decisions. Autopilot, reeling the thread, and normal walking are separate branches. It then measures actual movement, emits sounds, records exploration, checks objects, and tests the exit. <code>Game.WALK_SPEED</code> is 0.08 blocks per frame: at 30 FPS, unobstructed forward movement is 2.4 blocks per second.</p>
-<div class="note"><b>Rules and drawing can be tested separately</b><p>The game can update a player and a maze without drawing a single pixel. The host Lua specs exercise those rules. Playdate-facing graphics still need the Simulator or device.</p></div>
-''' + question('You hold forward against a wall. Should footsteps keep playing?', 'No. The code adds the distance actually walked, not the requested movement. A blocked push can emit a bump instead.'))
-
-chapter('grid', 'Build a world from squares', '04 / Coordinates and maze generation', '''
-<p>Imagine graph paper. In this game <strong>x grows right</strong> and <strong>y grows down</strong>. A block is one unit wide. World positions can be fractions; Lua grid indices are whole numbers starting at 1.</p>
-<div class="equation">gridX = floor(x) + 1 &nbsp; · &nbsp; gridY = floor(y) + 1</div>
-<p>World position (1.5, 1.5) is the center of grid block (2, 2). Block (2, 2) covers x from 1 up to, but not including, 2, and the same for y. A <em>cell</em> is a room in the maze; blocks are the smaller squares used to build its floor and walls.</p>
-''' + excerpt('Maze.lua','function Maze.new','-- random(n)') + '''
-<p>With corridor width 1, cell (column, row) sits at grid (2 × column, 2 × row). A 3-by-2-cell maze needs a 7-by-5-block grid. Slime uses corridor width 3: the pitch becomes 4, leaving wider spaces to fly through. The constructor makes isolated rooms first.</p>
-<h3>Carve, explore, backtrack</h3>
-<p>Picture walking through unexplored rooms with a stack of sticky notes. Choose an unvisited neighbor, knock down the wall, and put the new room on the stack. If you get stuck, peel off the top note and return to the previous room.</p>
-''' + excerpt('Maze.lua','function Maze.generate','-- The blocks of the wall') + '''
-<ol><li><code>visited</code> remembers rooms already reached.</li><li><code>stack[#stack]</code> is the room we are exploring now.</li><li>Choose randomly from neighbors that are inside and unvisited.</li><li>Carve one passage and push that neighbor.</li><li>At a dead end, pop. Finish when the stack is empty.</li></ol>
-<p>This is <strong>depth-first search with backtracking</strong>. Each new room gets exactly one connection to the already visited maze. No step connects two visited rooms, so no loops form. All rooms are reached: a <em>perfect maze</em> has exactly one route between any two cells. For N cells there are N − 1 internal carved connections.</p>
-<div class="lab"><h3>Watch the stack work</h3><p>A tiny 4 × 3 teaching maze. Cyan is the current stack; gold is its tip. Step through carving and backtracking.</p><canvas id="maze-demo" width="720" height="310" role="img" aria-label="Step-by-step depth-first maze generation"></canvas><div class="controls"><button id="maze-step">Next step</button><button id="maze-reset">Start over</button><output id="maze-status" aria-live="polite"></output></div></div>
-<p>The diagram is a small JavaScript teaching model of the algorithm, not the running Lua game. The source above is the real implementation.</p>
-''' + question('Why can’t we carve into a room we already visited?', 'Doing so could join two existing paths into a loop. Skipping visited rooms is what gives this generator one route between each pair of rooms.'))
-
-chapter('movement', 'Move a body, not a dot', '05 / Collision and sliding', '''
-<p>The player’s position is the center of a square. Its radius is 0.2 blocks, so the body is 0.4 blocks wide. A proposed position is blocked if one of its four corners lands in a wall or closed door.</p>
-''' + listing('Player.lua') + '''
-<h3>Why move x, then y?</h3><p>Suppose you push diagonally into a vertical wall. The x movement hits the wall, but the y movement may still be safe. Testing the axes separately lets you <strong>slide along it</strong>. Rejecting the entire diagonal move would make you stick.</p>
-<p><code>slide</code> first tries the destination. If it is blocked, it finds the relevant wall edge and places the body just short of it. The tiny <code>GAP</code> avoids rounding the resting body into the wall. The second axis uses the new x position.</p>
-<div class="note"><b>A limit of this collision method</b><p>This checks positions, not every point along a very long motion. The game uses small steps; Tumble and Slime cap speed at 0.35 blocks per frame. Teleporting a body several blocks with this method could skip a wall.</p></div>
-<h3>The first bit of trigonometry</h3>
-<p>A direction is an arrow with two numbers. At angle θ, <strong>cos(θ)</strong> tells us its horizontal part and <strong>sin(θ)</strong> its vertical part. Lua’s trig functions take radians, so <code>math.rad</code> converts degrees first. Here, 90° points down because y grows down.</p>
-<div class="equation">forward = (cos θ, sin θ)<br>right = (−sin θ, cos θ)<br>movement = forward × walking + right × strafing</div>
-<div class="lab"><h3>Turn the direction arrow</h3><label for="angle">Heading <output id="angle-label">35°</output></label><input id="angle" type="range" min="0" max="360" value="35"><canvas id="trig-demo" width="720" height="300" role="img" aria-label="Direction vector with cosine and sine components"></canvas><p id="trig-values" class="readout"></p></div>
-<table><thead><tr><th>Angle</th><th>Forward vector</th><th>Direction</th></tr></thead><tbody><tr><td>0°</td><td>(1, 0)</td><td>East / right</td></tr><tr><td>90°</td><td>(0, 1)</td><td>South / down</td></tr><tr><td>180°</td><td>(−1, 0)</td><td>West / left</td></tr><tr><td>270°</td><td>(0, −1)</td><td>North / up</td></tr></tbody></table>
-''' + question('At 90°, what happens when you strafe right?', 'You move west: right = (−1, 0). “Right” is relative to the player, not always the right edge of the map.'))
-
-chapter('algorithms', 'Three different ways to find your way', '06 / Search, navigation, and memory', '''
-<h3>1. Breadth-first search: send a ripple from the exit</h3>
-<p>A room may look close to the exit through a wall but require a long walk. <code>ExitDistance</code> measures corridor distance. Start with zero at the exit’s cell, put its neighbors at one, their unvisited neighbors at two, and keep going.</p>
-''' + listing('ExitDistance.lua') + '''
-<p>The <strong>queue</strong> processes the oldest waiting room first. This explores distance layers, unlike the stack used to generate the maze. Moving <code>head</code> avoids shifting the entire list. Because every cell-to-cell passage costs one step, the first assigned distance is the shortest.</p>
-<p>The key <code>(row − 1) * columns + column</code> gives each room one list position. A 4-column maze’s second row has keys 5, 6, 7, 8. The exit’s distance is zero, which is truthy in Lua, so it stays marked as visited. Music uses the resulting proximity to respond to progress through corridors.</p>
-<h3>2. Autopilot: keep your left hand on the wall</h3>
-''' + listing('Autopilot.lua') + '''
-<p>At a cell center, try left, ahead, right, then back. Turn toward the chosen direction before walking to the next center. This wall-following rule is suited to the game’s tree-shaped maze; it is not a general shortest-path planner.</p>
-<p>The turning expression wraps differences into [−180°, 180°). From 350° to 10°, it asks for +20°, not a long −340° spin. At an exact half-turn it chooses −180°.</p>
-<h3>3. Thread: keep a trail you can unwind</h3>
-''' + listing('Thread.lua') + '''
-<p>The thread samples a point roughly every quarter block. If you move closer to the previous point, it removes the newer end of the trail. Reeling consumes whole segments until only part of the next one is needed, then uses a fraction to stop between its ends.</p>
-<div class="equation">new position = current + (target − current) × share</div>
-<p><code>share = distance / stretch</code>. If you reel 0.1 blocks along a 0.25-block segment, share is 0.4. <code>math.atan(y, x)</code> recovers the segment’s angle, and <code>math.deg</code> converts radians back to degrees. The 800-point cap means very old trail points are eventually forgotten.</p>
-''' + question('Would the left-hand autopilot always choose the shortest route?', 'No. It follows a local preference and may visit dead ends. Breadth-first search is the method here that computes shortest corridor distances.'))
-
-chapter('physics', 'Turn the maze. Throw the slime.', '07 / 2D physics and reusable math', '''
-<h3>Tumble: keep gravity down the screen</h3>
-<p>Tumble stores positions and velocities in maze coordinates. The camera rotates that maze for drawing. So “down the screen” must be converted back into the maze’s coordinates before adding gravity.</p>
-''' + excerpt('Tumble.lua','function Tumble:update(input)') + '''
-<p>At maze angle 0°, down = (0, 1). At 90°, down = (1, 0): screen gravity now pulls east through the maze. The right vector is (cos θ, −sin θ). This is the <strong>inverse rotation</strong> of the view.</p>
-<p>The dot product <code>velocityX * rightX + velocityY * rightY</code> measures how much velocity points right. Walking adjusts only that component. Jumping replaces the downward component with an upward jump speed. Gravity adds 0.012 blocks per frame to downward velocity.</p>
-''' + excerpt('SideView.lua','function SideView.toScreen','local toScreen') + '''
-<p>Drawing goes the other way: subtract the player’s position, rotate the offset, scale blocks into pixels, and add screen center (200, 120). The player stays centered while the maze moves around them.</p>
-<h3>Slime: predict a throw by rehearsing it</h3>
-<p>Slime’s crank angle uses a different zero: <strong>0° aims up</strong>, 90° right. That gives a launch vector of (sin θ, −cos θ) times throw speed. Every flight step adds gravity to vertical velocity, limits speed, and reuses Player’s collision.</p>
-''' + excerpt('Slime.lua','local function throwVelocity','local function stick') + '''
-<p><code>arc()</code> moves a spare Player called <code>scout</code> using the <em>same</em> <code>fly</code> function as the real slime. It keeps a dot every three frames and stops at a collision, or after 240 simulated frames. The preview and actual flight therefore agree when they start from the same position and angle in the same maze. The grip clock keeps running while aiming, so the launch position can still change.</p>
-<p>The speed is <code>sqrt(2 * gravity * 4)</code>, about 0.310 blocks per frame. The continuous-motion formula h = v²/(2g) suggests a four-block rise. This implementation adds gravity before moving in discrete frames, so an unobstructed straight-up throw peaks a little lower, about 3.85 blocks.</p>
-<div class="flow"><div><b>RESTING</b>Safe on a floor</div><span>↔</span><div><b>FLYING</b>No mid-air throw</div><span>↔</span><div><b>CLINGING</b>30 frames of grip</div></div>
-<p>A wall grip runs out into <strong>SLIDING</strong>; a ceiling grip runs out into falling. These named states keep the movement rules explicit. The full Slime file includes the transitions and input handling.</p>
-''' + question('Why not draw the aiming arc with an unrelated parabola formula?', 'A separate formula could disagree with the game’s per-frame gravity, speed cap, and wall collisions. Reusing fly makes the preview obey the same rules.'))
-
-chapter('puzzle', 'Objects have states, too', '08 / Shapes, fog, and the gate', '''
-<p>The shape puzzle is a small state machine: a shape is on the <strong>GROUND</strong>, <strong>CARRIED</strong>, or <strong>PLACED</strong>. A successful pickup changes its state and remembers which shape is in your hands.</p>
-''' + excerpt('Puzzle.lua','function Puzzle:pickUp','local function isOccupied') + excerpt('Puzzle.lua','function Puzzle:drop','-- What is needed to build') + '''
-<p>Dropping first checks for the carried shape’s matching empty pedestal within reach. Otherwise it tries the player’s current block. Finishing the last pedestal <em>unlocks</em> the first-person gate; it still needs two full forward crank turns to raise. Tumble and Slime collect shapes on contact and open the exit when all three are collected.</p>
-''' + excerpt('Run.lua','function Run:visit()','function Run:say') + '''
-<p>Fog of war is another memory table: entering a cell marks its key. The minimap’s background can be reused until exploration or the exit changes. Its position conversion is a scale and an offset:</p>
-''' + excerpt('Minimap.lua','local function toMap','local function isRevealed') + '''
-<p>Compare this with SideView’s rotated coordinates. Both turn world positions into screen positions, but the minimap keeps north at the top. The first-person view needs one extra operation: dividing by depth.</p>''')
-
-chapter('rays', 'Send out rays to find the walls', '09 / From a flat map to a 3D view', '''
-<p>Imagine sending a thin measuring beam through each narrow strip of the screen. For every beam, ask: <strong>which wall does it hit first, and how far ahead is that wall?</strong> Nearby walls become tall strips; far walls become short ones.</p>
-<h3>First build a camera</h3>
-<div class="equation">forward = (cos θ, sin θ)<br>plane = (−sin θ, cos θ) × tan(FOV / 2)<br>cameraX = 2 × screenX / width − 1<br>ray = forward + plane × cameraX</div>
-<p><code>cameraX</code> runs from −1 at the left edge through 0 at the center to +1 at the right edge. The camera plane is perpendicular to forward. For a 70° field of view, its half-width at one unit forward is tan(35°) ≈ 0.700.</p>
-''' + excerpt('Raycaster.lua','function Raycaster.scan','    local runCount') + '''
-<h3>DDA: skip straight to the next grid boundary</h3>
-<p>A slow ray marcher might take hundreds of tiny steps. This game uses <strong>digital differential analysis (DDA)</strong>: work out when the ray next crosses a vertical or horizontal grid line, then choose whichever crossing comes first.</p>
-''' + excerpt('Raycaster.lua','function Raycaster.cast','-- Reused between frames') + '''
-<p>Write the ray as position + t × direction. <code>deltaX = abs(1 / directionX)</code> is the increase in t between successive vertical boundaries. <code>deltaY</code> does the same for horizontal boundaries. A zero component gets infinity: a horizontal ray never crosses a horizontal grid line.</p>
-<ol><li>Calculate the first boundary times.</li><li>Pick the smaller time and enter that neighboring block.</li><li>Add that axis’s delta to schedule its next boundary.</li><li>If the block is nonzero, return the hit.</li></ol>
-<p>Notice the subtraction at the end: the boundary time was already advanced, so the hit time is <code>sideDistance − delta</code>. The renderer stops at every non-OPEN value, including EXIT. Collision allows EXIT; drawing paints it as white light. These are different questions about the same block.</p>
-<div class="lab"><h3>A map and its first-person picture</h3><p>Turn in a small teaching room. Gold is the selected ray; cyan rays explain the rest of the view. Each selected ray visits whole grid cells.</p><label for="view-angle">Camera heading <output id="view-angle-label">0°</output></label><input id="view-angle" type="range" min="0" max="359" value="0"><label for="ray-column">Selected screen column <output id="ray-column-label">200</output></label><input id="ray-column" type="range" min="0" max="400" value="200"><canvas id="ray-demo" width="800" height="320" role="img" aria-label="Top-down ray traversal beside a matching first-person wall projection"></canvas><p id="ray-values" class="readout"></p><p class="caption">JavaScript teaching model: fixed map, colored columns, no bricks or sprites. The Lua renderer groups columns into wall faces, as the next chapter explains.</p></div>
-<h3>Why the walls do not bulge: perpendicular depth</h3>
-<p>The ray above is intentionally <strong>not normalized</strong>. Forward has length 1, and the plane is perpendicular to it. Therefore the dot product of forward with the ray is 1. At a hit, offset = t × ray, so forward depth = dot(offset, forward) = t. DDA’s returned parameter is already the depth the projection needs.</p>
-<p>For a flat wall straight ahead, every ray has the same forward depth, even though the edge rays travel farther diagonally. Using diagonal travel distance would shrink the wall at the edges: the “fisheye” error.</p>
-''' + question('A ray points exactly east. What is deltaY?', 'Infinity. Its y component is zero, so it never crosses a horizontal grid boundary. Only the x crossings advance.'))
-
-chapter('projection', 'Distance becomes height', '10 / Perspective and trigonometry', '''
-<p>Hold your hand near your face, then move it away. The hand stays the same size, but it covers less of your view. A renderer needs to recreate that relationship.</p>
-<div class="equation">projection = (screen width / 2) / tan(FOV / 2)<br>wall height in pixels = projection / depth<br>top = horizon − height / 2 &nbsp; · &nbsp; bottom = horizon + height / 2</div>
-<p>For this game: width = 400, FOV = 70°, and projection ≈ 285.63 pixels per block at depth 1. A one-block wall at depth 2 is about 142.81 pixels tall; at depth 4 it is about 71.41. Twice as far means half as tall.</p>
-<div class="lab"><h3>Move a wall away</h3><label for="depth">Wall depth in blocks <output id="depth-label">2.0</output></label><input id="depth" type="range" min="1" max="10" step="0.1" value="2"><canvas id="projection-demo" width="720" height="290" role="img" aria-label="A wall shrinking with distance around the horizon"></canvas><p id="projection-values" class="readout"></p></div>
-<h3>Project a shape into the same picture</h3>
-''' + excerpt('Raycaster.lua','function Raycaster.project') + '''
-<p>First subtract the camera position. Two dot products measure <strong>depth</strong> along forward and <strong>sideways</strong> along right. Reject a point with depth ≤ 0; it is behind the camera or exactly on the camera plane. Divide sideways by depth to get its apparent direction, then map that to screen pixels.</p>
-<p>Example: camera (1.5, 1.5), facing east; object (3.5, 2.0). Offset is (2, 0.5), depth is 2, sideways is 0.5. Its screen x is 200 × (1 + 0.5 / (2 × 0.7002)) ≈ <strong>271.4</strong>. It appears to the right of center, exactly as the map suggests.</p>
-<div class="note"><b>Where tangent comes from</b><p>In a right triangle, tan(angle) = opposite / adjacent. At half the field of view, the opposite side is half the camera plane’s width and the adjacent side is one unit forward. That is why tan(FOV / 2) sets the plane scale. Sine and cosine aim the camera; tangent controls its spread.</p></div>
-''' + question('If you double both an object’s sideways offset and its depth, does its screen x change?', 'No. The ratio sideways / depth stays the same. It lies along the same viewing direction, although its drawn size becomes smaller.'))
-
-chapter('pixels', 'Make the picture affordable', '11 / Runs, dithering, and hidden objects', '''
-<h3>Group rays that see the same wall face</h3>
-<p>The screen is 400 pixels wide, and the sampling column is 4 pixels wide: <strong>100 depth samples</strong>. The scan also casts at the left and right edges and adds two refinement casts at each detected face change. It is more than 100 ray casts in total.</p>
-''' + excerpt('Raycaster.lua','    local runCount','-- Where a point in the world') + '''
-<p>A <em>run</em> groups consecutive samples that hit the same face of the same block. The face key includes block x, block y, and whether the crossed boundary was vertical or horizontal. When a key changes, bisection halves the gap twice to better locate the edge.</p>
-<p>The two ends tell the renderer the wall’s top and bottom at each side. Straight edges in the world project to straight edges, so one trapezoid can fill the face. The tables for runs and depths are reused across frames, reducing garbage-collection work. This is still sampled visibility: a very thin third face can be folded into a run boundary, as the code’s comment explains.</p>
-''' + excerpt('MazeView.lua','local function drawRun','-- The game\'s frame count') + '''
-<h3>Gray made from black and white</h3>
-<p>Playdate’s screen is 1-bit: a pixel is black or white. The walls look gray because of <strong>ordered dithering</strong>. The 4 × 4 Bayer matrix decides which pixels turn white at each brightness level. Level 8 lights half the pixels; level 16 lights all of them.</p>
-''' + listing('Shades.lua') + '''
-<div class="lab"><h3>Mix black and white pixels</h3><label for="shade">Dither level <output id="shade-label">8 / 16</output></label><input id="shade" type="range" min="0" max="16" value="8"><canvas id="shade-demo" width="720" height="190" role="img" aria-label="Enlarged Bayer pixels and a small repeated dither swatch"></canvas><p id="shade-values" class="readout"></p></div>
-<p><code>drawRun</code> darkens distant walls and makes x-facing walls a little darker to clarify corners. Brick courses disappear below 40 pixels of wall height; the vertical joints disappear below 80. The background floor and ceiling are cached bands, not full per-pixel textured floor casting.</p>
-<h3>Hide shapes behind walls</h3>
-''' + excerpt('MazeView.lua','local function clipToVisibleColumns','local function drawSprite') + '''
-<p>The scan’s depth array acts like a ruler behind each 4-pixel strip. An object is visible where its depth is less than the wall’s. Sprites are sorted farthest first so nearer ones paint over farther ones.</p>
-<div class="note"><b>Read what the code does, not just its intention</b><p>This clipping function finds the first and last visible columns and uses one rectangular clip between them. It does not make separate clips for separated visible islands. If a nearer wall hides a middle strip but both sides are visible, the rectangle can include that hidden strip. It is an approximation, not a full per-pixel depth buffer.</p></div>
-''' + excerpt('MazeView.lua','local function drawScene','-- Where the scene is drawn') + '''
-<p>The final order is background → wall runs → floor/ceiling marks → sorted sprites. MazeView can draw the result into an image and flip it vertically. The scene then draws the HUD separately.</p>''')
-
-chapter('experiments', 'Be the game designer', '12 / Try it, explain it, change it', '''
-<p>Before editing, make a prediction. Change one thing, run the game, and compare what happened with what you expected. These are experiments to try later; the walkthrough does not change the game’s rules.</p>
-<table><thead><tr><th>Experiment</th><th>Where</th><th>Prediction to discuss</th></tr></thead><tbody>
-<tr><td>Change walking speed from 0.08 to 0.04</td><td>Game.WALK_SPEED</td><td>How long should the same straight walk take?</td></tr>
-<tr><td>Try a field of view of 50° or 90°</td><td>MazeView.SCREEN</td><td>Does the same wall look larger or smaller?</td></tr>
-<tr><td>Change columnWidth from 4 to 2</td><td>MazeView.SCREEN</td><td>Twice as many base depth samples. What happens near narrow edges?</td></tr>
-<tr><td>Prefer right before left</td><td>Autopilot.PREFERENCE</td><td>Does the route change? Does it become shortest?</td></tr>
-<tr><td>Change gravity</td><td>Slime.GRAVITY</td><td>THROW_SPEED also depends on gravity. Which aspects of the jump remain similar?</td></tr>
-</tbody></table>
-<h3>How this project checks its ideas</h3>
-<p><code>spec/Maze_spec.lua</code> exercises maze structure; <code>spec/Player_spec.lua</code> checks movement and collisions; <code>spec/Raycaster_spec.lua</code> checks casting and projection; <code>spec/Slime_spec.lua</code> checks flight and preview behavior. Host specs test numbers and rules. The screenshot harness runs the Playdate drawing and scene code in the Simulator.</p>
-<p>The local recipes are <code>just test</code> for host specs, <code>just lint</code> for Lua checks, and <code>just build</code> for the Playdate compiler. <code>just smoke</code> drives Simulator scenarios. None of those substitutes for measuring performance and controls on the handheld.</p>
-<div class="note"><b>Trace one step all the way through</b><p>You press up. PlayScene sets <code>input.forward</code>. Game scales it into blocks per frame. Player rotates it with sine and cosine, then checks the walls. Raycaster sees the world from the new position. MazeView divides by depth and paints the next picture. One button press has become geometry.</p></div>
-<h3>A pocket glossary</h3><dl><dt>State</dt><dd>The facts the game remembers right now.</dd><dt>Vector</dt><dd>An arrow described by components, such as (x, y).</dd><dt>Dot product</dt><dd>Multiply matching components and add; with a unit direction, it measures the amount along that direction.</dd><dt>Projection</dt><dd>Turning a world position into a screen position.</dd><dt>Stack / queue</dt><dd>Newest-first / oldest-first ways to process waiting work.</dd><dt>Depth</dt><dd>How far forward something lies in camera coordinates.</dd><dt>Occlusion</dt><dd>A nearer thing hiding a farther thing.</dd></dl>''')
-
-appendix = '<p>Every file quoted in the chapters is included below in full, even when the excerpt is less than half. No omitted middle sections. The snippets are exact slices of these source files; line numbers match this snapshot.</p><div class="source-index">'
-for name in files:
-    appendix += f'<a href="#file-{identity(name)}">{name}</a>'
-appendix += '</div>'
-for name, content in list(files.items()):
-    digest = hashlib.sha256(content.encode()).hexdigest()[:12]
-    appendix += f'<details class="full-source" id="file-{identity(name)}"><summary>{name} <small>{len(content.splitlines())} lines · SHA-256 {digest}</small></summary>{listing(name)}</details>'
-chapter('source', 'The complete source shelf', '13 / All the way down', appendix)
-
-navigation = ''.join(f'<a href="#{anchor}"><span>{i:02d}</span>{title}</a>' for i, (anchor, title, _) in enumerate(chapters, 1))
-body = ''.join(content for _, _, content in chapters)
-page = (HERE / 'template.html').read_text().replace('<!-- NAVIGATION -->', navigation).replace('<!-- CHAPTERS -->', body)
+options = ''.join(f'<option value="section-{index}">{index:02d} {html.escape(title)} — source/{name}</option>' for index, (name, title, _) in enumerate(sections, 1))
+page = (HERE / 'template.html').read_text().replace('<!-- OPTIONS -->', options).replace('<!-- SECTIONS -->', ''.join(markup for _, _, markup in sections)).replace('<!-- INTERACTIONS -->', (HERE / 'interactions.js').read_text())
 (ROOT / 'docs/walkthrough.html').write_text(page)
-print(f'Built docs/walkthrough.html: {len(files)} complete Lua files, {len(page.encode()):,} bytes')
+print(f'Built {len(sections)} complete files; {len(page.encode()):,} bytes')
