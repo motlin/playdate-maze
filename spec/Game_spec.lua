@@ -167,6 +167,51 @@ describe("Game", function()
         end)
     end)
 
+    describe("the flippers", function()
+        local function standIn(game, flipper, offset)
+            game.player.x, game.player.y = flipper.gridX - 0.5 + (offset or 0), flipper.gridY - 0.5
+        end
+
+        it("stand in blocks of their own, away from the shapes, pedestals, and marks", function()
+            local game = newGame()
+            assert.are.equal(1, #game.flippers.all)
+            local flipper = game.flippers.all[1]
+            local others = {}
+            for _, item in ipairs(game.puzzle.items) do others[#others + 1] = item end
+            for _, pedestal in ipairs(game.puzzle.pedestals) do others[#others + 1] = pedestal end
+            for _, mark in ipairs(game.landmarks.marks) do others[#others + 1] = mark end
+            for _, other in ipairs(others) do
+                assert.is_false(other.gridX == flipper.gridX and other.gridY == flipper.gridY)
+            end
+        end)
+
+        it("turn the world over when the player walks into one", function()
+            local game = newGame()
+            assert.is_false(game.isFlipped)
+            standIn(game, game.flippers.all[1])
+            game:update({})
+            assert.is_true(game.isFlipped)
+            assert.are.equal("The world turns over!", game.message)
+        end)
+
+        it("leave it over while the player stands there, and turn it back on the next visit", function()
+            local game = newGame()
+            local flipper = game.flippers.all[1]
+            standIn(game, flipper)
+            for _ = 1, 30 do game:update({}) end
+            assert.is_true(game.isFlipped)
+            game.player.x, game.player.y = 1.5, 1.5
+            game:update({})
+            standIn(game, flipper)
+            game:update({})
+            assert.is_false(game.isFlipped)
+        end)
+
+        it("are in the screensaver's mazes too", function()
+            assert.is_true(#newGame({ hasPuzzle = false }).flippers.all >= 1)
+        end)
+    end)
+
     describe("the thread", function()
         local function distanceFromStart(game)
             return math.sqrt((game.player.x - 1.5) ^ 2 + (game.player.y - 1.5) ^ 2)

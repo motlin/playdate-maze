@@ -108,6 +108,18 @@ local function drawPuzzle(game, left, top)
     end
 end
 
+-- A flipper is a small cross on the map
+local function drawFlippers(game, left, top)
+    gfx.setColor(gfx.kColorBlack)
+    for _, flipper in ipairs(game.flippers.all) do
+        if isRevealed(game, flipper) then
+            local x, y = toMap(left, top, game.maze:blockCenter(flipper.gridX, flipper.gridY))
+            gfx.drawLine(x - 2, y - 2, x + 2, y + 2)
+            gfx.drawLine(x - 2, y + 2, x + 2, y - 2)
+        end
+    end
+end
+
 -- Every few points is plenty at this size, and keeps the number of lines down
 local THREAD_STRIDE <const> = 4
 
@@ -135,6 +147,7 @@ function Minimap.draw(game, left, top)
     wallsImage:draw(left, top)
 
     if game.thread then drawThread(game.thread, left, top) end
+    if game.flippers then drawFlippers(game, left, top) end
     if game.puzzle then drawPuzzle(game, left, top) end
 
     local player = game.player

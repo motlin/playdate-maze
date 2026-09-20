@@ -51,6 +51,9 @@ local ITEM_HOVER_BELOW_EYE <const> = 0.1
 local PEDESTAL_WIDTH <const> = 0.34
 local PEDESTAL_HEIGHT <const> = 0.4
 local PEDESTAL_ICON_SIZE <const> = 0.16
+-- The thing that turns the world over hangs at eye level and spins this fast, in radians a frame
+local FLIPPER_SIZE <const> = 0.36
+local FLIPPER_SPIN <const> = 0.12
 
 local BLOCK_DOOR <const> = 2
 local BLOCK_EXIT <const> = 3
@@ -294,9 +297,12 @@ local function collectSprites(game)
         end
         sprite.thing, sprite.kind, sprite.screenX, sprite.depth, sprite.index = thing, kind, screenX, depth, index
     end
-    for index, pedestal in ipairs(game.puzzle.pedestals) do add(pedestal, "pedestal", index) end
-    for index, item in ipairs(game.puzzle.items) do
-        if item.state == Puzzle.STATES.GROUND then add(item, "item", index) end
+    for index, flipper in ipairs(game.flippers.all) do add(flipper, "flipper", index) end
+    if game.puzzle then
+        for index, pedestal in ipairs(game.puzzle.pedestals) do add(pedestal, "pedestal", index) end
+        for index, item in ipairs(game.puzzle.items) do
+            if item.state == Puzzle.STATES.GROUND then add(item, "item", index) end
+        end
     end
     for index = count + 1, #sprites do sprites[index] = nil end
     table.sort(sprites, byDepthFarthestFirst)
@@ -325,7 +331,21 @@ local function drawSprite(sprite, depths)
     local centerX = sprite.screenX
     local itemSize = ITEM_SIZE * scale
 
-    if sprite.kind == "item" then
+    if sprite.kind == "flipper" then
+        -- An octahedron turning on the spot: a diamond whose width swings as it spins
+        local size = FLIPPER_SIZE * scale
+        local halfWidth = math.max(1, math.abs(math.cos(frame * FLIPPER_SPIN + sprite.index)) * size / 2)
+        if not clipToVisibleColumns(depths, centerX, size / 2, sprite.depth) then return end
+        local top, bottom = horizon - size / 2, horizon + size / 2
+        gfx.setColor(gfx.kColorWhite)
+        gfx.fillPolygon(centerX, top, centerX + halfWidth, horizon, centerX, bottom, centerX - halfWidth, horizon)
+        gfx.setColor(gfx.kColorBlack)
+        gfx.setLineWidth(2)
+        gfx.drawPolygon(centerX, top, centerX + halfWidth, horizon, centerX, bottom, centerX - halfWidth, horizon)
+        gfx.setLineWidth(1)
+        gfx.drawLine(centerX - halfWidth, horizon, centerX + halfWidth, horizon)
+        gfx.drawLine(centerX, top, centerX, bottom)
+    elseif sprite.kind == "item" then
         if not clipToVisibleColumns(depths, centerX, itemSize / 2, sprite.depth) then return end
         local hover = ITEM_HOVER_BELOW_EYE + Bob.hoverOffset(frame, sprite.index)
         ShapeArt.drawSolid(sprite.thing.shape, centerX, horizon + hover * scale, itemSize)
@@ -382,8 +402,7 @@ local function drawMark(mark, maze, depths)
     gfx.clearClipRect()
 end
 
--- headOffset is how many pixels the view has bobbed down by, from a Bob
-function MazeView.draw(game, headOffset)
+local function drawScene(game, headOffset)
     horizon = HORIZON_AT_REST + headOffset
     frame = game.frames
     background = background or drawBackground()
@@ -399,8 +418,22 @@ function MazeView.draw(game, headOffset)
     for index = 1, #runs do drawRun(runs[index]) end
 
     for _, mark in ipairs(landmarks.marks) do drawMark(mark, game.maze, scan.depths) end
-    if game.puzzle then
-        collectSprites(game)
-        for index = 1, #sprites do drawSprite(sprites[index], scan.depths) end
+    collectSprites(game)
+    for index = 1, #sprites do drawSprite(sprites[index], scan.depths) end
+end
+
+-- Where the scene is drawn while the world is upside down, before being turned over on to the screen
+local flippedScene
+
+-- headOffset is how many pixels the view has bobbed down by, from a Bob
+function MazeView.draw(game, headOffset)
+    if not game.isFlipped then
+        drawScene(game, headOffset)
+        return
     end
+    flippedScene = flippedScene or gfx.image.new(SCREEN.width, SCREEN.height)
+    gfx.pushContext(flippedScene)
+    drawScene(game, headOffset)
+    gfx.popContext()
+    flippedScene:draw(0, 0, gfx.kImageFlippedY)
 end

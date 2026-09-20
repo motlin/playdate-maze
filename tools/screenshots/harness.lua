@@ -242,6 +242,18 @@ if playdate.isSimulator then
         end
         expect(seenKinds.picture and seenKinds.floor and seenKinds.ceiling, "a medium maze has every kind of landmark somewhere it can be seen from down a corridor")
 
+        -- The flipper: walk into it and the world turns over; walk away and back, and it turns back
+        local flipper = PlayScene.game.flippers.all[1]
+        standFacing(flipper); frames(8); shot("play-flipper-ahead")
+        frames(6); shot("play-flipper-spinning")
+        hold(pd.kButtonUp, 12); shot("play-flipped")
+        expect(PlayScene.game.isFlipped, "walking into the flipper turns the world over")
+        hold(pd.kButtonDown, 20); shot("play-flipped-looking-back")
+        expect(PlayScene.game.isFlipped, "and it stays over after walking away")
+        hold(pd.kButtonUp, 20)
+        expect(not PlayScene.game.isFlipped, "until the flipper is touched again")
+        hold(pd.kButtonDown, 20)
+
         -- The compass: north in the middle, and the letters carry on across 359 to 0 degrees
         player.angle = 270; frames(1); shot("play-compass-north")
         player.angle = 352; frames(1); shot("play-compass-across-the-join")

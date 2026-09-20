@@ -6,6 +6,7 @@ import "Maze"
 import "Player"
 import "Puzzle"
 import "Autopilot"
+import "Flippers"
 import "Landmarks"
 import "Run"
 import "Thread"
@@ -51,6 +52,16 @@ function Game.new(options)
         maze:openExit()
     end
     game.landmarks = Landmarks.scatter(maze, options.random)
+
+    -- Touching a flipper turns the world upside down, or the right way up again
+    local taken = {}
+    for _, mark in ipairs(game.landmarks.marks) do taken[#taken + 1] = mark end
+    if game.puzzle then
+        for _, item in ipairs(game.puzzle.items) do taken[#taken + 1] = item end
+        for _, pedestal in ipairs(game.puzzle.pedestals) do taken[#taken + 1] = pedestal end
+    end
+    game.flippers = Flippers.scatter(maze, options.random, taken)
+    game.isFlipped = false
     return game
 end
 
@@ -175,6 +186,10 @@ function Game:update(input)
     local walkedX, walkedY = self.player.x - fromX, self.player.y - fromY
     self.distanceWalked = math.sqrt(walkedX * walkedX + walkedY * walkedY)
     self:visit()
+    if self.flippers:touch(self.player.x, self.player.y) then
+        self.isFlipped = not self.isFlipped
+        self:say("The world turns over!")
+    end
     if self.puzzle and input.pickUp then pickUp(self) end
     if self.puzzle and input.drop then drop(self) end
 
