@@ -544,6 +544,97 @@ if playdate.isSimulator then
         expect(TitleScene.rows[1].name == "continue", "and leaving that one saves it in turn")
     end
 
+    -- Not a test: draws the launcher card, its highlighted animation, and the list icon from the
+    -- game's own renderer, as PNGs for `just launcher` to copy into source/launcher
+    scenarios.launcher_art = function()
+        local CARD_WIDTH <const>, CARD_HEIGHT <const> = 350, 155
+        local ICON_SIZE <const> = 32
+        local FRAMES <const> = 4
+        frames(2)
+
+        -- A maze of its own, the same every time, viewed down its longest straight corridor
+        local game = Game.new({ columns = 8, rows = 6, hasPuzzle = false, random = SeededRandom.new(1995) })
+        local best = { length = 0 }
+        for row = 1, game.maze.rows do
+            for column = 1, game.maze.columns do
+                for _, direction in ipairs(Maze.DIRECTIONS) do
+                    local offset, length = Maze.OFFSETS[direction], 0
+                    local atColumn, atRow = column, row
+                    while game.maze:hasPassage(atColumn, atRow, direction) and length < 8 do
+                        atColumn, atRow, length = atColumn + offset[1], atRow + offset[2], length + 1
+                    end
+                    if length > best.length then best = { length = length, column = column, row = row, direction = direction } end
+                end
+            end
+        end
+        local ANGLES <const> = { east = 0, south = 90, west = 180, north = 270 }
+        local startX, startY = game.maze:cellCenter(best.column, best.row)
+        local offset = Maze.OFFSETS[best.direction]
+        game.player.angle = ANGLES[best.direction]
+        -- Nothing in the corridor but the maze itself
+        game.flippers.all, game.landmarks.marks = {}, {}
+
+        local titleWidth, titleHeight = gfx.getTextSize("MAZE")
+        local title = gfx.image.new(titleWidth, titleHeight)
+        gfx.pushContext(title)
+        gfx.drawText("MAZE", 0, 0)
+        gfx.popContext()
+
+        local function drawCard(step)
+            -- Each frame is a quarter of a stride further down the corridor, so the four loop smoothly
+            local walked = (step - 1) * 2 / FRAMES
+            game.player.x, game.player.y = startX + offset[1] * walked, startY + offset[2] * walked
+            local scene = gfx.image.new(400, 240)
+            gfx.pushContext(scene)
+            MazeView.draw(game, 0)
+            gfx.popContext()
+
+            local card = gfx.image.new(CARD_WIDTH, CARD_HEIGHT, gfx.kColorBlack)
+            gfx.pushContext(card)
+            scene:draw((CARD_WIDTH - 400) / 2, (CARD_HEIGHT - 240) / 2)
+            local plateWidth, plateHeight = titleWidth * 3 + 24, titleHeight * 3 + 8
+            local plateLeft, plateTop = 14, (CARD_HEIGHT - plateHeight) / 2
+            gfx.setColor(gfx.kColorWhite)
+            gfx.fillRoundRect(plateLeft, plateTop, plateWidth, plateHeight, 6)
+            gfx.setColor(gfx.kColorBlack)
+            gfx.setLineWidth(2)
+            gfx.drawRoundRect(plateLeft, plateTop, plateWidth, plateHeight, 6)
+            gfx.drawRect(1, 1, CARD_WIDTH - 2, CARD_HEIGHT - 2)
+            gfx.setLineWidth(1)
+            title:drawScaled(plateLeft + 12, plateTop + 5, 3)
+            gfx.popContext()
+            return card
+        end
+
+        pd.simulator.writeToFile(drawCard(1), OUT .. "/card.png")
+        for step = 1, FRAMES do
+            pd.simulator.writeToFile(drawCard(step), OUT .. "/card-highlighted-" .. step .. ".png")
+        end
+
+        -- The icon: a little maze, walls and all, with a dot in it
+        local CELLS <const>, CELL <const> = 5, 6
+        local maze = Maze.generate(CELLS, CELLS, SeededRandom.new(7))
+        local icon = gfx.image.new(ICON_SIZE, ICON_SIZE, gfx.kColorWhite)
+        gfx.pushContext(icon)
+        gfx.setColor(gfx.kColorBlack)
+        gfx.setLineWidth(2)
+        local margin = (ICON_SIZE - CELLS * CELL) / 2
+        for row = 1, CELLS do
+            for column = 1, CELLS do
+                local left, top = margin + (column - 1) * CELL, margin + (row - 1) * CELL
+                if not maze:hasPassage(column, row, "north") then gfx.drawLine(left, top, left + CELL, top) end
+                if not maze:hasPassage(column, row, "west") then gfx.drawLine(left, top, left, top + CELL) end
+                if not maze:hasPassage(column, row, "south") then gfx.drawLine(left, top + CELL, left + CELL, top + CELL) end
+                if not maze:hasPassage(column, row, "east") then gfx.drawLine(left + CELL, top, left + CELL, top + CELL) end
+            end
+        end
+        gfx.setLineWidth(1)
+        gfx.fillCircleAtPoint(margin + CELL / 2, margin + CELL / 2, 2)
+        gfx.popContext()
+        pd.simulator.writeToFile(icon, OUT .. "/icon.png")
+        frames(1)
+    end
+
     -- Let the screensaver wander, then take over
     scenarios.screensaver = function()
         frames(5)

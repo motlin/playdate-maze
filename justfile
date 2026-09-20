@@ -39,6 +39,14 @@ screenshots output="builds/screenshots":
     tools/screenshots/run.sh slime "{{output}}"
     tools/screenshots/run.sh resume "{{output}}"
 
+# 🎴 Draw the launcher card and icon from the game itself
+launcher:
+    tools/screenshots/run.sh launcher_art builds/launcher
+    mkdir -p "{{source_dir}}/launcher/card-highlighted"
+    cp builds/launcher/card.png builds/launcher/icon.png "{{source_dir}}/launcher/"
+    for frame in 1 2 3 4; do cp "builds/launcher/card-highlighted-$frame.png" "{{source_dir}}/launcher/card-highlighted/$frame.png"; done
+    printf 'frames = 1x4, 2x4, 3x4, 4x4\n' > "{{source_dir}}/launcher/card-highlighted/animation.txt"
+
 # 💨 Play through the game in the Simulator and fail on any crash
 smoke: screenshots
 

@@ -4,3 +4,4 @@ description=Escape a 3D maze: look around with the crank, carry the shapes to th
 bundleID=com.motlin.maze
 version=1.0.0
 buildNumber=1
+imagePath=launcher
