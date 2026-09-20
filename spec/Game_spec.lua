@@ -76,6 +76,41 @@ describe("Game", function()
             assert.are.equal(270, game:heading())
         end)
 
+        describe("distanceWalked", function()
+            it("is how far the player went this frame", function()
+                local game = newGame()
+                game:update({ forward = 1 })
+                assert.is_near(Game.WALK_SPEED, game.distanceWalked, 0.0001)
+                game:update({})
+                assert.are.equal(0, game.distanceWalked)
+            end)
+
+            it("is nothing when a wall stops the player, however hard they push", function()
+                local game = newGame()
+                game.player.angle = (game.player.angle + 180) % 360
+                for _ = 1, 20 do game:update({ forward = 1 }) end
+                assert.are.equal(0, game.distanceWalked)
+            end)
+
+            it("counts the autopilot's walking", function()
+                local game = newGame()
+                game:setAutopilot(true)
+                local most = 0
+                for _ = 1, 100 do
+                    game:update({})
+                    most = math.max(most, game.distanceWalked)
+                end
+                assert.is_near(Game.WALK_SPEED, most, 0.0001)
+            end)
+
+            it("does not count being reeled along the thread, which is not walking", function()
+                local game = newGame()
+                for _ = 1, 25 do game:update({ forward = 1 }) end
+                game:update({ reel = 90 })
+                assert.are.equal(0, game.distanceWalked)
+            end)
+        end)
+
         it("counts the frames played", function()
             local game = newGame()
             for _ = 1, 45 do game:update({}) end

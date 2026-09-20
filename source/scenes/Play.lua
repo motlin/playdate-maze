@@ -3,6 +3,7 @@
 -- as the seed, so everyone gets the same medium maze on the same day. The screensaver has no
 -- puzzle, starts on autopilot, and rolls straight into a new maze whenever it finds the way out.
 
+import "Bob"
 import "DockTimer"
 import "Game"
 import "Hud"
@@ -34,6 +35,7 @@ local input = {}
 local bButton = TapOrReel.new()
 -- Putting the crank away and leaving the game alone hands over to the autopilot
 local dockTimer = DockTimer.new()
+local headBob = Bob.new()
 
 local function newGame(isAutopilotOn)
     local size = Sizes.ALL[PlayScene.sizeIndex]
@@ -61,6 +63,7 @@ end
 function PlayScene.enter(mode, sizeIndex)
     PlayScene.mode = mode
     dockTimer = DockTimer.new()
+    headBob = Bob.new()
     -- The daily maze is the same size for everyone
     PlayScene.sizeIndex = mode == PlayScene.MODES.DAILY and Sizes.DEFAULT or sizeIndex
     newGame(mode == PlayScene.MODES.SCREENSAVER)
@@ -161,6 +164,7 @@ function PlayScene.update()
         end
     end
 
-    MazeView.draw(PlayScene.game)
+    headBob:walk(PlayScene.game.distanceWalked)
+    MazeView.draw(PlayScene.game, headBob:headOffset())
     Hud.draw(PlayScene.game)
 end

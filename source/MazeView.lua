@@ -2,6 +2,7 @@
 -- shaded trapezoid with a black edge. Shapes and pedestals are drawn over the walls, far to near,
 -- clipped to the screen columns where nothing nearer hides them.
 
+import "Bob"
 import "Puzzle"
 import "Raycaster"
 import "Shades"
@@ -14,7 +15,11 @@ MazeView = {}
 MazeView.SCREEN = { width = 400, height = 240, columnWidth = 4, fieldOfView = 70, refinements = 2 }
 
 local SCREEN <const> = MazeView.SCREEN
-local HORIZON <const> = SCREEN.height / 2
+local HORIZON_AT_REST <const> = SCREEN.height / 2
+-- Where the horizon is on the frame being drawn: it rises and falls a little with each stride
+local horizon = HORIZON_AT_REST
+-- The floor and ceiling are painted this much taller than the screen, so a bob never shows an edge
+local BOB_ROOM <const> = Bob.HEAD_PIXELS + 1
 -- Pixels per block for something one block away
 local PROJECTION <const> = SCREEN.width / 2 / math.tan(math.rad(SCREEN.fieldOfView / 2))
 -- Anything nearer than this is drawn as if it were this far away, to keep coordinates sane
@@ -52,15 +57,16 @@ local BLOCK_EXIT <const> = 3
 local background
 
 local function drawBackground()
-    local image = gfx.image.new(SCREEN.width, SCREEN.height, gfx.kColorBlack)
+    local image = gfx.image.new(SCREEN.width, SCREEN.height + 2 * BOB_ROOM, gfx.kColorBlack)
     gfx.pushContext(image)
     local bandHeight <const> = 8
-    for band = 0, HORIZON // bandHeight - 1 do
+    local middle = HORIZON_AT_REST + BOB_ROOM
+    for band = 0, middle // bandHeight do
         -- The floor brightens towards the viewer; the ceiling stays nearly black
         gfx.setPattern(Shades.pattern(2 + band // 2))
-        gfx.fillRect(0, HORIZON + band * bandHeight, SCREEN.width, bandHeight)
+        gfx.fillRect(0, middle + band * bandHeight, SCREEN.width, bandHeight)
         gfx.setPattern(Shades.pattern(band // 5))
-        gfx.fillRect(0, HORIZON - (band + 1) * bandHeight, SCREEN.width, bandHeight)
+        gfx.fillRect(0, middle - (band + 1) * bandHeight, SCREEN.width, bandHeight)
     end
     gfx.popContext()
     return image
@@ -114,7 +120,7 @@ local function drawGate(run, startTop, startHeight, endTop, endHeight)
         -- Only the part of the face inside the run is in view
         if x and x > startX and x < endX then
             gfx.setLineWidth(math.max(2, height // 30))
-            gfx.drawLine(x, HORIZON - height / 2, x, HORIZON - height / 2 + height * shown)
+            gfx.drawLine(x, horizon - height / 2, x, horizon - height / 2 + height * shown)
         end
     end
     gfx.setLineWidth(1)
@@ -142,7 +148,7 @@ local function drawBricks(run, startTop, startHeight, endTop, endHeight)
             local x, height = jointX[index], jointHeight[index]
             -- Only the part of the face inside the run is in view
             if x and x > startX and x < endX then
-                local top = HORIZON - height / 2
+                local top = horizon - height / 2
                 gfx.drawLine(x, top + height * (course - 1) / COURSES, x, top + height * course / COURSES)
             end
         end
@@ -153,8 +159,8 @@ local function drawRun(run)
     local startHeight = PROJECTION / math.max(run.startDistance, NEAREST)
     local endHeight = PROJECTION / math.max(run.endDistance, NEAREST)
     local startX, endX = run.startX, run.endX
-    local startTop, startBottom = HORIZON - startHeight / 2, HORIZON + startHeight / 2
-    local endTop, endBottom = HORIZON - endHeight / 2, HORIZON + endHeight / 2
+    local startTop, startBottom = horizon - startHeight / 2, horizon + startHeight / 2
+    local endTop, endBottom = horizon - endHeight / 2, horizon + endHeight / 2
 
     if run.block == BLOCK_EXIT then
         gfx.setColor(gfx.kColorWhite)
@@ -183,6 +189,9 @@ local function drawRun(run)
     end
 end
 
+-- The game's frame count on the frame being drawn, which keeps the shapes' hovering in time
+local frame = 0
+
 -- Reused between frames
 local sprites = {}
 local function byDepthFarthestFirst(a, b) return a.depth > b.depth end
@@ -190,7 +199,7 @@ local function byDepthFarthestFirst(a, b) return a.depth > b.depth end
 local function collectSprites(game)
     local count = 0
     local player = game.player
-    local function add(thing, kind)
+    local function add(thing, kind, index)
         local worldX, worldY = game.maze:blockCenter(thing.gridX, thing.gridY)
         local screenX, depth = Raycaster.project(player.x, player.y, player.angle, SCREEN, worldX, worldY)
         if not screenX or depth < NEAREST then return end
@@ -200,11 +209,11 @@ local function collectSprites(game)
             sprite = {}
             sprites[count] = sprite
         end
-        sprite.thing, sprite.kind, sprite.screenX, sprite.depth = thing, kind, screenX, depth
+        sprite.thing, sprite.kind, sprite.screenX, sprite.depth, sprite.index = thing, kind, screenX, depth, index
     end
-    for _, pedestal in ipairs(game.puzzle.pedestals) do add(pedestal, "pedestal") end
-    for _, item in ipairs(game.puzzle.items) do
-        if item.state == Puzzle.STATES.GROUND then add(item, "item") end
+    for index, pedestal in ipairs(game.puzzle.pedestals) do add(pedestal, "pedestal", index) end
+    for index, item in ipairs(game.puzzle.items) do
+        if item.state == Puzzle.STATES.GROUND then add(item, "item", index) end
     end
     for index = count + 1, #sprites do sprites[index] = nil end
     table.sort(sprites, byDepthFarthestFirst)
@@ -229,13 +238,14 @@ end
 
 local function drawSprite(sprite, depths)
     local scale = PROJECTION / sprite.depth
-    local floorY = HORIZON + scale / 2
+    local floorY = horizon + scale / 2
     local centerX = sprite.screenX
     local itemSize = ITEM_SIZE * scale
 
     if sprite.kind == "item" then
         if not clipToVisibleColumns(depths, centerX, itemSize / 2, sprite.depth) then return end
-        ShapeArt.drawSolid(sprite.thing.shape, centerX, HORIZON + ITEM_HOVER_BELOW_EYE * scale, itemSize)
+        local hover = ITEM_HOVER_BELOW_EYE + Bob.hoverOffset(frame, sprite.index)
+        ShapeArt.drawSolid(sprite.thing.shape, centerX, horizon + hover * scale, itemSize)
     else
         local width, height = PEDESTAL_WIDTH * scale, PEDESTAL_HEIGHT * scale
         if not clipToVisibleColumns(depths, centerX, width / 2, sprite.depth) then return end
@@ -252,9 +262,12 @@ local function drawSprite(sprite, depths)
     gfx.clearClipRect()
 end
 
-function MazeView.draw(game)
+-- headOffset is how many pixels the view has bobbed down by, from a Bob
+function MazeView.draw(game, headOffset)
+    horizon = HORIZON_AT_REST + headOffset
+    frame = game.frames
     background = background or drawBackground()
-    background:draw(0, 0)
+    background:draw(0, headOffset - BOB_ROOM)
 
     local player = game.player
     local radians = math.rad(player.angle)

@@ -1,5 +1,6 @@
 -- The title screen: a menu over a maze that wanders by itself in the background.
 
+import "Bob"
 import "Game"
 import "MazeView"
 import "SceneManager"
@@ -43,6 +44,7 @@ local ROWS <const> = {
 }
 
 local backdrop
+local headBob = Bob.new()
 local titleImage
 
 local function newBackdrop()
@@ -80,7 +82,8 @@ function TitleScene.update()
 
     backdrop:update({})
     if backdrop.hasEscaped then newBackdrop() end
-    MazeView.draw(backdrop)
+    headBob:walk(backdrop.distanceWalked)
+    MazeView.draw(backdrop, headBob:headOffset())
 
     gfx.setColor(gfx.kColorWhite)
     gfx.fillRoundRect(PANEL_LEFT, PANEL_TOP, PANEL_WIDTH, PANEL_HEIGHT, 8)

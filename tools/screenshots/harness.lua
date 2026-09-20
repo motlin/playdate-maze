@@ -146,6 +146,13 @@ if playdate.isSimulator then
         hold(pd.kButtonDown, 20)
         expect(math.abs(player.x - startX) < 0.001 and math.abs(player.y - startY) < 0.001, "holding down walks back")
 
+        -- Head bob: the view rises and falls with each stride, and settles when standing
+        hold(pd.kButtonUp, 6); shot("play-bob-mid-stride")
+        hold(pd.kButtonUp, 7); shot("play-bob-later-in-the-stride")
+        hold(pd.kButtonDown, 13)
+        frames(40)
+        player.x, player.y = startX, startY
+
         -- Ariadne's thread: walk away, then hold B and crank backwards to be reeled back
         hold(pd.kButtonUp, 25)
         local walkedX, walkedY = player.x, player.y

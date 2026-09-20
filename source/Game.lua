@@ -39,6 +39,8 @@ function Game.new(options)
     -- The gate over the exit unlocks when the puzzle is solved and is then cranked up by hand.
     -- gateLift runs from 0, fully down, to 1, where the exit opens for good.
     -- It is counted in degrees of cranking, because adding up fractions never quite reaches 1.
+    -- How far the player walked in the latest frame, for the view's head bob
+    game.distanceWalked = 0
     game.isGateUnlocked = false
     game.gateDegrees = 0
     game.gateLift = 0
@@ -155,17 +157,21 @@ function Game:update(input)
 
     local reel = input.reel or 0
     local isCrankingGate = workGate(self, input.crank or 0)
+    local fromX, fromY = self.player.x, self.player.y
     if self.autopilot then
         self.autopilot:update()
         self.thread:record(self.player.x, self.player.y)
     elseif reel > 0 then
         reelIn(self, reel)
+        fromX, fromY = self.player.x, self.player.y
     else
         -- While the crank is lifting the gate it does not also swing the view
         if not isCrankingGate then self.player:turn(input.turn or 0) end
         self.player:move(self.maze, (input.forward or 0) * WALK_SPEED, (input.strafe or 0) * WALK_SPEED)
         self.thread:record(self.player.x, self.player.y)
     end
+    local walkedX, walkedY = self.player.x - fromX, self.player.y - fromY
+    self.distanceWalked = math.sqrt(walkedX * walkedX + walkedY * walkedY)
     self:visit()
     if self.puzzle and input.pickUp then pickUp(self) end
     if self.puzzle and input.drop then drop(self) end
