@@ -17,7 +17,7 @@ sections = []
 LABS = {
     'Maze.lua': ('maze', 'Watch the stack work', 'Step through carving and backtracking. Cyan marks the current stack; gold marks its last cell.'),
     'Player.lua': ('movement', 'Direction and angle', 'Change the heading. Compare the forward vector with its horizontal and vertical components.'),
-    'Raycaster.lua': ('rays', 'Ray traversal', 'Turn the camera and select a ray. Compare its grid crossings, forward depth, and diagonal travel distance.'),
+    'Raycaster.lua': ('rays', 'Ray traversal', 'Turn the camera and select a ray. Change the field of view, then compare grid crossings and distances. “Face a flat wall” makes the fisheye error easy to see. Cyan marks the camera plane.'),
     'MazeView.lua': ('projection', 'Wall height and distance', 'Double the depth to halve the projected height.'),
     'Shades.lua': ('shading', 'Dither thresholds', 'Change the shade level. Compare the enlarged matrix with the resulting black-and-white pattern.'),
 }
@@ -56,12 +56,16 @@ def section(name, title, steps):
         identifier, lab_title, explanation = LABS[name]
         lab = (HERE / (identifier + '.html')).read_text()
         markup += f'<section class="lab-section" id="lab-{identifier}"><div class="lab-intro"><p class="location">source/{name} · Interactive model</p><h2>{lab_title}</h2><p>{explanation}</p></div>{lab}</section>'
+    if name == 'MazeView.lua':
+        lab = (HERE / 'occlusion.html').read_text()
+        markup += f'<section class="lab-section" id="lab-occlusion"><div class="lab-intro"><p class="location">source/MazeView.lua · clipToVisibleColumns</p><h2>Which columns hide the sprite?</h2><p>Move a sprite behind a nearer wall. Compare testing each column with the game’s single clipping rectangle.</p><p>This reduced model has 16 columns. The real game samples 100. The sprite’s screen width is held fixed to isolate visibility.</p></div>{lab}</section>'
     sections.append((name, title, markup))
 
 
 section('main.lua', 'Game structure', [
     step('function playdate.update()', 3, 'One update per frame', '<p>The scene reads controls, updates the game, and draws it. The maze is a 2D grid shared by the first-person, Tumble, and Slime modes.</p><p><code>SceneManager.update()</code> dispatches each frame to the current scene.</p>'),
-    step('pd.display.setRefreshRate(30)', 4, 'Start at the title screen', '<p>Request 30 frames per second, then enter <code>TitleScene</code>. Each frame has about 33 milliseconds available.</p><p><code>onSwitch</code> refreshes the system menu when the scene changes.</p>'),
+    step('pd.display.setRefreshRate(30)', 1, 'Why 30 frames per second?', '<p>30 FPS is Playdate’s default. It allows about 33 milliseconds per frame, versus 20 at 50 FPS. This is a target, not a guarantee; no hardware benchmark here establishes that 30 is optimal.</p><p>Movement and timers count updates. At 30 FPS, 0.08 blocks per update is 2.4 blocks/second and Slime’s 30-frame grip lasts one second. At 50 FPS those become 4 blocks/second and 0.6 seconds.</p>'),
+    step('SceneManager.onSwitch =', 2, 'Start at the title screen', '<p>Refresh the system menu when scenes change, then enter <code>TitleScene</code>.</p>'),
 ])
 section('SceneManager.lua', 'Scene changes', [
     step('function SceneManager.switch(scene, ...)', 6, 'Exit, replace, enter', '<p>Let the old scene clean up, replace <code>currentScene</code>, then initialize the new scene. The <code>...</code> passes its arguments through.</p>'),
@@ -129,6 +133,7 @@ section('Raycaster.lua', 'Rays and perspective', [
     step('    if directionX < 0 then', 10, 'Find the first boundaries', '<p>Choose −1 or +1 for each grid direction. Multiply the distance to the first boundary by that axis’s interval.</p><p>From x = 1.5 pointing east with directionX = 1, the first x boundary is reached at t = 0.5.</p>'),
     step('        if sideDistanceX < sideDistanceY then', 9, 'Visit the next crossed block', '<p>Advance whichever boundary comes first, then schedule its next crossing. This is DDA: digital differential analysis.</p><p>It jumps from boundary to boundary instead of taking tiny steps through empty space.</p>'),
     step('        local block = blocks[gridY][gridX]', 5, 'Stop at the first nonempty block', '<p>Return the hit and t. Subtract the delta because the next boundary time was already advanced.</p><p>EXIT also stops a ray, although the player can enter it. The renderer draws it as white light.</p>'),
+    step('        local cameraX = 2 * screenX', 2, 'Equal screen spacing, unequal angles', '<p>Pixels are evenly spaced on a flat camera plane. The angle of a ray is <code>atan(cameraX × tan(FOV / 2))</code> relative to forward.</p><p>At 70° FOV, halfway from center to edge is about 19.3°, not 17.5°. Incrementing the angle by a fixed amount would not match this projection.</p>'),
     step('        return cast(maze, x, y, forwardX', 1, 'Why t is the correct depth', '<p>Forward has length 1; the plane is perpendicular to it. Thus dot(forward, ray) = 1, and a hit at t × ray has forward depth t.</p><p>A flat wall ahead keeps the same depth across the screen. Using diagonal travel distance would shrink its edges: the fisheye error.</p>'),
     step('        if column <= columnCount then depths[column]', 7, 'Group samples by wall face', '<p>Save each column’s depth. Consecutive hits on the same block face form a run, drawn later as one trapezoid.</p><p>At 400 pixels with 4-pixel columns, there are 100 depth samples plus edge and refinement rays.</p>'),
     step('            for _ = 1, screen.refinements do', 13, 'Refine the edge by bisection', '<p>Cast halfway between the two samples. Replace one endpoint, then repeat. Two refinements reduce the search interval to a quarter.</p><p>A thin third face can be folded into the boundary; this is sampled visibility.</p>'),
@@ -138,6 +143,8 @@ section('MazeView.lua', 'Drawing the 3D image', [
     step('local PROJECTION <const>', 3, 'Set the perspective scale', '<p><code>PROJECTION = 200 / tan(35°)</code> ≈ 285.63 pixels for a one-block wall one block ahead.</p><p>Clamp very near depths to 0.1 so screen coordinates remain manageable.</p>'),
     step('local function drawRun', 7, 'Divide by depth', '<p>Wall height = 285.63 ÷ depth. At depth 2, it is 142.81 pixels; at depth 4, 71.41 pixels.</p><p>Center both ends around the horizon. Their top and bottom edges form a trapezoid.</p>'),
     step('        local distance = (run.startDistance', 6, 'Shade and fill each face', '<p>Darken with distance and make x-facing walls slightly darker. <code>fillPolygon</code> draws the four projected corners.</p>'),
+    step('local function drawBricks', 17, 'Draw brickwork in world coordinates', '<p>Horizontal courses divide the wall’s height. Vertical joints are placed along the block face, then projected onto the screen.</p><p>Bitmap textures instead use the fractional hit position to choose an image column. This game draws lines; it does not sample a wall texture. Distant walls omit small brick details.</p>'),
+    step('local function drawBackground()', 14, 'The floor is a cached gradient', '<p>These horizontal bands suggest a floor and ceiling without locating a world point for every pixel.</p><p>A textured floor needs another projection: intersect viewing rays with the floor plane and sample its texture. This renderer only projects individual floor marks.</p>'),
     step('    local firstColumn = math.max', 12, 'Hide sprites behind walls', '<p>Compare the sprite’s depth with each wall-column depth. Clip drawing between the first and last visible columns.</p><p>This single rectangle can include a hidden middle strip. It is approximate occlusion, not a per-pixel depth buffer.</p>'),
     step('    local scan = Raycaster.scan', 7, 'Draw walls, marks, then sprites', '<p>Scan from the player’s position and draw the wall runs. Add floor and ceiling marks, then sprites sorted farthest first.</p><p>Nearby sprites paint over farther ones. The scene draws the HUD afterward.</p>'),
 ])
