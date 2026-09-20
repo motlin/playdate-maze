@@ -1,0 +1,6 @@
+name=Maze
+author=The Motlins
+description=Escape a 3D maze: look around with the crank, carry the shapes to their pedestals, and open the exit. Or sit back and let it wander like a screensaver.
+bundleID=com.motlin.maze
+version=1.0.0
+buildNumber=1
