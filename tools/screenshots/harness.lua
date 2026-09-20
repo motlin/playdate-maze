@@ -175,6 +175,23 @@ if playdate.isSimulator then
         press(pd.kButtonA, 2); shot("play-nothing-to-pick-up")
         press(pd.kButtonB, 2); shot("play-nothing-to-put-down")
 
+        -- Dock to dream: put the crank away and leave it, and the autopilot takes over
+        docked = true
+        frames(DockTimer.DELAY_FRAMES - 10)
+        expect(not PlayScene.game:isAutopilotOn(), "the autopilot waits three seconds after the crank is docked")
+        frames(15); shot("play-docked-autopilot")
+        expect(PlayScene.game:isAutopilotOn(), "then takes over")
+        docked = false
+        frames(2); shot("play-undocked-in-control")
+        expect(not PlayScene.game:isAutopilotOn(), "pulling the crank out takes control back")
+        docked = true
+        frames(DockTimer.DELAY_FRAMES + 5)
+        expect(PlayScene.game:isAutopilotOn(), "docking again hands over again")
+        press(pd.kButtonA, 2)
+        expect(not PlayScene.game:isAutopilotOn(), "and any button takes control back with the crank still docked")
+        docked = false
+        frames(2)
+
         -- Look around from the middle of the maze
         player.x, player.y = PlayScene.game.maze:cellCenter(4, 3)
         for quarter = 0, 3 do

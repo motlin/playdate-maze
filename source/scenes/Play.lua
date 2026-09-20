@@ -3,6 +3,7 @@
 -- as the seed, so everyone gets the same medium maze on the same day. The screensaver has no
 -- puzzle, starts on autopilot, and rolls straight into a new maze whenever it finds the way out.
 
+import "DockTimer"
 import "Game"
 import "Hud"
 import "MazeView"
@@ -31,6 +32,8 @@ local MONTHS <const> = { "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug",
 local input = {}
 -- B is tapped to put a shape down, or held while cranking backwards to reel in the thread
 local bButton = TapOrReel.new()
+-- Putting the crank away and leaving the game alone hands over to the autopilot
+local dockTimer = DockTimer.new()
 
 local function newGame(isAutopilotOn)
     local size = Sizes.ALL[PlayScene.sizeIndex]
@@ -57,6 +60,7 @@ end
 
 function PlayScene.enter(mode, sizeIndex)
     PlayScene.mode = mode
+    dockTimer = DockTimer.new()
     -- The daily maze is the same size for everyone
     PlayScene.sizeIndex = mode == PlayScene.MODES.DAILY and Sizes.DEFAULT or sizeIndex
     newGame(mode == PlayScene.MODES.SCREENSAVER)
@@ -77,6 +81,30 @@ local function isAnyButtonJustPressed()
         if pd.buttonJustPressed(button) then return true end
     end
     return false
+end
+
+local function isAnyButtonDown()
+    for _, button in ipairs(BUTTONS) do
+        if pd.buttonIsPressed(button) then return true end
+    end
+    return false
+end
+
+local function setAutopilot(isOn)
+    PlayScene.game:setAutopilot(isOn)
+    SystemMenu.setAutopilot(isOn)
+end
+
+local function dockToDream()
+    local game = PlayScene.game
+    local action = dockTimer:update(pd.isCrankDocked(), isAnyButtonDown() or isAnyButtonJustPressed())
+    if action == DockTimer.ACTIONS.HAND_OVER and not game:isAutopilotOn() then
+        setAutopilot(true)
+        game:say("Crank docked: autopilot")
+    elseif action == DockTimer.ACTIONS.TAKE_BACK and game:isAutopilotOn() then
+        setAutopilot(false)
+        game:say("You have the controls")
+    end
 end
 
 local function axis(negativeButton, positiveButton)
@@ -112,9 +140,9 @@ end
 
 function PlayScene.update()
     local game = PlayScene.game
+    dockToDream()
     if game:isAutopilotOn() and isAnyButtonJustPressed() then
-        game:setAutopilot(false)
-        SystemMenu.setAutopilot(false)
+        setAutopilot(false)
         -- The press that takes over does nothing else, not even when it is let go
         readInput()
         bButton:ignoreThisPress()
