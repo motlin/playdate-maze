@@ -6,6 +6,7 @@ import "Maze"
 import "Player"
 import "Puzzle"
 import "Autopilot"
+import "Landmarks"
 import "Run"
 import "Thread"
 
@@ -49,6 +50,7 @@ function Game.new(options)
     else
         maze:openExit()
     end
+    game.landmarks = Landmarks.scatter(maze, options.random)
     return game
 end
 

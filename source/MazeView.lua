@@ -3,6 +3,7 @@
 -- clipped to the screen columns where nothing nearer hides them.
 
 import "Bob"
+import "Landmarks"
 import "Puzzle"
 import "Raycaster"
 import "Shades"
@@ -128,6 +129,87 @@ local function drawGate(run, startTop, startHeight, endTop, endHeight)
     gfx.drawLine(startX, startFoot, endX, endFoot)
 end
 
+-- Landmarks. A picture hangs across the middle half of its wall face, between these heights
+-- measured down from the top of the wall; walls shorter than this on screen show no picture.
+local PICTURE_FROM <const> = 0.25
+local PICTURE_TO <const> = 0.75
+local PICTURE_TOP <const> = 0.28
+local PICTURE_BOTTOM <const> = 0.72
+local SHORTEST_WALL_WITH_PICTURE <const> = 36
+-- Each motif is a list of strokes; each stroke is a list of x, y pairs across the picture, from
+-- 0, 0 at its top left to 1, 1 at its bottom right
+local MOTIFS <const> = {
+    -- A sun
+    { { 0.5, 0.25, 0.75, 0.5, 0.5, 0.75, 0.25, 0.5, 0.5, 0.25 }, { 0.5, 0.08, 0.5, 0.18 }, { 0.5, 0.82, 0.5, 0.92 }, { 0.08, 0.5, 0.18, 0.5 }, { 0.82, 0.5, 0.92, 0.5 } },
+    -- A tree
+    { { 0.5, 0.1, 0.85, 0.65, 0.15, 0.65, 0.5, 0.1 }, { 0.5, 0.65, 0.5, 0.9 } },
+    -- Waves
+    { { 0.1, 0.35, 0.3, 0.2, 0.5, 0.35, 0.7, 0.2, 0.9, 0.35 }, { 0.1, 0.7, 0.3, 0.55, 0.5, 0.7, 0.7, 0.55, 0.9, 0.7 } },
+    -- A star
+    { { 0.5, 0.1, 0.72, 0.88, 0.1, 0.38, 0.9, 0.38, 0.28, 0.88, 0.5, 0.1 } },
+    -- An eye
+    { { 0.1, 0.5, 0.5, 0.2, 0.9, 0.5, 0.5, 0.8, 0.1, 0.5 }, { 0.42, 0.42, 0.58, 0.42, 0.58, 0.58, 0.42, 0.58, 0.42, 0.42 } },
+    -- A house
+    { { 0.2, 0.9, 0.2, 0.45, 0.5, 0.15, 0.8, 0.45, 0.8, 0.9, 0.2, 0.9 }, { 0.45, 0.9, 0.45, 0.65, 0.6, 0.65, 0.6, 0.9 } },
+    -- A cross
+    { { 0.15, 0.15, 0.85, 0.85 }, { 0.85, 0.15, 0.15, 0.85 } },
+    -- A spiral of squares
+    { { 0.15, 0.15, 0.85, 0.15, 0.85, 0.85, 0.15, 0.85, 0.15, 0.35, 0.65, 0.35, 0.65, 0.65, 0.35, 0.65, 0.35, 0.5 } },
+}
+-- Marks on floors and ceilings are squares or diamonds this far across, in blocks
+local MARK_HALF_SIZE <const> = 0.22
+
+local landmarks
+
+-- Which face of a run's block the viewer is looking at
+local function faceOf(run)
+    if run.side == Raycaster.SIDES.X then
+        return viewX < run.gridX - 1 and Landmarks.FACES.WEST or Landmarks.FACES.EAST
+    end
+    return viewY < run.gridY - 1 and Landmarks.FACES.NORTH or Landmarks.FACES.SOUTH
+end
+
+-- Draws the picture hanging on a run's wall face, if there is one. Wall heights vary evenly
+-- across the screen, so a point part of the way across the picture is found by blending its ends.
+local function drawPicture(run)
+    local motif = landmarks:pictureOn(run.gridX, run.gridY, faceOf(run))
+    if not motif then return end
+    local fromX, fromHeight = projectAlongFace(run, PICTURE_FROM)
+    local toX, toHeight = projectAlongFace(run, PICTURE_TO)
+    if not fromX or not toX then return end
+    if math.max(fromHeight, toHeight) < SHORTEST_WALL_WITH_PICTURE then return end
+    -- Along some faces the far end comes first on screen
+    if fromX > toX then fromX, fromHeight, toX, toHeight = toX, toHeight, fromX, fromHeight end
+
+    local function place(across, down)
+        local height = fromHeight + (toHeight - fromHeight) * across
+        local fraction = PICTURE_TOP + (PICTURE_BOTTOM - PICTURE_TOP) * down
+        return fromX + (toX - fromX) * across, horizon - height / 2 + height * fraction
+    end
+
+    -- Only the part of the face inside the run is in view
+    gfx.setClipRect(run.startX, 0, run.endX - run.startX, SCREEN.height)
+    local x1, y1 = place(0, 0)
+    local x2, y2 = place(1, 0)
+    local x3, y3 = place(1, 1)
+    local x4, y4 = place(0, 1)
+    gfx.setColor(gfx.kColorWhite)
+    gfx.fillPolygon(x1, y1, x2, y2, x3, y3, x4, y4)
+    gfx.setColor(gfx.kColorBlack)
+    gfx.setLineWidth(2)
+    gfx.drawPolygon(x1, y1, x2, y2, x3, y3, x4, y4)
+    gfx.setLineWidth(1)
+    for _, stroke in ipairs(MOTIFS[motif]) do
+        local previousX, previousY = place(stroke[1], stroke[2])
+        for index = 3, #stroke, 2 do
+            local x, y = place(stroke[index], stroke[index + 1])
+            gfx.drawLine(previousX, previousY, x, y)
+            previousX, previousY = x, y
+        end
+    end
+    gfx.clearClipRect()
+end
+
 local jointX, jointHeight = {}, {}
 
 local function drawBricks(run, startTop, startHeight, endTop, endHeight)
@@ -186,6 +268,7 @@ local function drawRun(run)
         drawGate(run, startTop, startHeight, endTop, endHeight)
     else
         drawBricks(run, startTop, startHeight, endTop, endHeight)
+        drawPicture(run)
     end
 end
 
@@ -262,6 +345,43 @@ local function drawSprite(sprite, depths)
     gfx.clearClipRect()
 end
 
+-- A mark is a square or a diamond lying flat, black on a floor and white on a ceiling, solid or
+-- in outline: four looks, so that marks near each other differ
+local markCornersX, markCornersY = {}, {}
+local SQUARE <const> = { -1, -1, 1, -1, 1, 1, -1, 1 }
+local DIAMOND <const> = { 0, -1.3, 1.3, 0, 0, 1.3, -1.3, 0 }
+
+local function drawMark(mark, maze, depths)
+    local centerWorldX, centerWorldY = maze:blockCenter(mark.gridX, mark.gridY)
+    local centerX, centerHeight = projectWallPoint(centerWorldX, centerWorldY)
+    if not centerX then return end
+    local outline = mark.motif % 2 == 0 and DIAMOND or SQUARE
+    local sign = mark.kind == "floor" and 1 or -1
+    local halfWidth = 0
+    for corner = 1, 4 do
+        local x, height = projectWallPoint(
+            centerWorldX + outline[2 * corner - 1] * MARK_HALF_SIZE,
+            centerWorldY + outline[2 * corner] * MARK_HALF_SIZE
+        )
+        -- Standing on it, or nearly: it is underfoot and out of view
+        if not x then return end
+        markCornersX[corner], markCornersY[corner] = x, horizon + sign * height / 2
+        halfWidth = math.max(halfWidth, math.abs(x - centerX))
+    end
+    if not clipToVisibleColumns(depths, centerX, halfWidth, PROJECTION / centerHeight) then return end
+
+    gfx.setColor(mark.kind == "floor" and gfx.kColorBlack or gfx.kColorWhite)
+    local x, y = markCornersX, markCornersY
+    if mark.motif % 4 < 2 then
+        gfx.fillPolygon(x[1], y[1], x[2], y[2], x[3], y[3], x[4], y[4])
+    else
+        gfx.setLineWidth(2)
+        gfx.drawPolygon(x[1], y[1], x[2], y[2], x[3], y[3], x[4], y[4])
+        gfx.setLineWidth(1)
+    end
+    gfx.clearClipRect()
+end
+
 -- headOffset is how many pixels the view has bobbed down by, from a Bob
 function MazeView.draw(game, headOffset)
     horizon = HORIZON_AT_REST + headOffset
@@ -273,10 +393,12 @@ function MazeView.draw(game, headOffset)
     local radians = math.rad(player.angle)
     viewX, viewY, forwardX, forwardY = player.x, player.y, math.cos(radians), math.sin(radians)
     gateLift = game.gateLift
+    landmarks = game.landmarks
     local scan = Raycaster.scan(game.maze, player.x, player.y, player.angle, SCREEN)
     local runs = scan.runs
     for index = 1, #runs do drawRun(runs[index]) end
 
+    for _, mark in ipairs(landmarks.marks) do drawMark(mark, game.maze, scan.depths) end
     if game.puzzle then
         collectSprites(game)
         for index = 1, #sprites do drawSprite(sprites[index], scan.depths) end

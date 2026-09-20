@@ -47,6 +47,13 @@ describe("Game", function()
             assert.is_false(game.maze:hasPassage(6, 5, "east"))
         end)
 
+        it("scatters landmarks, the same ones for the same random numbers", function()
+            local game = newGame()
+            assert.are.equal(30 // 5, #game.landmarks.all)
+            assert.are.same(game.landmarks.all, newGame().landmarks.all)
+            assert.is_true(#newGame({ hasPuzzle = false }).landmarks.all > 0)
+        end)
+
         it("leaves the exit open when there is no puzzle", function()
             local game = newGame({ hasPuzzle = false })
             assert.is_nil(game.puzzle)

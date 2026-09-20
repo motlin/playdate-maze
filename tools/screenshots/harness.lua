@@ -201,6 +201,47 @@ if playdate.isSimulator then
         docked = false
         frames(2)
 
+        -- Landmarks: look at one of each kind from as far back along a corridor as there is room
+        local ANGLES <const> = { east = 0, south = 90, west = 180, north = 270 }
+        local OPPOSITE <const> = { east = "west", west = "east", north = "south", south = "north" }
+        -- How many open blocks lie beyond a cell's block in a direction, up to three
+        local function roomBeyond(game, cellX, cellY, direction)
+            local offset = Maze.OFFSETS[direction]
+            for blocks = 1, 3 do
+                if game.maze:isWall(cellX + offset[1] * blocks, cellY + offset[2] * blocks) then return blocks - 1 end
+            end
+            return 3
+        end
+        -- Whether a landmark can be seen from a couple of blocks away, and the view that does so
+        local function viewOf(game, landmark)
+            local cellX, cellY = game.maze:cellBlock(landmark.column, landmark.row)
+            local candidates = landmark.kind == "picture" and { OPPOSITE[landmark.direction] } or Maze.DIRECTIONS
+            for _, direction in ipairs(candidates) do
+                local blocks = roomBeyond(game, cellX, cellY, direction)
+                if blocks >= 2 then
+                    local offset = Maze.OFFSETS[direction]
+                    local x, y = game.maze:blockCenter(cellX + offset[1] * blocks, cellY + offset[2] * blocks)
+                    return x, y, ANGLES[OPPOSITE[direction]]
+                end
+            end
+            return nil
+        end
+        local function lookAt(x, y, angle, name)
+            player.x, player.y, player.angle = x, y, angle
+            frames(1); shot(name)
+            player.angle = (angle + 12) % 360
+            frames(1); shot(name .. "-at-an-angle")
+        end
+        local seenKinds = {}
+        for _, landmark in ipairs(PlayScene.game.landmarks.all) do
+            local x, y, angle = viewOf(PlayScene.game, landmark)
+            if x and not seenKinds[landmark.kind] then
+                seenKinds[landmark.kind] = true
+                lookAt(x, y, angle, "play-landmark-" .. landmark.kind)
+            end
+        end
+        expect(seenKinds.picture and seenKinds.floor and seenKinds.ceiling, "a medium maze has every kind of landmark somewhere it can be seen from down a corridor")
+
         -- The compass: north in the middle, and the letters carry on across 359 to 0 degrees
         player.angle = 270; frames(1); shot("play-compass-north")
         player.angle = 352; frames(1); shot("play-compass-across-the-join")
