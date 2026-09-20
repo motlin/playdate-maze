@@ -1,6 +1,7 @@
 -- Plays the game's sounds on the Playdate's synths, from the notes SoundBook writes for each
 -- event. Each wave has a few synths, used in turn, so notes that overlap do not cut each other off.
 
+import "Hum"
 import "SoundBook"
 
 local snd <const> = playdate.sound
@@ -43,4 +44,38 @@ function Sounds.play(events)
             synth:playNote(note.frequency, note.volume * masterVolume, note.seconds, now + note.delay)
         end
     end
+end
+
+-- One held note for each shape, made the first time it is needed
+local hums = {}
+
+local function humFor(shape)
+    local synth = hums[shape]
+    if not synth then
+        synth = snd.synth.new(snd.kWaveSine)
+        -- A slow swell, so a hum never clicks in or out
+        synth:setADSR(0.4, 0, 1, 0.4)
+        hums[shape] = synth
+    end
+    return synth
+end
+
+-- Call every frame of the 3D maze: sets how loudly each shape hums in each ear
+function Sounds.hum(game)
+    if not game.puzzle then return end
+    local player, items = game.player, game.puzzle.items
+    for index, level in ipairs(Hum.levels(player.x, player.y, player.angle, items)) do
+        local shape = items[index].shape
+        local synth = humFor(shape)
+        if level.left + level.right > 0 then
+            if not synth:isPlaying() then synth:playNote(Hum.FREQUENCIES[shape], 1) end
+            synth:setVolume(level.left * masterVolume, level.right * masterVolume)
+        elseif synth:isPlaying() then
+            synth:noteOff()
+        end
+    end
+end
+
+function Sounds.stopHum()
+    for _, synth in pairs(hums) do synth:noteOff() end
 end

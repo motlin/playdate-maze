@@ -75,6 +75,10 @@ function PlayScene.playAgain()
     SceneManager.switch(PlayScene, PlayScene.MODES.EXPLORE, PlayScene.sizeIndex)
 end
 
+function PlayScene.exit()
+    Sounds.stopHum()
+end
+
 function PlayScene.restart()
     newGame(PlayScene.game:isAutopilotOn())
     SystemMenu.setAutopilot(PlayScene.game:isAutopilotOn())
@@ -157,6 +161,7 @@ function PlayScene.update()
     end
 
     Sounds.play(game.events)
+    Sounds.hum(game)
     if game.hasEscaped then
         if PlayScene.mode == PlayScene.MODES.SCREENSAVER then
             PlayScene.restart()

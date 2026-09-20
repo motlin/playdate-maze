@@ -1,6 +1,7 @@
 import "CoreLibs/graphics"
 
 import "SceneManager"
+import "Sounds"
 import "SystemMenu"
 import "scenes/Title"
 import "scenes/Play"
@@ -12,6 +13,11 @@ local pd <const> = playdate
 
 function playdate.update()
     SceneManager.update()
+end
+
+-- Held notes would otherwise drone on behind the system menu
+function playdate.gameWillPause()
+    Sounds.stopHum()
 end
 
 math.randomseed(pd.getSecondsSinceEpoch())
