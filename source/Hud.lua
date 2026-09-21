@@ -7,6 +7,7 @@ import "Puzzle"
 import "ShapeArt"
 
 Hud = {}
+local compassMarks = {}
 
 local SCREEN_WIDTH <const> = 400
 local SCREEN_HEIGHT <const> = 240
@@ -56,7 +57,7 @@ local function drawCompass(heading)
     drawPanel(left, EDGE, COMPASS_WIDTH, COMPASS_HEIGHT)
     playdate.graphics.setClipRect(left + 2, EDGE, COMPASS_WIDTH - 4, COMPASS_HEIGHT)
     playdate.graphics.setColor(playdate.graphics.kColorBlack)
-    for _, mark in ipairs(Compass.marks(heading, COMPASS_WIDTH, COMPASS_SPAN)) do
+    for _, mark in ipairs(Compass.marks(heading, COMPASS_WIDTH, COMPASS_SPAN, compassMarks)) do
         if mark.label then
             playdate.graphics.drawTextAligned(mark.label, left + mark.x, EDGE + 2, kTextAlignment.center)
         else

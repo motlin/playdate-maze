@@ -1,7 +1,7 @@
 std = "lua54"
 include_files = { "source/**/*.lua", "spec/**/*.lua", "tools/screenshots/harness.lua" }
 local modules = {
-    "PlayInput", "WalkingActions", "TumbleActions", "SlimeActions",
+    "SaveData", "PlayInput", "WalkingActions", "TumbleActions", "SlimeActions",
     "Maze", "Raycaster", "Player", "Autopilot", "Puzzle", "Game", "Run", "Tumble", "Slime", "Thread", "TapOrReel", "Landmarks", "Flippers", "SoundBook", "Sounds", "Hum", "ExitDistance", "MusicScore", "Music", "SaveGame", "Settings", "CrankSteps", "MapDesign", "MapSlots", "MapEditor", "DockTimer", "Compass", "Bob", "Shades", "Sizes", "SeededRandom",
     "ShapeArt", "MazeView", "SideView", "MapView", "TumbleView", "SlimeView", "Minimap", "Hud",
     "SceneManager", "SystemMenu",

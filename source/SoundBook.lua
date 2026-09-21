@@ -51,4 +51,5 @@ local BOOK <const> = {
     letGo = run("sine", { 330, 240 }, 0.3, 0.05),
 }
 
+-- Borrowed immutable data; callers must not modify it.
 function SoundBook.notes(event) return BOOK[event] or error("no sound for the event '" .. tostring(event) .. "'") end

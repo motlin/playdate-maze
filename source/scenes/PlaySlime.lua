@@ -17,6 +17,7 @@ SlimeScene = { slime = nil, sizeIndex = Sizes.DEFAULT }
 
 local controls = PlayInput.new()
 local actions = SlimeActions.new(controls)
+local actionBuffer = {}
 
 function SlimeScene.newGame()
     local size = Sizes.ALL[SlimeScene.sizeIndex]
@@ -37,7 +38,7 @@ local function playAgain() SceneManager.switch(SlimeScene, SlimeScene.sizeIndex)
 function SlimeScene.update()
     local slime = SlimeScene.slime
     local input = controls:read()
-    slime:update(actions:read())
+    slime:update(actions:read(actionBuffer))
     Sounds.play(slime.events)
     Music.update(slime)
     if slime.hasEscaped then

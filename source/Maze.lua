@@ -4,6 +4,8 @@
 -- covers world x in [gridX - 1, gridX) and y in [gridY - 1, gridY). North is -y, east is +x.
 -- The exit is a door one block big, at floor level in the east wall of the last cell.
 
+import "SaveData"
+
 ---@alias Random fun(limit: integer): integer
 ---@class Point
 ---@field x number
@@ -280,7 +282,7 @@ function Maze:toSave()
         columns = self.columns,
         rows = self.rows,
         corridorWidth = self.corridorWidth,
-        blocks = self.blocks,
+        blocks = SaveData.copy(self.blocks),
         exitGridX = self.exitGridX,
         exitGridY = self.exitGridY,
     }

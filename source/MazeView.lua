@@ -10,6 +10,7 @@ import "Shades"
 import "ShapeArt"
 
 MazeView = {}
+local scanBuffer = { runs = {}, depths = {} }
 
 MazeView.SCREEN = { width = 400, height = 240, columnWidth = 4, fieldOfView = 70, refinements = 2 }
 
@@ -469,7 +470,7 @@ local function drawScene(game, headOffset)
     viewX, viewY, forwardX, forwardY = player.x, player.y, math.cos(radians), math.sin(radians)
     gateLift = game.gateLift
     landmarks = game.landmarks
-    local scan = Raycaster.scan(game.maze, player.x, player.y, player.angle, MazeView.SCREEN)
+    local scan = Raycaster.scan(game.maze, player.x, player.y, player.angle, MazeView.SCREEN, scanBuffer)
     local runs = scan.runs
     for index = 1, #runs do
         drawRun(runs[index])

@@ -4,6 +4,8 @@
 -- block at (2 * column, 2 * row); but blocks can also be opened and filled one at a time, so a
 -- design need not be a proper maze. problems() says what stops it being played.
 
+import "SaveData"
+
 import "Maze"
 
 ---@class MapDesignSave
@@ -292,11 +294,11 @@ function MapDesign:toSave()
         version = MapDesign.SAVE_VERSION,
         columns = self.columns,
         rows = self.rows,
-        blocks = self.blocks,
-        start = self.start,
-        exit = self.exit,
-        items = self.items,
-        pedestals = self.pedestals,
+        blocks = SaveData.copy(self.blocks),
+        start = SaveData.copy(self.start),
+        exit = SaveData.copy(self.exit),
+        items = SaveData.copy(self.items),
+        pedestals = SaveData.copy(self.pedestals),
     }
 end
 

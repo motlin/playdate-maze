@@ -17,6 +17,7 @@ TumbleScene = { tumble = nil, sizeIndex = Sizes.DEFAULT }
 
 local controls = PlayInput.new()
 local actions = TumbleActions.new(controls)
+local actionBuffer = {}
 
 function TumbleScene.newGame()
     local size = Sizes.ALL[TumbleScene.sizeIndex]
@@ -37,7 +38,7 @@ local function playAgain() SceneManager.switch(TumbleScene, TumbleScene.sizeInde
 function TumbleScene.update()
     local tumble = TumbleScene.tumble
     local input = controls:read()
-    tumble:update(actions:read())
+    tumble:update(actions:read(actionBuffer))
     Sounds.play(tumble.events)
     Music.update(tumble)
     if tumble.hasEscaped then

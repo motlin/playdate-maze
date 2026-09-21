@@ -6,6 +6,7 @@ import "SideView"
 import "Slime"
 
 SlimeView = {}
+local arcBuffer = { points = {}, landingX = 0, landingY = 0 }
 
 local PIXELS_PER_BLOCK <const> = 24
 -- Half the body's collision square, in pixels: the blob is drawn flush with this
@@ -81,7 +82,7 @@ local function drawPointer(slime)
 end
 
 local function drawArc(slime)
-    local arc = slime:arc()
+    local arc = slime:arc(arcBuffer)
     playdate.graphics.setColor(playdate.graphics.kColorBlack)
     for _, point in ipairs(arc.points) do
         local x, y = SideView.toScreen(point.x, point.y)

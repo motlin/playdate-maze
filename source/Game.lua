@@ -2,6 +2,8 @@
 -- doing the walking. update() advances it by one frame of input.
 -- Without a puzzle the exit starts open, which is what the screensaver wants.
 
+import "SaveData"
+
 import "Maze"
 import "Player"
 import "Puzzle"
@@ -382,9 +384,9 @@ function Game:toSave()
         maze = self.maze:toSave(),
         player = { x = self.player.x, y = self.player.y, angle = self.player.angle },
         puzzle = self.puzzle:toSave(),
-        landmarks = self.landmarks.all,
-        flippers = self.flippers.all,
-        thread = self.thread.points,
+        landmarks = SaveData.copy(self.landmarks.all),
+        flippers = SaveData.copy(self.flippers.all),
+        thread = SaveData.copy(self.thread.points),
         visited = visited,
         frames = self.frames,
         isFlipped = self.isFlipped,

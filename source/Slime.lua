@@ -37,8 +37,6 @@ import "Run"
 ---@field isAimCancelled boolean
 ---@field throws integer
 ---@field scout Player
----@field arcPoints Point[]
----@field arcResult SlimeArc
 Slime = setmetatable({}, { __index = Run })
 Slime.__index = Slime
 
@@ -84,8 +82,6 @@ function Slime.inMaze(maze, puzzle)
     slime.isAimCancelled = false
     slime.throws = 0
     slime.scout = Player.new(startX, startY, 0)
-    slime.arcPoints = {}
-    slime.arcResult = { points = slime.arcPoints, landingX = startX, landingY = startY }
     return slime
 end
 
@@ -133,10 +129,12 @@ local function fly(maze, body, velocityX, velocityY)
 end
 
 -- Where a throw from here at the present aim would go: { points = { { x, y }, ... }, landingX,
--- landingY }. The tables are reused by the next call.
+-- landingY }. A supplied buffer and its points are overwritten; otherwise the result is fresh.
+---@param result? SlimeArc
 ---@return SlimeArc
-function Slime:arc()
-    local scout, points = self.scout, self.arcPoints
+function Slime:arc(result)
+    result = result or { points = {}, landingX = 0, landingY = 0 }
+    local scout, points = self.scout, result.points
     scout:copyFrom(self.player)
     local velocityX, velocityY = throwVelocity(self.aimAngle)
     local count = 0
@@ -157,8 +155,8 @@ function Slime:arc()
     for index = count + 1, #points do
         points[index] = nil
     end
-    self.arcResult.landingX, self.arcResult.landingY = scout.x, scout.y
-    return self.arcResult
+    result.landingX, result.landingY = scout.x, scout.y
+    return result
 end
 
 ---@param surface string

@@ -85,11 +85,11 @@ describe("Hum", function()
             assert.is_true(Hum.FREQUENCIES.triangle < Hum.FREQUENCIES.square)
         end)
 
-        it("answers for every shape in the order given, reusing its tables", function()
+        it("answers for every shape in the order given, reusing a supplied buffer", function()
             local items = { shapeAt(6, 5), shapeAt(5, 7, "square") }
             local first = Hum.levels(5, 5, 0, items)
             assert.are.equal(2, #first)
-            assert.are.equal(first, Hum.levels(5, 5, 0, items))
+            assert.are.equal(first, Hum.levels(5, 5, 0, items, first))
         end)
     end)
 end)

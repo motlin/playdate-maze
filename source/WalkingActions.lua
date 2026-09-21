@@ -6,12 +6,14 @@ WalkingActions.__index = WalkingActions
 local DPAD_TURN_SPEED <const> = 5
 
 function WalkingActions.new(controls)
-    return setmetatable({ controls = controls, actions = {}, bButton = TapOrReel.new() }, WalkingActions)
+    return setmetatable({ controls = controls, bButton = TapOrReel.new() }, WalkingActions)
 end
 
-function WalkingActions:read(suppressItemActions)
+-- Returns fresh actions unless the caller supplies the table to overwrite.
+function WalkingActions:read(suppressItemActions, actions)
+    actions = actions or {}
     local input = self.controls
-    local actions, button = self.actions, self.bButton
+    local button = self.bButton
     local sideways = input:axis(playdate.kButtonLeft, playdate.kButtonRight)
     local reel, isBTapped = button:update(
         input:isPressed(playdate.kButtonB),

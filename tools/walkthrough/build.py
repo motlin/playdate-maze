@@ -89,7 +89,7 @@ section('PlayInput.lua', 'Shared hardware input', [
     step('function PlayInput:axis(', 3, 'Combine opposite directions', '<p>Subtract the negative button from the positive button. Left alone gives −1, right alone gives +1, and both or neither gives 0.</p>'),
 ])
 section('WalkingActions.lua', 'Walking actions', [
-    step('function WalkingActions.new(controls)', 3, 'Own the button history', '<p>The constructor stores the supplied <code>controls</code> reader. Each mapper owns a reusable action table and a <code>TapOrReel</code> tracker. The tracker distinguishes tapping B from holding B while reeling.</p>'),
+    step('function WalkingActions.new(controls)', 3, 'Own the button history', '<p>The constructor stores the supplied <code>controls</code> reader. Each mapper owns its <code>TapOrReel</code> tracker. Reads return fresh actions unless the scene explicitly supplies its reusable output table. The tracker distinguishes tapping B from holding B while reeling.</p>'),
     step('    actions.forward =', 12, 'Map hardware to actions', '<p>Up/down moves forward/back. The crank turns the view unless B is held. Left/right turns when docked and strafes when undocked.</p><p><code>crank</code> preserves actual crank movement for the gate; D-pad turning does not operate it.</p>'),
     step('    if suppressItemActions then', 4, 'Consume the takeover press', '<p>Suppress pickup, drop, and reel for this frame. Tell the B tracker to ignore the rest of this press too, so releasing it later cannot drop an item.</p>'),
 ])
@@ -154,7 +154,7 @@ section('SideView.lua', '2D drawing coordinates', [
 section('Slime.lua', 'Throwing and trajectory prediction', [
     step('local function throwVelocity', 4, 'Convert the crank angle to velocity', '<p>Slime uses 0° up, unlike the first-person camera’s 0° east. Its launch direction is (sin θ, −cos θ).</p><p>Multiply by <code>THROW_SPEED</code> to get blocks per frame.</p>'),
     step('local function fly', 17, 'Simulate one frame', '<p>Add gravity, cap speed, then call the shared collision method. A downward hit is a floor; other blocked directions identify walls or the ceiling.</p>'),
-    step('function Slime:arc()', 13, 'Preview with the same simulation', '<p>A spare player, <code>scout</code>, resets its own pose through <code>copyFrom</code> and repeats <code>fly</code> until collision or 240 frames. The real player stays unchanged, and the spare body is reused.</p><p>The real flight uses this same function. The preview therefore includes the same gravity, speed cap, and collisions.</p>'),
+    step('function Slime:arc(result)', 14, 'Preview with the same simulation', '<p>A spare player, <code>scout</code>, resets its own pose through <code>copyFrom</code> and repeats <code>fly</code> until collision or 240 frames. The real player stays unchanged, and the spare body is reused. The returned points are fresh unless the view supplies its own output buffer.</p><p>The real flight uses this same function. The preview therefore includes the same gravity, speed cap, and collisions.</p>'),
 ])
 section('Puzzle.lua', 'Shape states', [
     step('function Puzzle:pickUp', 7, 'Ground → carried', '<p>Find an item within reach, change its state, and remember it in <code>self.carried</code>. Only one item can be carried.</p>'),
@@ -162,6 +162,7 @@ section('Puzzle.lua', 'Shape states', [
     step('function Puzzle:isSolved()', 6, 'Check all shapes', '<p>Any shape not placed means the puzzle is unfinished. In first-person play, solving it unlocks the gate; the player must still crank it open.</p>'),
 ])
 section('Raycaster.lua', 'Rays and perspective', [
+    step('function Raycaster.scan', 3, 'Own each scan result', '<p>Without an output buffer, every call returns independent runs and depths. MazeView supplies its private buffer each frame to reuse those tables. Only another scan into that same buffer invalidates its contents.</p>'),
     step('    local width, columnWidth = screen.width', 5, 'Build the camera directions', '<p>Forward = (cos θ, sin θ). The camera plane is perpendicular to forward and has half-width <code>tan(FOV / 2)</code>.</p><p>For 70° FOV, tan(35°) ≈ 0.700. Tangent is opposite ÷ adjacent: plane half-width divided by one unit forward.</p>'),
     step('    local function castAt', 4, 'Aim one ray through the screen', '<p><code>cameraX</code> maps screen x to −1 at the left edge, 0 at center, and +1 at the right edge.</p><p>Add that share of the camera plane to forward. The resulting ray direction is deliberately not normalized.</p>'),
     step('    local gridX, gridY = math.floor(x)', 3, 'Calculate grid-crossing intervals', '<p>Write a ray as position + t × direction. Crossing one block in x takes <code>abs(1 / directionX)</code> units of t.</p><p>A zero component gets infinity: an exactly horizontal ray never crosses a horizontal grid line.</p>'),
@@ -181,11 +182,24 @@ section('MazeView.lua', 'Drawing the 3D image', [
     step('local function drawBricks', 17, 'Draw brickwork in world coordinates', '<p>Horizontal courses divide the wall’s height. Vertical joints are placed along the block face, then projected onto the screen.</p><p>Bitmap textures instead use the fractional hit position to choose an image column. This game draws lines; it does not sample a wall texture. Distant walls omit small brick details.</p>'),
     step('local function drawBackground()', 14, 'The floor is a cached gradient', '<p>These horizontal bands suggest a floor and ceiling without locating a world point for every pixel.</p><p>A textured floor needs another projection: intersect viewing rays with the floor plane and sample its texture. This renderer only projects individual floor marks.</p>'),
     step('    local firstColumn = math.max', 12, 'Hide sprites behind walls', '<p>Compare the sprite’s depth with each wall-column depth. Clip drawing between the first and last visible columns.</p><p>This single rectangle can include a hidden middle strip. It is approximate occlusion, not a per-pixel depth buffer.</p>'),
-    step('    local scan = Raycaster.scan', 7, 'Draw walls, marks, then sprites', '<p>Scan from the player’s position and draw the wall runs. Add floor and ceiling marks, then sprites sorted farthest first.</p><p>Nearby sprites paint over farther ones. The scene draws the HUD afterward.</p>'),
+    step('    local scan = Raycaster.scan', 7, 'Draw walls, marks, then sprites', '<p>Scan from the player’s position into the view’s reusable buffer and draw the wall runs. Add floor and ceiling marks, then sprites sorted farthest first.</p><p>Nearby sprites paint over farther ones. The scene draws the HUD afterward.</p>'),
 ])
 section('Shades.lua', 'Black-and-white shading', [
     step('local BAYER <const>', 6, 'Use a repeating threshold pattern', '<p>Playdate pixels are black or white. The Bayer matrix orders which pixels turn white to imitate gray.</p><p>At level 8, eight of the sixteen pixels are white. At level 16, all are white.</p>'),
     step('for level = 0, Shades.WHITE do', 13, 'Build the drawing patterns once', '<p>Repeat the matrix over an 8 × 8 tile. A pixel is white when its matrix value is below the shade level.</p><p><code>byte * 2</code> shifts the row’s bits left; adding 0 or 1 appends a pixel. Store the eight rows for <code>playdate.graphics.setPattern</code>.</p>'),
+])
+
+section('SaveData.lua', 'Independent save snapshots', [
+    step('function SaveData.copy(value)', 8, 'Detach nested save data', '<p>Game, Maze, Puzzle, and MapDesign copy mutable nested data when exporting a save. Later gameplay and edits to the exported tables cannot change each other. This helper only copies acyclic plain save data; constructors and SDK objects keep their own ownership rules.</p>'),
+])
+section('Hum.lua', 'Owning proximity levels', [
+    step('function Hum.levels', 8, 'Keep or reuse the result', '<p>Omitting the output buffer creates independent levels, including each left/right pair. Sounds supplies its private buffer every frame, consuming the values before explicitly overwriting them next frame.</p>'),
+])
+section('Compass.lua', 'Owning compass marks', [
+    step('function Compass.marks', 8, 'Reuse only the caller’s marks', '<p>Each ordinary call returns independent marks. Hud supplies its own reusable list. Only writing into that same buffer changes its nested marks, so separate callers cannot invalidate each other.</p>'),
+])
+section('SoundBook.lua', 'Borrowing immutable notes', [
+    step('function SoundBook.notes', 1, 'Read shared sheet music', '<p>The note book is immutable by contract. Sounds reads it without modifying it, and later calls never rewrite it. Copying these constants would add allocation without fixing an observed ownership violation.</p>'),
 ])
 
 options = ''.join(f'<option value="section-{index}">{index:02d} {html.escape(title)} — source/{name}</option>' for index, (name, title, _) in enumerate(sections, 1))

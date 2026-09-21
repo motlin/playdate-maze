@@ -84,6 +84,7 @@ function MapEditor:designToPlay()
     return self.design
 end
 
+-- Borrowed immutable data; callers must not modify it.
 ---@return EditorTool
 function MapEditor:tool() return MapEditor.TOOLS[self.toolIndex] end
 

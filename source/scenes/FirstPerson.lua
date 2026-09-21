@@ -34,6 +34,7 @@ local MONTHS <const> = { "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug",
 
 local controls = PlayInput.new()
 local walkingActions = WalkingActions.new(controls)
+local actionBuffer = {}
 -- Putting the crank away and leaving the game alone hands over to the autopilot
 local dockTimer = DockTimer.new()
 local headBob = Bob.new()
@@ -150,7 +151,7 @@ function FirstPersonScene.update()
     FirstPersonScene.applyDockAction(dockAction)
     local takingOver = game:isAutopilotOn() and input.pressed ~= 0
     if takingOver then game:setAutopilot(false) end
-    game:update(walkingActions:read(takingOver))
+    game:update(walkingActions:read(takingOver, actionBuffer))
 
     Sounds.play(game.events)
     Sounds.hum(game)

@@ -75,11 +75,6 @@ function Raycaster.cast(maze, x, y, directionX, directionY)
     end
 end
 
--- Reused between frames so that scanning allocates nothing once it has warmed up
-local runs = {}
-local depths = {}
-local result = { runs = runs, depths = depths }
-
 local function faceKey(side, gridX, gridY) return (gridY * 256 + gridX) * 2 + side end
 
 -- screen = { width, columnWidth, fieldOfView (degrees), refinements }
@@ -90,8 +85,12 @@ local function faceKey(side, gridX, gridY) return (gridY * 256 + gridX) * 2 + si
 ---@param y number
 ---@param angle number
 ---@param screen RayScreen
+-- A fresh result unless the caller supplies a buffer, whose nested tables are overwritten.
+---@param result? RayScan
 ---@return RayScan
-function Raycaster.scan(maze, x, y, angle, screen)
+function Raycaster.scan(maze, x, y, angle, screen, result)
+    result = result or { runs = {}, depths = {} }
+    local runs, depths = result.runs, result.depths
     local width, columnWidth = screen.width, screen.columnWidth
     local radians = math.rad(angle)
     local forwardX, forwardY = math.cos(radians), math.sin(radians)
@@ -106,12 +105,12 @@ function Raycaster.scan(maze, x, y, angle, screen)
 
     local runCount = 0
     local run
-    local function startRun(startX, distance, side, gridX, gridY, block)
+    local function startRun(outputRuns, startX, distance, side, gridX, gridY, block)
         runCount = runCount + 1
-        run = runs[runCount]
+        run = outputRuns[runCount]
         if not run then
             run = {}
-            runs[runCount] = run
+            outputRuns[runCount] = run
         end
         run.startX, run.startDistance = startX, distance
         run.endX, run.endDistance = startX, distance
@@ -119,7 +118,7 @@ function Raycaster.scan(maze, x, y, angle, screen)
         run.key = faceKey(side, gridX, gridY)
     end
 
-    startRun(0, castAt(0))
+    startRun(runs, 0, castAt(0))
     local previousX = 0
     local columnCount = width // columnWidth
     for column = 1, columnCount + 1 do
@@ -148,7 +147,7 @@ function Raycaster.scan(maze, x, y, angle, screen)
             end
             local edge = (low + high) / 2
             run.endX = edge
-            startRun(edge, startDistance, side, gridX, gridY, block)
+            startRun(runs, edge, startDistance, side, gridX, gridY, block)
             run.endX, run.endDistance = sampleX, distance
         end
         previousX = sampleX

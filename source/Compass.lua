@@ -16,12 +16,10 @@ local LABELS <const> = {
     [315] = "NE",
 }
 
--- Reused between frames, as this is called every frame
-local marks = {}
-
 -- Returns a list of { x, label }, left to right, for a strip `width` pixels wide that shows
--- `span` degrees. A mark without a label is a tick. The list is reused by the next call.
-function Compass.marks(angle, width, span)
+-- `span` degrees. A mark without a label is a tick. A supplied buffer and its entries are overwritten; otherwise the result is fresh.
+function Compass.marks(angle, width, span, marks)
+    marks = marks or {}
     local count = 0
     local first = math.ceil((angle - span / 2) / STEP) * STEP
     for markAngle = first, angle + span / 2, STEP do

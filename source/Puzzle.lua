@@ -2,6 +2,8 @@
 -- The player carries one shape at a time. Standing every shape on its own pedestal solves it.
 -- Shapes and pedestals sit in the middle of a block, given as gridX, gridY.
 
+import "SaveData"
+
 ---@class PuzzleItem: GridPoint
 ---@field shape string
 ---@field state? string
@@ -207,7 +209,7 @@ function Puzzle:toSave()
         if item == self.carried then carriedIndex = index end
     end
     -- 0 means nothing is being carried, as a saved table cannot hold a nil
-    return { items = self.items, pedestals = self.pedestals, carriedIndex = carriedIndex }
+    return { items = SaveData.copy(self.items), pedestals = SaveData.copy(self.pedestals), carriedIndex = carriedIndex }
 end
 
 ---@param save PuzzleSave

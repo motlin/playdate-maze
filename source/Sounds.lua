@@ -5,6 +5,7 @@ import "Hum"
 import "SoundBook"
 
 Sounds = {}
+local humLevels = {}
 
 local VOICES_PER_WAVE <const> = 4
 local WAVES <const> = {
@@ -60,7 +61,7 @@ end
 function Sounds.hum(game)
     if not game.puzzle then return end
     local player, items = game.player, game.puzzle.items
-    for index, level in ipairs(Hum.levels(player.x, player.y, player.angle, items)) do
+    for index, level in ipairs(Hum.levels(player.x, player.y, player.angle, items, humLevels)) do
         local shape = items[index].shape
         local synth = humFor(shape)
         if level.left + level.right > 0 then

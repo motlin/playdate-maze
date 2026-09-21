@@ -14,12 +14,10 @@ Hum.NEAREST = 0.5
 -- A shape directly behind is this share as loud as one straight ahead
 local BEHIND <const> = 0.3
 
--- Reused between frames
-local levels = {}
-
 -- items is a list of shapes with gridX, gridY, and state. Returns a list of { left, right }
--- loudnesses from 0 to Hum.LOUDEST, one for each item in order; the list is reused by the next call.
-function Hum.levels(x, y, angle, items)
+-- loudnesses from 0 to Hum.LOUDEST, one for each item in order; A supplied buffer and its entries are overwritten; otherwise the result is fresh.
+function Hum.levels(x, y, angle, items, levels)
+    levels = levels or {}
     for index, item in ipairs(items) do
         local level = levels[index]
         if not level then

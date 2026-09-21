@@ -26,4 +26,5 @@ for level = 0, Shades.WHITE do
     patterns[level] = pattern
 end
 
+-- Borrowed immutable data; callers must not modify it.
 function Shades.pattern(level) return patterns[level] or error("no such shade: " .. tostring(level)) end
