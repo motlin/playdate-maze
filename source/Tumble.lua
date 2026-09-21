@@ -68,7 +68,7 @@ function Tumble.new(options)
 end
 
 ---@return nil
-function Tumble:hint() return nil end
+function Tumble:hint() return nil end -- luacheck: ignore 212/self
 
 ---@param item PuzzleItem
 ---@return nil

@@ -205,12 +205,12 @@ end
 ---@param gridX integer
 ---@param gridY integer
 ---@return number, number
-function Maze:blockCenter(gridX, gridY) return gridX - 0.5, gridY - 0.5 end
+function Maze:blockCenter(gridX, gridY) return gridX - 0.5, gridY - 0.5 end -- luacheck: ignore 212/self
 
 ---@param x number
 ---@param y number
 ---@return integer, integer
-function Maze:blockAt(x, y) return math.floor(x) + 1, math.floor(y) + 1 end
+function Maze:blockAt(x, y) return math.floor(x) + 1, math.floor(y) + 1 end -- luacheck: ignore 212/self
 
 -- A wall or passage belongs with the cell before it up to its middle, and the next cell after
 ---@param x number

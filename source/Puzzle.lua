@@ -128,7 +128,7 @@ end
 -- Takes a shape out of the maze for good, as placing it on a pedestal does
 ---@param item PuzzleItem
 ---@return nil
-function Puzzle:collect(item)
+function Puzzle:collect(item) -- luacheck: ignore 212/self
     assert(item.state == Puzzle.STATES.GROUND, "only a shape lying in the maze can be collected")
     item.state = Puzzle.STATES.PLACED
 end

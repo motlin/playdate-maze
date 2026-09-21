@@ -97,4 +97,4 @@ function Run:tick()
 end
 
 ---@return boolean
-function Run:isAutopilotOn() return false end
+function Run:isAutopilotOn() return false end -- luacheck: ignore 212/self
