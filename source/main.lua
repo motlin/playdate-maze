@@ -32,7 +32,5 @@ playdate.gameWillTerminate = SceneManager.save
 math.randomseed(playdate.getSecondsSinceEpoch())
 Settings.load()
 
-playdate.display.setRefreshRate(30)
-
 SceneManager.onSwitch = SystemMenu.refresh
 SceneManager.switch(TitleScene)
