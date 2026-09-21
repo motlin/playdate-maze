@@ -1,7 +1,7 @@
 -- The maze as a side-on throwing game. You are a slime: hold A and the crank handle points the
 -- way you will throw yourself, along the arc shown; let go to fly, always at full power. There is
 -- no throwing in mid-air: a throw commits you until you stick to something. A floor is safe, but
--- a wall or ceiling only holds you for a second, and the clock runs while you aim. Then you slide
+-- a wall or ceiling only holds you for two seconds, and the clock runs while you aim. Then you slide
 -- down the wall, or drop from the ceiling. B calls off an aim, or, when not aiming, lets go of a
 -- wall or ceiling to drop straight down. The D-pad crawls along floors. Touch all three shapes to
 -- open the exit.
@@ -25,8 +25,8 @@ Slime.GRAVITY = 0.012
 Slime.THROW_SPEED = math.sqrt(2 * Slime.GRAVITY * 4)
 -- Less than the body's width, so one frame's move can never step over a wall
 Slime.MAX_SPEED = 0.35
--- One second of grip on a wall or ceiling
-Slime.STICK_FRAMES = 30
+-- Two seconds of grip on a wall or ceiling
+Slime.STICK_FRAMES = 60
 Slime.SLIDE_SPEED = 0.03
 Slime.CRAWL_SPEED = 0.04
 

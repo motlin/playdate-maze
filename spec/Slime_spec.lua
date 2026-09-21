@@ -230,8 +230,8 @@ describe("Slime", function()
             return slime
         end
 
-        it("has one second of grip", function()
-            assert.are.equal(30, Slime.STICK_FRAMES)
+        it("has two seconds of grip", function()
+            assert.are.equal(60, Slime.STICK_FRAMES)
         end)
 
         it("sticks where it hits, with a full clock", function()
