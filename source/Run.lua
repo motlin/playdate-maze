@@ -2,11 +2,31 @@
 -- taken, the latest message for the screen, and which cells have been seen, for the map's fog of
 -- war. Game and Tumble build on this.
 
+---@class RunOptions
+---@field columns integer
+---@field rows integer
+---@field random Random
+---@field hasPuzzle? boolean
+
+---@class Run
+---@field maze Maze
+---@field player Player
+---@field puzzle Puzzle?
+---@field frames integer
+---@field hasEscaped boolean
+---@field message string?
+---@field messageFrames integer
+---@field visited table<integer, boolean>
+---@field visitedCount integer
+---@field events string[]
 Run = {}
 Run.__index = Run
 
 Run.MESSAGE_FRAMES = 60
 
+---@param maze Maze
+---@param player Player
+---@return Run
 function Run.new(maze, player)
     local run = setmetatable({
         maze = maze,
@@ -26,6 +46,7 @@ function Run.new(maze, player)
 end
 
 -- Remembers the cell the player is in
+---@return nil
 function Run:visit()
     local column, row = self.maze:nearestCell(self.player.x, self.player.y)
     local key = (row - 1) * self.maze.columns + column
@@ -35,29 +56,41 @@ function Run:visit()
     end
 end
 
+---@param column integer
+---@param row integer
+---@return boolean
 function Run:hasVisited(column, row)
     return self.visited[(row - 1) * self.maze.columns + column] == true
 end
 
 -- Whether the map shows this cell. Without a puzzle there is nothing to find, so nothing is hidden.
+---@param column integer
+---@param row integer
+---@return boolean
 function Run:isRevealed(column, row)
     return self.puzzle == nil or self:hasVisited(column, row)
 end
 
+---@param message string
+---@return nil
 function Run:say(message)
     self.message = message
     self.messageFrames = Run.MESSAGE_FRAMES
 end
 
+---@param event string
+---@return nil
 function Run:emit(event)
     self.events[#self.events + 1] = event
 end
 
+---@return nil
 function Run:clearEvents()
     for index = #self.events, 1, -1 do self.events[index] = nil end
 end
 
 -- Call once at the start of every frame that is played
+---@return nil
 function Run:tick()
     self:clearEvents()
     self.frames = self.frames + 1
@@ -67,6 +100,7 @@ function Run:tick()
     end
 end
 
+---@return boolean
 function Run:isAutopilotOn()
     return false
 end

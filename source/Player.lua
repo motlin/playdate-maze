@@ -2,6 +2,11 @@
 -- Angles are in degrees, 0 facing east and growing clockwise. The body is a square of
 -- RADIUS either side, moved one axis at a time so it slides along walls instead of sticking.
 
+
+---@class Player
+---@field x number
+---@field y number
+---@field angle number
 Player = {}
 Player.__index = Player
 
@@ -9,10 +14,16 @@ Player.RADIUS = 0.2
 
 local FACINGS <const> = { "east", "south", "west", "north" }
 
+---@param x number
+---@param y number
+---@param angle number
+---@return Player
 function Player.new(x, y, angle)
     return setmetatable({ x = x, y = y, angle = angle }, Player)
 end
 
+---@param degrees number
+---@return nil
 function Player:turn(degrees)
     self.angle = (self.angle + degrees) % 360
 end
@@ -43,6 +54,10 @@ local function slide(from, to, isBlockedAt)
 end
 
 -- Moves by an offset in the world. Returns whether the way was blocked along x and along y.
+---@param maze Maze
+---@param offsetX number
+---@param offsetY number
+---@return boolean, boolean
 function Player:moveBy(maze, offsetX, offsetY)
     local targetX, targetY = self.x + offsetX, self.y + offsetY
     self.x = slide(self.x, targetX, function(x) return isBlocked(maze, x, self.y) end)
@@ -52,17 +67,26 @@ function Player:moveBy(maze, offsetX, offsetY)
 end
 
 -- Whether the body would overlap a wall if it were this far from where it is
+---@param maze Maze
+---@param offsetX number
+---@param offsetY number
+---@return boolean
 function Player:wouldHit(maze, offsetX, offsetY)
     return isBlocked(maze, self.x + offsetX, self.y + offsetY)
 end
 
 -- Moves relative to the way the player faces
+---@param maze Maze
+---@param forward number
+---@param strafe number
+---@return nil
 function Player:move(maze, forward, strafe)
     local radians = math.rad(self.angle)
     local cosine, sine = math.cos(radians), math.sin(radians)
     self:moveBy(maze, cosine * forward - sine * strafe, sine * forward + cosine * strafe)
 end
 
+---@return string
 function Player:facing()
     return FACINGS[math.floor((self.angle + 45) / 90) % 4 + 1]
 end
@@ -86,6 +110,12 @@ local function crossesBox(fromX, fromY, toX, toY, left, top, right, bottom)
 end
 
 -- Sweep the square body along the whole segment, including corners between its endpoints.
+---@param maze Maze
+---@param fromX number
+---@param fromY number
+---@param toX number
+---@param toY number
+---@return boolean
 function Player.isPathClear(maze, fromX, fromY, toX, toY)
     local left, top = maze:blockAt(math.min(fromX, toX) - Player.RADIUS, math.min(fromY, toY) - Player.RADIUS)
     local right, bottom = maze:blockAt(math.max(fromX, toX) + Player.RADIUS, math.max(fromY, toY) + Player.RADIUS)

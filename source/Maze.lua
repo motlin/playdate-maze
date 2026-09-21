@@ -4,6 +4,34 @@
 -- covers world x in [gridX - 1, gridX) and y in [gridY - 1, gridY). North is -y, east is +x.
 -- The exit is a door one block big, at floor level in the east wall of the last cell.
 
+---@alias Random fun(limit: integer): integer
+---@class Point
+---@field x number
+---@field y number
+---@class GridPoint
+---@field gridX integer
+---@field gridY integer
+---@class MazeSave
+---@field columns integer
+---@field rows integer
+---@field corridorWidth integer
+---@field blocks integer[][]
+---@field exitGridX integer
+---@field exitGridY integer
+---@class OpenRun
+---@field gridY integer
+---@field startGridX integer
+---@field endGridX integer
+
+---@class Maze
+---@field columns integer
+---@field rows integer
+---@field corridorWidth integer
+---@field gridWidth integer
+---@field gridHeight integer
+---@field blocks integer[][]
+---@field exitGridX integer
+---@field exitGridY integer
 Maze = {}
 Maze.__index = Maze
 
@@ -22,6 +50,10 @@ local function cellSpan(maze, number)
     return (number - 1) * pitch + 2, number * pitch
 end
 
+---@param columns integer
+---@param rows integer
+---@param corridorWidth integer?
+---@return Maze
 function Maze.new(columns, rows, corridorWidth)
     corridorWidth = corridorWidth or 1
     local maze = setmetatable({
@@ -46,6 +78,11 @@ function Maze.new(columns, rows, corridorWidth)
 end
 
 -- random(n) returns an integer from 1 to n, like math.random
+---@param columns integer
+---@param rows integer
+---@param random Random
+---@param corridorWidth integer?
+---@return Maze
 function Maze.generate(columns, rows, random, corridorWidth)
     local maze = Maze.new(columns, rows, corridorWidth)
     local visited = { [1] = true }
@@ -92,6 +129,10 @@ local function wallBetween(maze, column, row, direction)
     return left, right, gridY, gridY
 end
 
+---@param column integer
+---@param row integer
+---@param direction string
+---@return nil
 function Maze:carve(column, row, direction)
     local offset = Maze.OFFSETS[direction]
     local nextColumn, nextRow = column + offset[1], row + offset[2]
@@ -105,11 +146,17 @@ function Maze:carve(column, row, direction)
     end
 end
 
+---@param gridX integer
+---@param gridY integer
+---@return integer
 function Maze:blockValue(gridX, gridY)
     local line = self.blocks[gridY]
     return line and line[gridX] or Maze.BLOCKS.WALL
 end
 
+---@param gridX integer
+---@param gridY integer
+---@return boolean
 function Maze:isWall(gridX, gridY)
     local value = self:blockValue(gridX, gridY)
     return value == Maze.BLOCKS.WALL or value == Maze.BLOCKS.DOOR
@@ -117,19 +164,30 @@ end
 
 -- A passage is as wide as the corridor, except the exit, which is only its last block: so look
 -- at the last block of the wall, which is the bottom one of an east or west wall
+---@param column integer
+---@param row integer
+---@param direction string
+---@return boolean
 function Maze:hasPassage(column, row, direction)
     local _, toX, _, toY = wallBetween(self, column, row, direction)
     return not self:isWall(toX, toY)
 end
 
+---@return nil
 function Maze:openExit()
     self.blocks[self.exitGridY][self.exitGridX] = Maze.BLOCKS.EXIT
 end
 
+---@param x number
+---@param y number
+---@return boolean
 function Maze:isExit(x, y)
     return self:blockValue(self:blockAt(x, y)) == Maze.BLOCKS.EXIT
 end
 
+---@param column integer
+---@param row integer
+---@return number, number
 function Maze:cellCenter(column, row)
     local left, right = cellSpan(self, column)
     local top, bottom = cellSpan(self, row)
@@ -137,21 +195,33 @@ function Maze:cellCenter(column, row)
 end
 
 -- The block in the middle of a cell
+---@param column integer
+---@param row integer
+---@return integer, integer
 function Maze:cellBlock(column, row)
     local left, right = cellSpan(self, column)
     local top, bottom = cellSpan(self, row)
     return (left + right) // 2, (top + bottom) // 2
 end
 
+---@param gridX integer
+---@param gridY integer
+---@return number, number
 function Maze:blockCenter(gridX, gridY)
     return gridX - 0.5, gridY - 0.5
 end
 
+---@param x number
+---@param y number
+---@return integer, integer
 function Maze:blockAt(x, y)
     return math.floor(x) + 1, math.floor(y) + 1
 end
 
 -- A wall or passage belongs with the cell before it up to its middle, and the next cell after
+---@param x number
+---@param y number
+---@return integer, integer
 function Maze:nearestCell(x, y)
     local pitch = self.corridorWidth + 1
     local column = math.floor((x - 0.5) / pitch) + 1
@@ -159,6 +229,7 @@ function Maze:nearestCell(x, y)
     return math.max(1, math.min(self.columns, column)), math.max(1, math.min(self.rows, row))
 end
 
+---@return integer[][]
 function Maze:deadEnds()
     local deadEnds = {}
     for row = 1, self.rows do
@@ -175,6 +246,7 @@ end
 
 -- Every stretch of blocks along a row that can be walked through, as { startGridX, endGridX, gridY },
 -- for drawing the maze from above or from the side with few shapes
+---@return OpenRun[]
 function Maze:openRuns()
     local runs = {}
     for gridY = 1, self.gridHeight do
@@ -192,6 +264,7 @@ function Maze:openRuns()
 end
 
 -- What is needed to build this maze again, in a form that can be saved
+---@return MazeSave
 function Maze:toSave()
     return {
         columns = self.columns,
@@ -203,6 +276,8 @@ function Maze:toSave()
     }
 end
 
+---@param save MazeSave
+---@return Maze
 function Maze.fromSave(save)
     local maze = Maze.new(save.columns, save.rows, save.corridorWidth)
     maze.blocks, maze.exitGridX, maze.exitGridY = save.blocks, save.exitGridX, save.exitGridY

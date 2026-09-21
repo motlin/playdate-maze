@@ -51,8 +51,12 @@ launcher:
 # 💨 Play through the game in the Simulator and fail on any crash
 smoke: screenshots
 
+# python3 tools/typecheck/check.py
+typecheck:
+    python3 tools/typecheck/check.py
+
 # ✅ Pre-commit checks
-precommit: lint test build
+precommit: lint typecheck test build
 
 # git test add --test default 'just precommit' --forget
 setup-git-test:

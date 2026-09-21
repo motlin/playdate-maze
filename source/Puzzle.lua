@@ -2,6 +2,21 @@
 -- The player carries one shape at a time. Standing every shape on its own pedestal solves it.
 -- Shapes and pedestals sit in the middle of a block, given as gridX, gridY.
 
+---@class PuzzleItem: GridPoint
+---@field shape string
+---@field state? string
+---@class Pedestal: GridPoint
+---@field shape string
+---@field isFilled? boolean
+---@class PuzzleSave
+---@field items PuzzleItem[]
+---@field pedestals Pedestal[]
+---@field carriedIndex integer
+
+---@class Puzzle
+---@field items PuzzleItem[]
+---@field pedestals Pedestal[]
+---@field carried PuzzleItem?
 Puzzle = {}
 Puzzle.__index = Puzzle
 
@@ -15,6 +30,9 @@ Puzzle.REACH = 1.25
 Puzzle.TOUCH = 0.45
 
 -- items and pedestals are lists of { shape, gridX, gridY }
+---@param items PuzzleItem[]
+---@param pedestals Pedestal[]
+---@return Puzzle
 function Puzzle.new(items, pedestals)
     for _, item in ipairs(items) do item.state = Puzzle.STATES.GROUND end
     for _, pedestal in ipairs(pedestals) do pedestal.isFilled = false end
@@ -43,6 +61,9 @@ local function inCell(maze, shape, cell)
 end
 
 -- A shape and a pedestal for each of Puzzle.SHAPES, every one in a cell of its own
+---@param maze Maze
+---@param random Random
+---@return Puzzle
 function Puzzle.scatter(maze, random)
     local cells = shuffledCells(maze, random)
     assert(#cells >= 2 * #Puzzle.SHAPES, "the maze is too small to hold every shape and pedestal")
@@ -55,6 +76,9 @@ function Puzzle.scatter(maze, random)
 end
 
 -- Only the shapes, for a mode where they are collected rather than carried home
+---@param maze Maze
+---@param random Random
+---@return Puzzle
 function Puzzle.scatterItems(maze, random)
     local cells = shuffledCells(maze, random)
     assert(#cells >= #Puzzle.SHAPES, "the maze is too small to hold every shape")
@@ -69,6 +93,9 @@ local function distanceTo(thing, x, y)
 end
 
 -- The shape A would pick up from here, if any
+---@param x number
+---@param y number
+---@return PuzzleItem?
 function Puzzle:itemInReach(x, y)
     if self.carried then return nil end
     local nearest, nearestDistance = nil, Puzzle.REACH
@@ -82,6 +109,9 @@ function Puzzle:itemInReach(x, y)
 end
 
 -- The shape the player's body is touching, for modes that collect by contact
+---@param x number
+---@param y number
+---@return PuzzleItem?
 function Puzzle:itemTouching(x, y)
     for _, item in ipairs(self.items) do
         if item.state == Puzzle.STATES.GROUND and distanceTo(item, x, y) <= Puzzle.TOUCH then return item end
@@ -90,11 +120,16 @@ function Puzzle:itemTouching(x, y)
 end
 
 -- Takes a shape out of the maze for good, as placing it on a pedestal does
+---@param item PuzzleItem
+---@return nil
 function Puzzle:collect(item)
     assert(item.state == Puzzle.STATES.GROUND, "only a shape lying in the maze can be collected")
     item.state = Puzzle.STATES.PLACED
 end
 
+---@param x number
+---@param y number
+---@return PuzzleItem?
 function Puzzle:pickUp(x, y)
     local item = self:itemInReach(x, y)
     if not item then return nil end
@@ -104,6 +139,9 @@ function Puzzle:pickUp(x, y)
 end
 
 -- The carried shape's own empty pedestal, if it is close enough to put the shape on
+---@param x number
+---@param y number
+---@return Pedestal?
 function Puzzle:pedestalInReach(x, y)
     if not self.carried then return nil end
     for _, pedestal in ipairs(self.pedestals) do
@@ -124,6 +162,9 @@ local function isOccupied(self, gridX, gridY)
 end
 
 -- Returns one of Puzzle.RESULTS, or nil when nothing is being carried
+---@param x number
+---@param y number
+---@return string?
 function Puzzle:drop(x, y)
     local item = self.carried
     if not item then return nil end
@@ -144,6 +185,7 @@ function Puzzle:drop(x, y)
 end
 
 -- Solved once no shape is left lying around or in hand
+---@return boolean
 function Puzzle:isSolved()
     for _, item in ipairs(self.items) do
         if item.state ~= Puzzle.STATES.PLACED then return false end
@@ -152,6 +194,7 @@ function Puzzle:isSolved()
 end
 
 -- What is needed to build this puzzle again, in a form that can be saved
+---@return PuzzleSave
 function Puzzle:toSave()
     local carriedIndex = 0
     for index, item in ipairs(self.items) do
@@ -161,6 +204,8 @@ function Puzzle:toSave()
     return { items = self.items, pedestals = self.pedestals, carriedIndex = carriedIndex }
 end
 
+---@param save PuzzleSave
+---@return Puzzle
 function Puzzle.fromSave(save)
     local puzzle = setmetatable({ items = save.items, pedestals = save.pedestals, carried = nil }, Puzzle)
     if save.carriedIndex > 0 then puzzle.carried = save.items[save.carriedIndex] end

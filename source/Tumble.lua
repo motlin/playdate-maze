@@ -12,6 +12,18 @@ import "Player"
 import "Puzzle"
 import "Run"
 
+---@class TumbleInput
+---@field turn? number
+---@field move? number
+---@field jump? boolean
+
+---@class Tumble: Run
+---@field puzzle Puzzle
+---@field angle number
+---@field velocityX number
+---@field velocityY number
+---@field isGrounded boolean
+---@field facing number
 Tumble = setmetatable({}, { __index = Run })
 Tumble.__index = Tumble
 
@@ -31,9 +43,13 @@ local AIR_FRICTION <const> = 0.02
 local GROUND_PROBE <const> = 0.05
 
 -- A Tumble in a maze and puzzle made elsewhere, starting in the first cell
+---@param maze Maze
+---@param puzzle Puzzle
+---@return Tumble
 function Tumble.inMaze(maze, puzzle)
     local startX, startY = maze:cellCenter(1, 1)
     local tumble = setmetatable(Run.new(maze, Player.new(startX, startY, 90)), Tumble)
+    ---@cast tumble Tumble
     tumble.puzzle = puzzle
     tumble.angle = 0
     tumble.velocityX, tumble.velocityY = 0, 0
@@ -44,15 +60,20 @@ function Tumble.inMaze(maze, puzzle)
 end
 
 -- options = { columns, rows, random }, where random(n) is like math.random
+---@param options RunOptions
+---@return Tumble
 function Tumble.new(options)
     local maze = Maze.generate(options.columns, options.rows, options.random)
     return Tumble.inMaze(maze, Puzzle.scatterItems(maze, options.random))
 end
 
+---@return nil
 function Tumble:hint()
     return nil
 end
 
+---@param item PuzzleItem
+---@return nil
 function Tumble:collect(item)
     self.puzzle:collect(item)
     self:emit("collect")
@@ -70,6 +91,8 @@ function Tumble:collect(item)
 end
 
 -- input = { turn (degrees), move (-1 to 1, along the screen), jump }, all optional
+---@param input TumbleInput
+---@return nil
 function Tumble:update(input)
     if self.hasEscaped then
         self:clearEvents()

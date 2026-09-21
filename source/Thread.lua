@@ -4,6 +4,12 @@
 
 import "Player"
 
+
+---@class Thread
+---@field maze Maze
+---@field lastX number
+---@field lastY number
+---@field points Point[]
 Thread = {}
 Thread.__index = Thread
 
@@ -17,10 +23,15 @@ local function distanceBetween(fromX, fromY, toX, toY)
     return math.sqrt(offsetX * offsetX + offsetY * offsetY)
 end
 
+---@param maze Maze
+---@param x number
+---@param y number
+---@return Thread
 function Thread.new(maze, x, y)
     return setmetatable({ maze = maze, lastX = x, lastY = y, points = { { x = x, y = y } } }, Thread)
 end
 
+---@return number
 function Thread:length()
     local length = 0
     for index = 2, #self.points do
@@ -31,6 +42,9 @@ function Thread:length()
 end
 
 -- Call with the player's position every frame they move under their own power
+---@param x number
+---@param y number
+---@return nil
 function Thread:record(x, y)
     local points = self.points
     -- Nearer the point before last than the last point is: the player has turned back
@@ -54,6 +68,10 @@ end
 
 -- Reels in `distance` blocks of thread from the player's position. Returns the new position and
 -- the heading in degrees, plus whether a wall blocked progress. Position is nil if nothing moved.
+---@param x number
+---@param y number
+---@param distance number
+---@return number?, number?, number?, boolean?
 function Thread:rewindFrom(x, y, distance)
     local points = self.points
     local heading, blocked
@@ -82,6 +100,11 @@ function Thread:rewindFrom(x, y, distance)
 end
 
 -- A thread again from its saved points
+---@param maze Maze
+---@param points Point[]
+---@param x number
+---@param y number
+---@return Thread
 function Thread.fromSave(maze, points, x, y)
     assert(#points >= 1, "a thread has at least the point it started from")
     return setmetatable({ maze = maze, points = points, lastX = x, lastY = y }, Thread)

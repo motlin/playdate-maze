@@ -4,6 +4,20 @@
 
 import "MapDesign"
 
+---@class EditorTool
+---@field name string
+---@field label string
+---@field hint string
+---@field kind? string
+---@field shape? string
+
+---@class MapEditor
+---@field design MapDesign
+---@field cursorX integer
+---@field cursorY integer
+---@field toolIndex integer
+---@field message string?
+---@field hasUnsavedChanges boolean
 MapEditor = {}
 MapEditor.__index = MapEditor
 
@@ -24,6 +38,8 @@ MapEditor.TOOLS = {
 
 local DIRECTIONS <const> = { ["1,0"] = "east", ["-1,0"] = "west", ["0,1"] = "south", ["0,-1"] = "north" }
 
+---@param design MapDesign
+---@return MapEditor
 function MapEditor.new(design)
     return setmetatable({
         design = design,
@@ -35,6 +51,7 @@ function MapEditor.new(design)
     }, MapEditor)
 end
 
+---@return EditorTool
 function MapEditor:tool()
     return MapEditor.TOOLS[self.toolIndex]
 end
@@ -44,6 +61,8 @@ local function nearestCellBlock(value, gridSize)
     return math.max(2, math.min(gridSize - 1, 2 * math.floor(value / 2 + 0.5)))
 end
 
+---@param steps integer
+---@return nil
 function MapEditor:turnTool(steps)
     self.toolIndex = (self.toolIndex - 1 + steps) % #MapEditor.TOOLS + 1
     -- The cells tool's cursor lives on cells
@@ -53,6 +72,7 @@ function MapEditor:turnTool(steps)
     end
 end
 
+---@return nil
 function MapEditor:markSaved()
     self.hasUnsavedChanges = false
 end
@@ -74,6 +94,11 @@ local function setBlock(self, gridX, gridY, isOpen)
 end
 
 -- Moves the cursor a step. isAdding and isRemoving say whether A or B is held as it moves.
+---@param stepX integer
+---@param stepY integer
+---@param isAdding boolean?
+---@param isRemoving boolean?
+---@return nil
 function MapEditor:move(stepX, stepY, isAdding, isRemoving)
     local design = self.design
     if self:tool().name == "cells" then
@@ -108,6 +133,7 @@ local function nameOf(kind, shape)
 end
 
 -- A, pressed where the cursor stands
+---@return nil
 function MapEditor:add()
     local tool, design = self:tool(), self.design
     if tool.name == "cells" then return end
@@ -127,6 +153,7 @@ function MapEditor:add()
 end
 
 -- B, pressed where the cursor stands
+---@return nil
 function MapEditor:remove()
     local design = self.design
     if self:tool().name == "cells" then return end
@@ -144,6 +171,7 @@ function MapEditor:remove()
 end
 
 -- One line on whether the map can be played yet
+---@return string
 function MapEditor:status()
     return self.design:problems()[1] or "Ready to play"
 end

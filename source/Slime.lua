@@ -14,6 +14,31 @@ import "Player"
 import "Puzzle"
 import "Run"
 
+---@class SlimeInput
+---@field aim number
+---@field isAimHeld? boolean
+---@field cancel? boolean
+---@field move? number
+---@class SlimeArc
+---@field points Point[]
+---@field landingX number
+---@field landingY number
+
+---@class Slime: Run
+---@field puzzle Puzzle
+---@field state string
+---@field surface string?
+---@field stickFrames integer
+---@field flightFrames integer
+---@field velocityX number
+---@field velocityY number
+---@field aimAngle number
+---@field isAiming boolean
+---@field isAimCancelled boolean
+---@field throws integer
+---@field scout Player
+---@field arcPoints Point[]
+---@field arcResult SlimeArc
 Slime = setmetatable({}, { __index = Run })
 Slime.__index = Slime
 
@@ -40,9 +65,13 @@ local ARC_FRAMES <const> = 240
 local ARC_POINT_EVERY <const> = 3
 
 -- A Slime in a maze and puzzle made elsewhere, dropped into the first cell
+---@param maze Maze
+---@param puzzle Puzzle
+---@return Slime
 function Slime.inMaze(maze, puzzle)
     local startX, startY = maze:cellCenter(1, 1)
     local slime = setmetatable(Run.new(maze, Player.new(startX, startY, 0)), Slime)
+    ---@cast slime Slime
     slime.puzzle = puzzle
     slime.state = Slime.STATES.FLYING
     -- What it is stuck to: "floor", "ceiling", "left", or "right"
@@ -61,17 +90,21 @@ function Slime.inMaze(maze, puzzle)
 end
 
 -- options = { columns, rows, random }, where random(n) is like math.random
+---@param options RunOptions
+---@return Slime
 function Slime.new(options)
     local maze = Maze.generate(options.columns, options.rows, options.random, Slime.CORRIDOR_WIDTH)
     return Slime.inMaze(maze, Puzzle.scatterItems(maze, options.random))
 end
 
+---@return string?
 function Slime:hint()
     if self.throws == 0 then return "Hold Ⓐ, aim with the crank, let go" end
     return nil
 end
 
 -- Only from something it is stuck to: there is no throwing in mid-air
+---@return boolean
 function Slime:canThrow()
     return self.state ~= Slime.STATES.FLYING
 end
@@ -103,6 +136,7 @@ end
 
 -- Where a throw from here at the present aim would go: { points = { { x, y }, ... }, landingX,
 -- landingY }. The tables are reused by the next call.
+---@return SlimeArc
 function Slime:arc()
     local scout, points = self.scout, self.arcPoints
     scout.x, scout.y = self.player.x, self.player.y
@@ -116,7 +150,7 @@ function Slime:arc()
             count = count + 1
             local point = points[count]
             if not point then
-                point = {}
+                point = { x = scout.x, y = scout.y }
                 points[count] = point
             end
             point.x, point.y = scout.x, scout.y
@@ -127,6 +161,8 @@ function Slime:arc()
     return self.arcResult
 end
 
+---@param surface string
+---@return nil
 function Slime:stick(surface)
     if self.state == Slime.STATES.FLYING then self:emit("splat") end
     local isSameSurfaceAgain = surface == self.surface and self.flightFrames < SHORTEST_REAL_FLIGHT
@@ -140,6 +176,7 @@ function Slime:stick(surface)
     self.state = self.stickFrames > 0 and Slime.STATES.CLINGING or Slime.STATES.SLIDING
 end
 
+---@return nil
 function Slime:launch()
     self:emit("throw")
     self.velocityX, self.velocityY = throwVelocity(self.aimAngle)
@@ -148,6 +185,7 @@ function Slime:launch()
     self.throws = self.throws + 1
 end
 
+---@return nil
 function Slime:fall()
     self.state = Slime.STATES.FLYING
     self.isAiming = false
@@ -157,6 +195,8 @@ end
 
 -- Holding A aims and letting go of A throws. B calls off an aim; with no aim to call off, it
 -- lets go of a wall or ceiling.
+---@param input SlimeInput
+---@return nil
 function Slime:aim(input)
     if input.cancel then
         if self.isAiming then
@@ -174,6 +214,8 @@ function Slime:aim(input)
     end
 end
 
+---@param input SlimeInput
+---@return nil
 function Slime:move(input)
     local maze, player = self.maze, self.player
     if self.state == Slime.STATES.FLYING then
@@ -201,6 +243,8 @@ function Slime:move(input)
     end
 end
 
+---@param item PuzzleItem
+---@return nil
 function Slime:collect(item)
     self.puzzle:collect(item)
     self:emit("collect")
@@ -219,6 +263,8 @@ end
 
 -- input = { aim (the crank's position in degrees), isAimHeld (A is down), cancel (B was pressed),
 -- move (-1 to 1, crawling) }; all but aim are optional
+---@param input SlimeInput
+---@return nil
 function Slime:update(input)
     if self.hasEscaped then
         self:clearEvents()

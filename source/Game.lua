@@ -11,6 +11,43 @@ import "Landmarks"
 import "Run"
 import "Thread"
 
+---@class GameInput
+---@field turn? number
+---@field crank? number
+---@field forward? number
+---@field strafe? number
+---@field reel? number
+---@field pickUp? boolean
+---@field drop? boolean
+---@class GameSave
+---@field version integer
+---@field maze MazeSave
+---@field player {x: number, y: number, angle: number}
+---@field puzzle PuzzleSave
+---@field landmarks table[]
+---@field flippers table[]
+---@field thread Point[]
+---@field visited integer[]
+---@field frames integer
+---@field isFlipped boolean
+---@field isHandMade? boolean
+---@field isGateUnlocked boolean
+---@field gateDegrees number
+
+---@class Game: Run
+---@field thread Thread
+---@field autopilot table?
+---@field landmarks table
+---@field flippers table
+---@field isHandMade boolean
+---@field distanceWalked number
+---@field blocksSinceStep number
+---@field blocksSinceReelTick number
+---@field lastBumpFrame integer
+---@field isGateUnlocked boolean
+---@field gateDegrees number
+---@field gateLift number
+---@field isFlipped boolean
 Game = setmetatable({}, { __index = Run })
 Game.__index = Game
 
@@ -39,6 +76,7 @@ local ANGLES <const> = { east = 0, south = 90, west = 180, north = 270 }
 -- A game in a maze, with the player at the start and everything else still to be put in it
 local function begin(maze, startX, startY, startAngle)
     local game = setmetatable(Run.new(maze, Player.new(startX, startY, startAngle)), Game)
+    ---@cast game Game
     game.autopilot = nil
     -- A maze drawn in the editor, which may have loops, rooms, and dead space
     game.isHandMade = false
@@ -58,6 +96,8 @@ local function begin(maze, startX, startY, startAngle)
     return game
 end
 
+---@param options RunOptions
+---@return Game
 function Game.new(options)
     local maze = Maze.generate(options.columns, options.rows, options.random)
     local startX, startY = maze:cellCenter(1, 1)
@@ -84,6 +124,9 @@ end
 -- A game in a maze drawn in the editor. The start, the exit, and whatever shapes and pedestals
 -- were placed are where the design says; the rest is scattered where the player can get to.
 -- random(n) is like math.random.
+---@param design MapDesign
+---@param random Random
+---@return Game
 function Game.fromDesign(design, random)
     local problems = design:problems()
     assert(#problems == 0, "this map cannot be played: " .. tostring(problems[1]))
@@ -142,25 +185,31 @@ function Game.fromDesign(design, random)
 end
 
 -- The compass bearing of the view, which a mode only has if looking around means something in it
+---@return number
 function Game:heading()
     return self.player.angle
 end
 
+---@return boolean
 function Game:isAutopilotOn()
     return self.autopilot ~= nil
 end
 
 -- Following a wall only finds the way in a true maze, so a hand-made one has no autopilot
+---@return boolean
 function Game:canAutopilot()
     return not self.isHandMade
 end
 
+---@param isOn boolean
+---@return nil
 function Game:setAutopilot(isOn)
     assert(not isOn or self:canAutopilot(), "a hand-made maze has no autopilot")
     self.autopilot = isOn and Autopilot.new(self.maze, self.player) or nil
 end
 
 -- Whether the player is standing at the unlocked gate, looking at it, with it still to be raised
+---@return boolean
 function Game:canCrankGate()
     if not self.isGateUnlocked or self.gateLift == 1 then return false end
     local gateX, gateY = self.maze:blockCenter(self.maze.exitGridX, self.maze.exitGridY)
@@ -171,6 +220,7 @@ function Game:canCrankGate()
 end
 
 -- One line for the bottom of the screen about what the player could do here, or nil
+---@return string?
 function Game:hint()
     if self.autopilot then return "Autopilot: press any button to take over" end
     if self:canCrankGate() then return "Crank forwards to raise the gate" end
@@ -182,6 +232,7 @@ function Game:hint()
     return nil
 end
 
+---@return nil
 function Game:pickUp()
     local item = self.puzzle:pickUp(self.player.x, self.player.y)
     if item then
@@ -196,6 +247,7 @@ function Game:pickUp()
     end
 end
 
+---@return nil
 function Game:drop()
     local item = self.puzzle.carried
     local result = self.puzzle:drop(self.player.x, self.player.y)
@@ -222,6 +274,8 @@ end
 
 -- Pulls the player back along the thread, looking the way they were walking when it was laid,
 -- like a film run backwards
+---@param degrees number
+---@return nil
 function Game:reelIn(degrees)
     local player = self.player
     local x, y, heading, blocked = self.thread:rewindFrom(player.x, player.y, degrees / Game.REEL_DEGREES_PER_BLOCK)
@@ -234,12 +288,17 @@ function Game:reelIn(degrees)
         self.blocksSinceReelTick = self.blocksSinceReelTick - Game.REEL_TICK_BLOCKS
         self:emit("reel")
     end
+    -- rewindFrom returns the coordinates and heading together.
+    ---@cast y number
+    ---@cast heading number
     player.x, player.y = x, y
     local turn = (heading - player.angle + 180) % 360 - 180
     player:turn(math.max(-Game.REEL_TURN_SPEED, math.min(Game.REEL_TURN_SPEED, turn)))
 end
 
 -- Raises the gate by a forward crank, or lets it sag. Returns whether the crank was used on it.
+---@param crank number
+---@return boolean
 function Game:workGate(crank)
     if self.gateLift == 1 then return false end
     local isCranking = crank > 0 and self:canCrankGate()
@@ -264,6 +323,8 @@ end
 -- input = { turn (degrees to turn the view, from the crank or the D-pad), crank (degrees the crank
 -- itself moved), forward and strafe (-1 to 1), reel (degrees of thread to wind in), pickUp, drop },
 -- all optional
+---@param input GameInput
+---@return nil
 function Game:update(input)
     if self.hasEscaped then
         self:clearEvents()
@@ -317,6 +378,7 @@ Game.SAVE_VERSION = 1
 
 -- Everything needed to carry on later, as lists and named entries only, so it can be written as
 -- JSON. The autopilot is not kept: a resumed game is in the player's hands.
+---@return GameSave
 function Game:toSave()
     assert(self.puzzle, "only a maze with a puzzle is worth saving")
     local visited = {}
@@ -339,10 +401,13 @@ function Game:toSave()
     }
 end
 
+---@param save GameSave
+---@return Game
 function Game.fromSave(save)
     assert(save.version == Game.SAVE_VERSION, "this save is version " .. tostring(save.version) .. ", which this game cannot load")
     local maze = Maze.fromSave(save.maze)
     local game = setmetatable(Run.new(maze, Player.new(save.player.x, save.player.y, save.player.angle)), Game)
+    ---@cast game Game
     game.autopilot = nil
     game.puzzle = Puzzle.fromSave(save.puzzle)
     game.landmarks = Landmarks.fromSave(save.landmarks)

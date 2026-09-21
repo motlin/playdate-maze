@@ -177,6 +177,9 @@ local function drawPicture(run)
     local fromX, fromHeight = projectAlongFace(run, PICTURE_FROM)
     local toX, toHeight = projectAlongFace(run, PICTURE_TO)
     if not fromX or not toX then return end
+    -- Each visible projection returns its position and height together.
+    ---@cast fromHeight number
+    ---@cast toHeight number
     if math.max(fromHeight, toHeight) < SHORTEST_WALL_WITH_PICTURE then return end
     -- Along some faces the far end comes first on screen
     if fromX > toX then fromX, fromHeight, toX, toHeight = toX, toHeight, fromX, fromHeight end

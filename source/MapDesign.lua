@@ -6,6 +6,26 @@
 
 import "Maze"
 
+---@class MapDesignSave
+---@field version integer
+---@field columns integer
+---@field rows integer
+---@field blocks boolean[][]
+---@field start GridPoint
+---@field exit GridPoint?
+---@field items table<string, GridPoint>
+---@field pedestals table<string, GridPoint>
+
+---@class MapDesign
+---@field columns integer
+---@field rows integer
+---@field gridWidth integer
+---@field gridHeight integer
+---@field blocks boolean[][]
+---@field start GridPoint
+---@field exit GridPoint?
+---@field items table<string, GridPoint>
+---@field pedestals table<string, GridPoint>
 MapDesign = {}
 MapDesign.__index = MapDesign
 
@@ -28,6 +48,9 @@ local function newDesign(columns, rows)
 end
 
 -- Every cell walled in, ready to be carved
+---@param columns integer
+---@param rows integer
+---@return MapDesign
 function MapDesign.new(columns, rows)
     local design = newDesign(columns, rows)
     for gridY = 1, design.gridHeight do
@@ -39,6 +62,8 @@ function MapDesign.new(columns, rows)
 end
 
 -- A copy of a generated maze to start from, with its exit
+---@param maze Maze
+---@return MapDesign
 function MapDesign.fromMaze(maze)
     assert(maze.corridorWidth == 1, "a design has corridors one block wide")
     local design = newDesign(maze.columns, maze.rows)
@@ -51,10 +76,16 @@ function MapDesign.fromMaze(maze)
     return design
 end
 
+---@param gridX integer
+---@param gridY integer
+---@return boolean
 function MapDesign:isInside(gridX, gridY)
     return gridX > 1 and gridX < self.gridWidth and gridY > 1 and gridY < self.gridHeight
 end
 
+---@param gridX integer
+---@param gridY integer
+---@return boolean
 function MapDesign:isOpen(gridX, gridY)
     local line = self.blocks[gridY]
     return line ~= nil and line[gridX] == true
@@ -65,6 +96,9 @@ local function isAt(place, gridX, gridY)
 end
 
 -- What stands on a block: "start", "exit", or "item" or "pedestal" with its shape; or nil
+---@param gridX integer
+---@param gridY integer
+---@return string?, string?
 function MapDesign:thingAt(gridX, gridY)
     if isAt(self.start, gridX, gridY) then return "start" end
     if isAt(self.exit, gridX, gridY) then return "exit" end
@@ -76,6 +110,9 @@ function MapDesign:thingAt(gridX, gridY)
 end
 
 -- The block just inside the outer wall from a block of it, or nil for a corner or an inside block
+---@param gridX integer
+---@param gridY integer
+---@return integer?, integer?
 function MapDesign:blockInsideWall(gridX, gridY)
     local isOnSide = (gridX == 1 or gridX == self.gridWidth) and gridY > 1 and gridY < self.gridHeight
     local isOnEnd = (gridY == 1 or gridY == self.gridHeight) and gridX > 1 and gridX < self.gridWidth
@@ -86,6 +123,10 @@ end
 
 -- Opens or fills one block. Returns whether it could: the outer wall is never opened, and a block
 -- is never filled while something stands on it or it is the way in to the exit.
+---@param gridX integer
+---@param gridY integer
+---@param isOpen boolean
+---@return boolean
 function MapDesign:setBlock(gridX, gridY, isOpen)
     if not self:isInside(gridX, gridY) then return false end
     if not isOpen then
@@ -103,11 +144,20 @@ local function passageBlock(column, row, direction)
     return 2 * column + offset[1], 2 * row + offset[2]
 end
 
+---@param column integer
+---@param row integer
+---@param direction string
+---@return boolean
 function MapDesign:hasPassage(column, row, direction)
     return self:isOpen(passageBlock(column, row, direction))
 end
 
 -- Knocks through, or builds back, the wall between a cell and its neighbour
+---@param column integer
+---@param row integer
+---@param direction string
+---@param isOpen boolean
+---@return boolean
 function MapDesign:setPassage(column, row, direction, isOpen)
     local gridX, gridY = passageBlock(column, row, direction)
     return self:setBlock(gridX, gridY, isOpen)
@@ -121,6 +171,11 @@ end
 
 -- Puts the start, the exit, or a shape's item or pedestal on a block, moving it if it was
 -- somewhere else. Returns whether it could.
+---@param kind string
+---@param shape string?
+---@param gridX integer
+---@param gridY integer
+---@return boolean
 function MapDesign:place(kind, shape, gridX, gridY)
     local there, shapeThere = self:thingAt(gridX, gridY)
     local isSameThing = there == kind and shapeThere == shape
@@ -128,7 +183,10 @@ function MapDesign:place(kind, shape, gridX, gridY)
 
     if kind == "exit" then
         local insideX, insideY = self:blockInsideWall(gridX, gridY)
-        if not insideX or not self:isOpen(insideX, insideY) then return false end
+        if not insideX then return false end
+        -- blockInsideWall returns both coordinates together.
+        ---@cast insideY integer
+        if not self:isOpen(insideX, insideY) then return false end
         self.exit = { gridX = gridX, gridY = gridY }
         return true
     end
@@ -148,6 +206,9 @@ function MapDesign:place(kind, shape, gridX, gridY)
 end
 
 -- Takes away whatever stands on a block. The start can only be moved, never taken away.
+---@param gridX integer
+---@param gridY integer
+---@return boolean
 function MapDesign:remove(gridX, gridY)
     local kind, shape = self:thingAt(gridX, gridY)
     if not kind or kind == "start" then return false end
@@ -160,6 +221,7 @@ local function key(gridX, gridY)
 end
 
 -- The open blocks that can be walked to from the start, as a set keyed by key(gridX, gridY)
+---@return table<integer, boolean>
 function MapDesign:reachable()
     local seen = { [key(self.start.gridX, self.start.gridY)] = true }
     local queue, head = { self.start }, 1
@@ -180,6 +242,7 @@ end
 
 -- The cells that scattering may use: open, reachable, and with nothing on them. A list of
 -- { gridX, gridY } in reading order.
+---@return GridPoint[]
 function MapDesign:freeCells()
     local reachable, cells = self:reachable(), {}
     for row = 1, self.rows do
@@ -194,6 +257,7 @@ function MapDesign:freeCells()
 end
 
 -- What stops this map being played, as sentences for the player; empty when it is ready
+---@return string[]
 function MapDesign:problems()
     local problems, reachable = {}, self:reachable()
     if not self.exit then
@@ -222,6 +286,7 @@ function MapDesign:problems()
 end
 
 -- Lists and named entries only, so that it can be written as JSON
+---@return MapDesignSave
 function MapDesign:toSave()
     return {
         version = MapDesign.SAVE_VERSION,
@@ -235,6 +300,8 @@ function MapDesign:toSave()
     }
 end
 
+---@param save MapDesignSave
+---@return MapDesign
 function MapDesign.fromSave(save)
     assert(save.version == MapDesign.SAVE_VERSION, "this map is version " .. tostring(save.version) .. ", which this game cannot load")
     local design = newDesign(save.columns, save.rows)

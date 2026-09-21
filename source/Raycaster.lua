@@ -4,6 +4,26 @@
 -- wall is a straight line on screen, so a run can be drawn as one trapezoid from its two ends.
 -- Angles are in degrees, 0 facing east (+x) and growing clockwise, since +y is south.
 
+---@class RayScreen
+---@field width integer
+---@field columnWidth integer
+---@field fieldOfView number
+---@field refinements integer
+---@class RayRun
+---@field startX number
+---@field endX number
+---@field startDistance number
+---@field endDistance number
+---@field side integer
+---@field gridX integer
+---@field gridY integer
+---@field block integer
+---@field key integer
+---@class RayScan
+---@field runs RayRun[]
+---@field depths number[]
+
+---@class Raycaster
 Raycaster = {}
 
 Raycaster.SIDES = { X = 0, Y = 1 }
@@ -12,6 +32,12 @@ local OPEN <const> = 0
 
 -- Returns distance, side, gridX, gridY, block. The distance is in multiples of the direction's
 -- length, so a direction built from a camera plane gives the fisheye-free perpendicular distance.
+---@param maze Maze
+---@param x number
+---@param y number
+---@param directionX number
+---@param directionY number
+---@return number, integer, integer, integer, integer
 function Raycaster.cast(maze, x, y, directionX, directionY)
     local blocks = maze.blocks
     local gridX, gridY = math.floor(x) + 1, math.floor(y) + 1
@@ -61,6 +87,12 @@ end
 -- screen = { width, columnWidth, fieldOfView (degrees), refinements }
 -- Each run has startX, endX, startDistance, endDistance, side, gridX, gridY, block.
 -- refinements is how many times to halve the gap between two columns to pin down a run's edge.
+---@param maze Maze
+---@param x number
+---@param y number
+---@param angle number
+---@param screen RayScreen
+---@return RayScan
 function Raycaster.scan(maze, x, y, angle, screen)
     local width, columnWidth = screen.width, screen.columnWidth
     local radians = math.rad(angle)
@@ -131,6 +163,13 @@ end
 
 -- Where a point in the world lands on screen. Returns screenX and the depth straight ahead,
 -- which is the same measure scan() gives for walls, or nil when the point is behind the viewer.
+---@param x number
+---@param y number
+---@param angle number
+---@param screen RayScreen
+---@param worldX number
+---@param worldY number
+---@return number?, number?
 function Raycaster.project(x, y, angle, screen, worldX, worldY)
     local radians = math.rad(angle)
     local forwardX, forwardY = math.cos(radians), math.sin(radians)
