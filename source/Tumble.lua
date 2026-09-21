@@ -57,7 +57,7 @@ function Tumble:hint()
     return nil
 end
 
-local function collect(self, item)
+function Tumble:collect(item)
     self.puzzle:collect(item)
     self:emit("collect")
     local remaining = 0
@@ -122,7 +122,7 @@ function Tumble:update(input)
 
     self:visit()
     local item = self.puzzle:itemTouching(self.player.x, self.player.y)
-    if item then collect(self, item) end
+    if item then self:collect(item) end
     self.hasEscaped = self.maze:isExit(self.player.x, self.player.y)
     if self.hasEscaped then self:emit("escape") end
 end

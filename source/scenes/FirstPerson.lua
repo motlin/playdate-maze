@@ -36,7 +36,7 @@ local walkingActions = WalkingActions.new(controls)
 local dockTimer = DockTimer.new()
 local headBob = Bob.new()
 
-local function newGame(isAutopilotOn)
+function FirstPersonScene.newGame(isAutopilotOn)
     local size = Sizes.ALL[FirstPersonScene.sizeIndex]
     local random = math.random
     local today
@@ -72,7 +72,7 @@ function FirstPersonScene.enter(submode, sizeIndex, savedGame)
     end
     -- A new maze with a puzzle replaces whatever was saved; the screensaver leaves it be
     if submode ~= FirstPersonScene.SUBMODES.SCREENSAVER then SaveGame.delete() end
-    newGame(submode == FirstPersonScene.SUBMODES.SCREENSAVER)
+    FirstPersonScene.newGame(submode == FirstPersonScene.SUBMODES.SCREENSAVER)
 end
 
 -- Keeps the run on disk so that it can be continued. Called when the game pauses, sleeps,
@@ -95,12 +95,11 @@ end
 
 function FirstPersonScene.restart()
     if FirstPersonScene.submode ~= FirstPersonScene.SUBMODES.SCREENSAVER then SaveGame.delete() end
-    newGame(FirstPersonScene.game:isAutopilotOn())
+    FirstPersonScene.newGame(FirstPersonScene.game:isAutopilotOn())
 end
 
-local function dockToDream(input)
+function FirstPersonScene.applyDockAction(action)
     local game = FirstPersonScene.game
-    local action = dockTimer:update(input.isCrankDocked, input.current ~= 0 or input.pressed ~= 0)
     if action == DockTimer.ACTIONS.HAND_OVER and not game:isAutopilotOn() then
         game:setAutopilot(true)
         game:say("Crank docked: autopilot")
@@ -113,7 +112,8 @@ end
 function FirstPersonScene.update()
     local game = FirstPersonScene.game
     local input = controls:read()
-    dockToDream(input)
+    local dockAction = dockTimer:update(input.isCrankDocked, input.current ~= 0 or input.pressed ~= 0)
+    FirstPersonScene.applyDockAction(dockAction)
     local takingOver = game:isAutopilotOn() and input.pressed ~= 0
     if takingOver then game:setAutopilot(false) end
     game:update(walkingActions:read(takingOver))

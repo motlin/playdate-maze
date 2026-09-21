@@ -66,13 +66,17 @@ function Landmarks.scatter(maze, random)
             gridY = gridY,
         }
         if landmark.kind == "picture" then
-            -- Every cell of a maze has at least one solid wall
             local walls = solidWalls(maze, column, row)
-            landmark.direction = walls[random(#walls)]
-            local offset = Maze.OFFSETS[landmark.direction]
-            landmark.gridX, landmark.gridY = gridX + offset[1], gridY + offset[2]
-            landmark.face = FACE_SEEN_FROM[landmark.direction]
-            landmarks.pictures[faceKey(landmark.gridX, landmark.gridY, landmark.face)] = landmark.motif
+            if #walls == 0 then
+                landmark.kind = "floor"
+                landmarks.marks[#landmarks.marks + 1] = landmark
+            else
+                landmark.direction = walls[random(#walls)]
+                local offset = Maze.OFFSETS[landmark.direction]
+                landmark.gridX, landmark.gridY = gridX + offset[1], gridY + offset[2]
+                landmark.face = FACE_SEEN_FROM[landmark.direction]
+                landmarks.pictures[faceKey(landmark.gridX, landmark.gridY, landmark.face)] = landmark.motif
+            end
         else
             landmarks.marks[#landmarks.marks + 1] = landmark
         end

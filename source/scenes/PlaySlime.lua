@@ -20,14 +20,14 @@ SlimeScene = { slime = nil, sizeIndex = Sizes.DEFAULT }
 local controls = PlayInput.new()
 local actions = SlimeActions.new(controls)
 
-local function newSlime()
+function SlimeScene.newGame()
     local size = Sizes.ALL[SlimeScene.sizeIndex]
     SlimeScene.slime = Slime.new({ columns = size.slimeColumns, rows = size.slimeRows, random = math.random })
 end
 
 function SlimeScene.enter(sizeIndex)
     SlimeScene.sizeIndex = sizeIndex
-    newSlime()
+    SlimeScene.newGame()
 end
 
 function SlimeScene.exit()
@@ -35,7 +35,7 @@ function SlimeScene.exit()
 end
 
 function SlimeScene.restart()
-    newSlime()
+    SlimeScene.newGame()
 end
 
 local function playAgain()

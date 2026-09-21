@@ -20,14 +20,14 @@ TumbleScene = { tumble = nil, sizeIndex = Sizes.DEFAULT }
 local controls = PlayInput.new()
 local actions = TumbleActions.new(controls)
 
-local function newTumble()
+function TumbleScene.newGame()
     local size = Sizes.ALL[TumbleScene.sizeIndex]
     TumbleScene.tumble = Tumble.new({ columns = size.columns, rows = size.rows, random = math.random })
 end
 
 function TumbleScene.enter(sizeIndex)
     TumbleScene.sizeIndex = sizeIndex
-    newTumble()
+    TumbleScene.newGame()
 end
 
 function TumbleScene.exit()
@@ -35,7 +35,7 @@ function TumbleScene.exit()
 end
 
 function TumbleScene.restart()
-    newTumble()
+    TumbleScene.newGame()
 end
 
 local function playAgain()

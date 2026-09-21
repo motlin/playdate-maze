@@ -43,7 +43,7 @@ function Game.new(options)
     local startAngle = maze:hasPassage(1, 1, "east") and ANGLES.east or ANGLES.south
     local game = setmetatable(Run.new(maze, Player.new(startX, startY, startAngle)), Game)
     game.autopilot = nil
-    game.thread = Thread.new(startX, startY)
+    game.thread = Thread.new(maze, startX, startY)
     -- The gate over the exit unlocks when the puzzle is solved and is then cranked up by hand.
     -- gateLift runs from 0, fully down, to 1, where the exit opens for good.
     -- It is counted in degrees of cranking, because adding up fractions never quite reaches 1.
@@ -109,7 +109,7 @@ function Game:hint()
     return nil
 end
 
-local function pickUp(self)
+function Game:pickUp()
     local item = self.puzzle:pickUp(self.player.x, self.player.y)
     if item then
         self:emit("pickUp")
@@ -123,7 +123,7 @@ local function pickUp(self)
     end
 end
 
-local function drop(self)
+function Game:drop()
     local item = self.puzzle.carried
     local result = self.puzzle:drop(self.player.x, self.player.y)
     if result == Puzzle.RESULTS.DROPPED then
@@ -149,11 +149,11 @@ end
 
 -- Pulls the player back along the thread, looking the way they were walking when it was laid,
 -- like a film run backwards
-local function reelIn(self, degrees)
+function Game:reelIn(degrees)
     local player = self.player
-    local x, y, heading = self.thread:rewindFrom(player.x, player.y, degrees / Game.REEL_DEGREES_PER_BLOCK)
+    local x, y, heading, blocked = self.thread:rewindFrom(player.x, player.y, degrees / Game.REEL_DEGREES_PER_BLOCK)
     if not x then
-        self:say("The thread begins here")
+        self:say(blocked and "The thread is blocked here" or "The thread begins here")
         return
     end
     self.blocksSinceReelTick = self.blocksSinceReelTick + degrees / Game.REEL_DEGREES_PER_BLOCK
@@ -167,7 +167,7 @@ local function reelIn(self, degrees)
 end
 
 -- Raises the gate by a forward crank, or lets it sag. Returns whether the crank was used on it.
-local function workGate(self, crank)
+function Game:workGate(crank)
     if self.gateLift == 1 then return false end
     local isCranking = crank > 0 and self:canCrankGate()
     if isCranking then
@@ -199,18 +199,20 @@ function Game:update(input)
     self:tick()
 
     local reel = input.reel or 0
-    local isCrankingGate = workGate(self, input.crank or 0)
+    local isCrankingGate = self:workGate(input.crank or 0)
     local fromX, fromY = self.player.x, self.player.y
     if self.autopilot then
         self.autopilot:update()
+        self.thread:record(self.player.x, fromY)
         self.thread:record(self.player.x, self.player.y)
     elseif reel > 0 then
-        reelIn(self, reel)
+        self:reelIn(reel)
         fromX, fromY = self.player.x, self.player.y
     else
         -- While the crank is lifting the gate it does not also swing the view
         if not isCrankingGate then self.player:turn(input.turn or 0) end
         self.player:move(self.maze, (input.forward or 0) * WALK_SPEED, (input.strafe or 0) * WALK_SPEED)
+        self.thread:record(self.player.x, fromY)
         self.thread:record(self.player.x, self.player.y)
     end
     local walkedX, walkedY = self.player.x - fromX, self.player.y - fromY
@@ -231,8 +233,8 @@ function Game:update(input)
         self:emit("flip")
         self:say("The world turns over!")
     end
-    if self.puzzle and input.pickUp then pickUp(self) end
-    if self.puzzle and input.drop then drop(self) end
+    if self.puzzle and input.pickUp then self:pickUp() end
+    if self.puzzle and input.drop then self:drop() end
 
     self.hasEscaped = self.maze:isExit(self.player.x, self.player.y)
     if self.hasEscaped then self:emit("escape") end
@@ -271,7 +273,7 @@ function Game.fromSave(save)
     game.puzzle = Puzzle.fromSave(save.puzzle)
     game.landmarks = Landmarks.fromSave(save.landmarks)
     game.flippers = Flippers.fromSave(save.flippers)
-    game.thread = Thread.fromSave(save.thread)
+    game.thread = Thread.fromSave(maze, save.thread, save.player.x, save.player.y)
     game.frames = save.frames
     game.visited, game.visitedCount = {}, #save.visited
     for _, key in ipairs(save.visited) do game.visited[key] = true end

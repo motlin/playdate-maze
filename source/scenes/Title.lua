@@ -28,10 +28,10 @@ local function playFirstPerson(submode)
     return function() SceneManager.switch(FirstPersonScene, submode, TitleScene.sizeIndex) end
 end
 
-local function nextSize() TitleScene.sizeIndex = Sizes.next(TitleScene.sizeIndex) end
-local function previousSize() TitleScene.sizeIndex = Sizes.previous(TitleScene.sizeIndex) end
+function TitleScene.nextSize() TitleScene.sizeIndex = Sizes.next(TitleScene.sizeIndex) end
+function TitleScene.previousSize() TitleScene.sizeIndex = Sizes.previous(TitleScene.sizeIndex) end
 
-local function continueSavedGame()
+function TitleScene.continueSavedGame()
     local game, submode, sizeIndex = SaveGame.read()
     -- A save this version cannot read has just been thrown away: show the menu without it
     if not game then
@@ -42,7 +42,7 @@ local function continueSavedGame()
 end
 
 -- Each row has a name, a label, and what A does; left and right are optional
-local CONTINUE_ROW <const> = { name = "continue", label = function() return "Continue" end, confirm = continueSavedGame }
+local CONTINUE_ROW <const> = { name = "continue", label = function() return "Continue" end, confirm = TitleScene.continueSavedGame }
 local PLAY_ROWS <const> = {
     { name = "explore", label = function() return "Explore" end, confirm = playFirstPerson("explore") },
     { name = "daily", label = function() return "Daily maze" end, confirm = playFirstPerson("daily") },
@@ -60,9 +60,9 @@ local PLAY_ROWS <const> = {
     {
         name = "size",
         label = function() return "Size: " .. Sizes.ALL[TitleScene.sizeIndex].name end,
-        confirm = nextSize,
-        left = previousSize,
-        right = nextSize,
+        confirm = TitleScene.nextSize,
+        left = TitleScene.previousSize,
+        right = TitleScene.nextSize,
     },
 }
 
@@ -80,8 +80,9 @@ local titleImage
 
 local function newBackdrop()
     local size = Sizes.ALL[Sizes.DEFAULT]
-    backdrop = Game.new({ columns = size.columns, rows = size.rows, hasPuzzle = false, random = math.random })
-    backdrop:setAutopilot(true)
+    local game = Game.new({ columns = size.columns, rows = size.rows, hasPuzzle = false, random = math.random })
+    game:setAutopilot(true)
+    return game
 end
 
 local function drawTitleImage()
@@ -97,11 +98,11 @@ function TitleScene.enter()
     TitleScene.rows = buildRows()
     TitleScene.selection = 1
     crankSteps:reset()
-    newBackdrop()
+    backdrop = newBackdrop()
     titleImage = titleImage or drawTitleImage()
 end
 
-local function handleInput()
+function TitleScene.handleInput()
     local rows = TitleScene.rows
     local row = rows[TitleScene.selection]
     local move = crankSteps:turn(pd.getCrankChange())
@@ -116,11 +117,11 @@ local function handleInput()
 end
 
 function TitleScene.update()
-    handleInput()
+    TitleScene.handleInput()
     if not SceneManager.isCurrent(TitleScene) then return end
 
     backdrop:update({})
-    if backdrop.hasEscaped then newBackdrop() end
+    if backdrop.hasEscaped then backdrop = newBackdrop() end
     headBob:walk(backdrop.distanceWalked)
     MazeView.draw(backdrop, headBob:headOffset())
 

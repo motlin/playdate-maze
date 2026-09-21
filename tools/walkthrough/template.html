@@ -48,8 +48,9 @@ function activate(step,instant=false){
  const section=step.closest('.section');focusCode(section,step,instant);
  selector.value=section.id;previous.disabled=activeIndex===0;next.disabled=activeIndex===steps.length-1;
 }
+function activationThreshold(){return innerWidth<=650?innerHeight*.72:innerHeight*.43;}
 function update(){
- const threshold=innerWidth<=650?innerHeight*.72:innerHeight*.43;
+ const threshold=activationThreshold();
  let candidate=steps[0];
  for(const step of steps){if(step.getBoundingClientRect().top<=threshold)candidate=step;else break;}
  activate(candidate);
@@ -60,7 +61,7 @@ let scheduled=false;
 window.addEventListener('scroll',()=>{if(!scheduled){scheduled=true;requestAnimationFrame(()=>{scheduled=false;update();});}},{passive:true});
 window.addEventListener('resize',()=>{update();if(activeStep)focusCode(activeStep.closest('.section'),activeStep,true);});
 function goTo(step){
- const offset=innerWidth<=650?Math.max(innerHeight*.52+80,330):innerHeight*.30;
+ const offset=Math.min(innerWidth<=650?Math.max(innerHeight*.52+80,330):innerHeight*.30,activationThreshold()-2);
  window.scrollTo({top:scrollY+step.getBoundingClientRect().top-offset,behavior:reduceMotion.matches?'instant':'smooth'});
 }
 selector.addEventListener('change',()=>goTo(document.getElementById(selector.value).querySelector('.step')));

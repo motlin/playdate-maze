@@ -133,7 +133,7 @@ function Slime:arc()
     return self.arcResult
 end
 
-local function stick(self, surface)
+function Slime:stick(surface)
     if self.state == FLYING then self:emit("splat") end
     local isSameSurfaceAgain = surface == self.surface and self.flightFrames < SHORTEST_REAL_FLIGHT
     self.velocityX, self.velocityY = 0, 0
@@ -146,7 +146,7 @@ local function stick(self, surface)
     self.state = self.stickFrames > 0 and CLINGING or SLIDING
 end
 
-local function launch(self)
+function Slime:launch()
     self:emit("throw")
     self.velocityX, self.velocityY = throwVelocity(self.aimAngle)
     self.state = FLYING
@@ -154,59 +154,60 @@ local function launch(self)
     self.throws = self.throws + 1
 end
 
-local function fall(self)
+function Slime:fall()
     self.state = FLYING
+    self.isAiming = false
     self.velocityX, self.velocityY = 0, 0
     self.flightFrames = SHORTEST_REAL_FLIGHT
 end
 
 -- Holding A aims and letting go of A throws. B calls off an aim; with no aim to call off, it
 -- lets go of a wall or ceiling.
-local function aim(self, input)
+function Slime:aim(input)
     if input.cancel then
         if self.isAiming then
             self.isAiming, self.isAimCancelled = false, true
         elseif self.state == CLINGING or self.state == SLIDING then
             self:emit("letGo")
-            fall(self)
+            self:fall()
         end
     end
     if not input.isAimHeld then
-        if self.isAiming then launch(self) end
+        if self.isAiming and self:canThrow() then self:launch() end
         self.isAiming, self.isAimCancelled = false, false
     elseif not self.isAimCancelled then
         self.isAiming = self:canThrow()
     end
 end
 
-local function move(self, input)
+function Slime:move(input)
     local maze, player = self.maze, self.player
     if self.state == FLYING then
         local surface
         self.velocityX, self.velocityY, surface = fly(maze, player, self.velocityX, self.velocityY)
         self.flightFrames = self.flightFrames + 1
-        if surface then stick(self, surface) end
+        if surface then self:stick(surface) end
     elseif self.state == RESTING then
         player:moveBy(maze, (input.move or 0) * Slime.CRAWL_SPEED, 0)
-        if not player:wouldHit(maze, 0, PROBE) then fall(self) end
+        if not player:wouldHit(maze, 0, PROBE) then self:fall() end
     elseif self.state == CLINGING then
         self.stickFrames = self.stickFrames - 1
         if self.stickFrames == 0 then
             self:emit("slip")
-            if self.surface == "ceiling" then fall(self) else self.state = SLIDING end
+            if self.surface == "ceiling" then self:fall() else self.state = SLIDING end
         end
     else
         local _, hasReachedFloor = player:moveBy(maze, 0, Slime.SLIDE_SPEED)
         local towardsWall = self.surface == "right" and PROBE or -PROBE
         if hasReachedFloor then
-            stick(self, "floor")
+            self:stick("floor")
         elseif not player:wouldHit(maze, towardsWall, 0) then
-            fall(self)
+            self:fall()
         end
     end
 end
 
-local function collect(self, item)
+function Slime:collect(item)
     self.puzzle:collect(item)
     self:emit("collect")
     local remaining = 0
@@ -231,12 +232,12 @@ function Slime:update(input)
     end
     self:tick()
     self.aimAngle = input.aim
-    aim(self, input)
-    move(self, input)
+    self:aim(input)
+    self:move(input)
 
     self:visit()
     local item = self.puzzle:itemTouching(self.player.x, self.player.y)
-    if item then collect(self, item) end
+    if item then self:collect(item) end
     self.hasEscaped = self.maze:isExit(self.player.x, self.player.y)
     if self.hasEscaped then self:emit("escape") end
 end

@@ -67,3 +67,36 @@ end
 function Player:facing()
     return FACINGS[math.floor((self.angle + 45) / 90) % 4 + 1]
 end
+
+local function crossesBox(fromX, fromY, toX, toY, left, top, right, bottom)
+    local enter, leave = 0, 1
+    local offsetX, offsetY = toX - fromX, toY - fromY
+    if offsetX == 0 then
+        if fromX < left or fromX > right then return false end
+    else
+        local first, last = (left - fromX) / offsetX, (right - fromX) / offsetX
+        enter, leave = math.max(enter, math.min(first, last)), math.min(leave, math.max(first, last))
+    end
+    if offsetY == 0 then
+        if fromY < top or fromY > bottom then return false end
+    else
+        local first, last = (top - fromY) / offsetY, (bottom - fromY) / offsetY
+        enter, leave = math.max(enter, math.min(first, last)), math.min(leave, math.max(first, last))
+    end
+    return enter <= leave
+end
+
+-- Sweep the square body along the whole segment, including corners between its endpoints.
+function Player.isPathClear(maze, fromX, fromY, toX, toY)
+    local left, top = maze:blockAt(math.min(fromX, toX) - RADIUS, math.min(fromY, toY) - RADIUS)
+    local right, bottom = maze:blockAt(math.max(fromX, toX) + RADIUS, math.max(fromY, toY) + RADIUS)
+    for gridY = top, bottom do
+        for gridX = left, right do
+            if maze:isWall(gridX, gridY) and crossesBox(fromX, fromY, toX, toY,
+                gridX - 1 - RADIUS, gridY - 1 - RADIUS, gridX + RADIUS, gridY + RADIUS) then
+                return false
+            end
+        end
+    end
+    return true
+end

@@ -80,7 +80,7 @@ section('SceneManager.lua', 'Scene changes', [
 section('scenes/FirstPerson.lua', 'First-person scene', [
     step('    SUBMODES =', 1, 'Three first-person submodes', '<p>Explore, Daily, and Screensaver share this scene and its 3D maze rules. Daily fixes the maze seed and size; Screensaver starts on autopilot without the puzzle. Tumble and Slime use separate scenes.</p>'),
     step('local controls = PlayInput.new()', 2, 'Create the input reader and action mapper', '<p><code>PlayInput</code> reads hardware. <code>WalkingActions.new(controls)</code> connects a mapper to that reader. The mapper translates its snapshot into movement and item actions and owns the button history.</p>'),
-    step('    local input = controls:read()', 5, 'Read, map, update', '<p>Read one hardware snapshot. Check whether control should pass to or from autopilot, then map the snapshot into walking actions.</p><p><code>takingOver</code> tells the mapper to consume item actions from the takeover press. The game receives only the resulting action table.</p>'),
+    step('    local input = controls:read()', 6, 'Read, map, update', '<p>Read one hardware snapshot. <code>dockTimer:update</code> returns a handover action; <code>FirstPersonScene.applyDockAction</code> applies it to the scene’s game. Then map the snapshot into walking actions.</p><p><code>takingOver</code> tells the mapper to consume item actions from the takeover press. The game receives only the resulting action table.</p>'),
     step('    Sounds.play(game.events)', 18, 'Draw the result', '<p>Play sounds, check for escape, then draw the world and HUD. Drawing the HUD last keeps it above the 3D image.</p><p><code>distanceWalked</code> drives head bob from actual travel.</p>'),
 ])
 section('PlayInput.lua', 'Shared hardware input', [
@@ -101,7 +101,7 @@ section('SlimeActions.lua', 'Slime actions', [
 ])
 section('Game.lua', 'First-person rules', [
     step('function Game.new(options)', 9, 'Create the world', '<p>Generate a maze, place the player in its first cell, and combine them in a <code>Run</code>. Face an open passage at the start.</p><p>A Lua table holds state; <code>setmetatable</code> lets it find the module’s methods.</p>'),
-    step('    if self.autopilot then\n        self.autopilot:update()', 13, 'Choose one movement mode', '<p>Autopilot, thread reeling, and manual movement are exclusive branches. Manual movement scales input by <code>WALK_SPEED</code>: 0.08 blocks per frame.</p><p><code>player:move(...)</code> passes the player as <code>self</code>. The colon marks a method call.</p>'),
+    step('    if self.autopilot then\n        self.autopilot:update()', 15, 'Choose one movement mode', '<p>Autopilot, thread reeling, and manual movement are exclusive branches. Manual movement scales input by <code>WALK_SPEED</code>: 0.08 blocks per frame.</p><p><code>player:move(...)</code> passes the player as <code>self</code>. The colon marks a method call.</p>'),
     step('    local walkedX, walkedY', 12, 'Measure what moved', '<p>Subtract the old position and use √(dx² + dy²) for distance. Footsteps follow actual travel; a blocked push can produce a bump.</p>'),
     step('    self:visit()\n    if self.flippers', 11, 'Check interactions', '<p>Record the visited cell, handle flippers and shapes, then check whether the player entered the exit block.</p><p>The drawing code reads this state after the update.</p>'),
 ])
@@ -127,8 +127,8 @@ section('Autopilot.lua', 'Wall-following navigation', [
     step('    local turn = (ANGLES', 5, 'Turn by the shorter angle', '<p>Wrap the turn into [−180°, 180°). From 350° to 10°, the result is +20°.</p><p>Limit turning to six degrees per frame before moving toward the next cell center.</p>'),
 ])
 section('Thread.lua', 'Recording and reversing a path', [
-    step('function Thread:record', 15, 'Add points; remove retraced points', '<p>Record a point every 0.25 blocks. Moving closer to the previous point removes the last point.</p><p>The list is capped at 800 points; older trail positions are eventually forgotten.</p>'),
-    step('        if stretch > distance then', 7, 'Stop partway along a segment', '<p>If the segment is longer than the reel distance, move a fraction of the way toward its end.</p><p><code>share = distance / stretch</code>. Reeling 0.1 blocks along 0.25 blocks moves 40% of the segment.</p>'),
+    step('function Thread:record', 22, 'Keep collision-safe path segments', '<p>Record a point every 0.25 blocks, with extra points where a shortcut would cross a wall. Check clearance for the player’s whole body before removing a retraced point.</p><p>The scene’s game records both axes of movement. The list is capped at 800 points.</p>'),
+    step('        local share = stretch > 0', 8, 'Check the segment before rewinding', '<p><code>share = distance / stretch</code>, capped at 1, gives the fraction to rewind. Reeling 0.1 blocks along 0.25 blocks moves 40% of the segment.</p><p>Check the entire segment for body clearance before moving. Stop at blocked segments, including unsafe paths from older saves.</p>'),
 ])
 section('Tumble.lua', 'Rotating gravity', [
     step('    self.angle = (self.angle', 9, 'Convert screen directions to maze directions', '<p>The view rotates clockwise by <code>angle</code>. Gravity must still point down the screen.</p><p>In maze coordinates, down = (sin θ, cos θ). At 90°, gravity points east. Right = (cos θ, −sin θ).</p>'),

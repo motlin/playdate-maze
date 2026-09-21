@@ -18,6 +18,9 @@ local SCALE <const> = { 57, 60, 62, 64, 67, 69, 72, 74, 76 }
 local WALK <const> = { 2, 1, -2, 3, -1, -2, 2, -3, 1, 2, -1, -2, 1 }
 local SWAY <const> = { 0, 1, 0, -1, 1, 0, -1 }
 
+local WALK_PREFIX <const> = { [0] = 0 }
+for index, offset in ipairs(WALK) do WALK_PREFIX[index] = WALK_PREFIX[index - 1] + offset end
+
 function MusicScore.transposition(proximity)
     return OCTAVE * proximity
 end
@@ -39,8 +42,7 @@ end
 
 -- The MIDI note of the tune's step-th note, counting from 1
 function MusicScore.noteAt(step)
-    local position = 0
-    for index = 1, step do position = position + WALK[(index - 1) % #WALK + 1] end
+    local position = (step // #WALK) * WALK_PREFIX[#WALK] + WALK_PREFIX[step % #WALK]
     position = position + SWAY[(step - 1) % #SWAY + 1]
     -- Fold the walk back and forth across the scale rather than letting it run off either end
     local span = #SCALE - 1
