@@ -13,8 +13,6 @@ import "SlimeActions"
 import "SlimeView"
 import "Sounds"
 
-local pd <const> = playdate
-
 SlimeScene = { slime = nil, sizeIndex = Sizes.DEFAULT }
 
 local controls = PlayInput.new()
@@ -56,5 +54,5 @@ function SlimeScene.update()
     SlimeView.draw(slime)
     Hud.draw(slime)
     -- Nothing aims a throw but the crank
-    if input.isCrankDocked then pd.ui.crankIndicator:draw() end
+    if input.isCrankDocked then playdate.ui.crankIndicator:draw() end
 end

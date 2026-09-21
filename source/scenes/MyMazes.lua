@@ -12,9 +12,6 @@ import "PlayInput"
 import "SceneManager"
 import "Sizes"
 
-local pd <const> = playdate
-local gfx <const> = playdate.graphics
-
 MyMazesScene = { selection = 1, designs = {}, isDeleteArmed = false }
 
 local LIST_LEFT <const> = 16
@@ -85,17 +82,17 @@ end
 function MyMazesScene.handleInput()
     local input = controls:read()
     local steps = crankSteps:turn(input.crankChange)
-    if input:isPressed(pd.kButtonUp) then steps = -1 end
-    if input:isPressed(pd.kButtonDown) then steps = 1 end
+    if input:isPressed(playdate.kButtonUp) then steps = -1 end
+    if input:isPressed(playdate.kButtonDown) then steps = 1 end
     if steps ~= 0 then MyMazesScene.moveSelection(steps) end
 
-    if input:isPressed(pd.kButtonLeft) then
+    if input:isPressed(playdate.kButtonLeft) then
         MyMazesScene.delete()
-    elseif input:isPressed(pd.kButtonA) then
+    elseif input:isPressed(playdate.kButtonA) then
         MyMazesScene.playOrEdit()
-    elseif input:isPressed(pd.kButtonRight) then
+    elseif input:isPressed(playdate.kButtonRight) then
         MyMazesScene.edit()
-    elseif input:isPressed(pd.kButtonB) then
+    elseif input:isPressed(playdate.kButtonB) then
         SceneManager.switch(TitleScene)
     end
 end
@@ -117,30 +114,30 @@ function MyMazesScene.update()
     MyMazesScene.handleInput()
     if not SceneManager.isCurrent(MyMazesScene) then return end
 
-    gfx.clear(gfx.kColorWhite)
-    gfx.drawText("*My mazes*", LIST_LEFT, 12)
+    playdate.graphics.clear(playdate.graphics.kColorWhite)
+    playdate.graphics.drawText("*My mazes*", LIST_LEFT, 12)
     for index, name in ipairs(MapSlots.NAMES) do
         local top = LIST_TOP + (index - 1) * ROW_HEIGHT
         local design = MyMazesScene.designs[index] or nil
         if index == MyMazesScene.selection then
-            gfx.setColor(gfx.kColorBlack)
-            gfx.fillRoundRect(LIST_LEFT, top, LIST_WIDTH, ROW_HEIGHT - 4, 4)
-            gfx.setImageDrawMode(gfx.kDrawModeFillWhite)
+            playdate.graphics.setColor(playdate.graphics.kColorBlack)
+            playdate.graphics.fillRoundRect(LIST_LEFT, top, LIST_WIDTH, ROW_HEIGHT - 4, 4)
+            playdate.graphics.setImageDrawMode(playdate.graphics.kDrawModeFillWhite)
         end
-        gfx.drawText("*" .. name .. "*   " .. describe(design), LIST_LEFT + 8, top + 4)
-        gfx.setImageDrawMode(gfx.kDrawModeCopy)
+        playdate.graphics.drawText("*" .. name .. "*   " .. describe(design), LIST_LEFT + 8, top + 4)
+        playdate.graphics.setImageDrawMode(playdate.graphics.kDrawModeCopy)
     end
 
     local design = MyMazesScene.selectedDesign()
-    gfx.setColor(gfx.kColorBlack)
-    gfx.drawRect(THUMBNAIL_LEFT - 2, THUMBNAIL_TOP - 2, THUMBNAIL_WIDTH + 4, THUMBNAIL_HEIGHT + 4)
+    playdate.graphics.setColor(playdate.graphics.kColorBlack)
+    playdate.graphics.drawRect(THUMBNAIL_LEFT - 2, THUMBNAIL_TOP - 2, THUMBNAIL_WIDTH + 4, THUMBNAIL_HEIGHT + 4)
     if design then
         local blockSize = MapView.blockSizeToFit(design, THUMBNAIL_WIDTH, THUMBNAIL_HEIGHT)
         local width, height = MapView.size(design, blockSize)
         MapView.draw(design, THUMBNAIL_LEFT + (THUMBNAIL_WIDTH - width) // 2, THUMBNAIL_TOP + (THUMBNAIL_HEIGHT - height) // 2, blockSize)
     else
-        gfx.drawTextAligned("A new map will be", THUMBNAIL_LEFT + THUMBNAIL_WIDTH / 2, THUMBNAIL_TOP + 40, kTextAlignment.center)
-        gfx.drawTextAligned("*" .. Sizes.ALL[TitleScene.sizeIndex].name .. "*", THUMBNAIL_LEFT + THUMBNAIL_WIDTH / 2, THUMBNAIL_TOP + 62, kTextAlignment.center)
+        playdate.graphics.drawTextAligned("A new map will be", THUMBNAIL_LEFT + THUMBNAIL_WIDTH / 2, THUMBNAIL_TOP + 40, kTextAlignment.center)
+        playdate.graphics.drawTextAligned("*" .. Sizes.ALL[TitleScene.sizeIndex].name .. "*", THUMBNAIL_LEFT + THUMBNAIL_WIDTH / 2, THUMBNAIL_TOP + 62, kTextAlignment.center)
     end
-    gfx.drawTextAligned(footer(design), 200, 212, kTextAlignment.center)
+    playdate.graphics.drawTextAligned(footer(design), 200, 212, kTextAlignment.center)
 end

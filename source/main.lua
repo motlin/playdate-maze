@@ -13,8 +13,6 @@ import "scenes/Escaped"
 import "scenes/MyMazes"
 import "scenes/MazeEditor"
 
-local pd <const> = playdate
-
 function playdate.update()
     SceneManager.update()
 end
@@ -37,10 +35,10 @@ playdate.deviceWillSleep = saveRun
 playdate.deviceWillLock = saveRun
 playdate.gameWillTerminate = saveRun
 
-math.randomseed(pd.getSecondsSinceEpoch())
+math.randomseed(playdate.getSecondsSinceEpoch())
 Settings.load()
 
-pd.display.setRefreshRate(30)
+playdate.display.setRefreshRate(30)
 
 SceneManager.onSwitch = SystemMenu.refresh
 SceneManager.switch(TitleScene)

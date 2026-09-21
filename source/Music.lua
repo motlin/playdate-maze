@@ -6,8 +6,6 @@ import "ExitDistance"
 import "MusicScore"
 import "Settings"
 
-local snd <const> = playdate.sound
-
 Music = {}
 
 local VOICES <const> = 3
@@ -23,12 +21,12 @@ local BASS_SECONDS <const> = 1.6
 local masterVolume = 1
 local voices = {}
 for index = 1, VOICES do
-    local synth = snd.synth.new(index == VOICES and snd.kWaveTriangle or snd.kWaveSine)
+    local synth = playdate.sound.synth.new(index == VOICES and playdate.sound.kWaveTriangle or playdate.sound.kWaveSine)
     -- A soft start and a long tail, so the notes run into each other
     synth:setADSR(0.12, 0.5, 0.4, 1.6)
     voices[index] = synth
 end
-local bass = snd.synth.new(snd.kWaveSine)
+local bass = playdate.sound.synth.new(playdate.sound.kWaveSine)
 bass:setADSR(0.3, 0.8, 0.5, 2)
 
 local distances, heard, step, framesUntilNote = nil, 0, 0, 0

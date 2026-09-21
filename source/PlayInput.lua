@@ -1,17 +1,15 @@
 PlayInput = {}
 PlayInput.__index = PlayInput
 
-local pd <const> = playdate
-
 function PlayInput.new()
     return setmetatable({ current = 0, pressed = 0, released = 0, crankChange = 0, crankPosition = 0, isCrankDocked = true }, PlayInput)
 end
 
 function PlayInput:read()
-    self.current, self.pressed, self.released = pd.getButtonState()
-    self.crankChange = pd.getCrankChange()
-    self.crankPosition = pd.getCrankPosition()
-    self.isCrankDocked = pd.isCrankDocked()
+    self.current, self.pressed, self.released = playdate.getButtonState()
+    self.crankChange = playdate.getCrankChange()
+    self.crankPosition = playdate.getCrankPosition()
+    self.isCrankDocked = playdate.isCrankDocked()
     return self
 end
 

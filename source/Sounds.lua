@@ -4,16 +4,14 @@
 import "Hum"
 import "SoundBook"
 
-local snd <const> = playdate.sound
-
 Sounds = {}
 
 local VOICES_PER_WAVE <const> = 4
 local WAVES <const> = {
-    sine = snd.kWaveSine,
-    square = snd.kWaveSquare,
-    triangle = snd.kWaveTriangle,
-    noise = snd.kWaveNoise,
+    sine = playdate.sound.kWaveSine,
+    square = playdate.sound.kWaveSquare,
+    triangle = playdate.sound.kWaveTriangle,
+    noise = playdate.sound.kWaveNoise,
 }
 
 -- 1 is full volume. The screenshot harness plays at 0, which still exercises all of this.
@@ -22,7 +20,7 @@ local voices, nextVoice = {}, {}
 for wave, waveform in pairs(WAVES) do
     voices[wave], nextVoice[wave] = {}, 1
     for index = 1, VOICES_PER_WAVE do
-        local synth = snd.synth.new(waveform)
+        local synth = playdate.sound.synth.new(waveform)
         synth:setADSR(0.003, 0.03, 0.6, 0.04)
         voices[wave][index] = synth
     end
@@ -35,7 +33,7 @@ end
 -- events is a list of event names, such as a Run's events for the frame
 function Sounds.play(events)
     if #events == 0 then return end
-    local now = snd.getCurrentTime()
+    local now = playdate.sound.getCurrentTime()
     for _, event in ipairs(events) do
         for _, note in ipairs(SoundBook.notes(event)) do
             local wave = note.wave
@@ -52,7 +50,7 @@ local hums = {}
 local function humFor(shape)
     local synth = hums[shape]
     if not synth then
-        synth = snd.synth.new(snd.kWaveSine)
+        synth = playdate.sound.synth.new(playdate.sound.kWaveSine)
         -- A slow swell, so a hum never clicks in or out
         synth:setADSR(0.4, 0, 1, 0.4)
         hums[shape] = synth

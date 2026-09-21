@@ -5,8 +5,6 @@
 import "MapDesign"
 import "ShapeArt"
 
-local gfx <const> = playdate.graphics
-
 MapView = {}
 
 local GATE_PATTERN <const> = { 0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA }
@@ -40,16 +38,16 @@ local function drawThings(design, left, top, blockSize)
 
     -- The start is a ring with a dot in it
     local x, y = blockMiddle(left, top, blockSize, design.start)
-    gfx.setColor(gfx.kColorBlack)
-    gfx.drawCircleAtPoint(x, y, thingSize / 2)
-    gfx.fillCircleAtPoint(x, y, math.max(1, thingSize / 5))
+    playdate.graphics.setColor(playdate.graphics.kColorBlack)
+    playdate.graphics.drawCircleAtPoint(x, y, thingSize / 2)
+    playdate.graphics.fillCircleAtPoint(x, y, math.max(1, thingSize / 5))
 end
 
 function MapView.draw(design, left, top, blockSize)
     local width, height = MapView.size(design, blockSize)
-    gfx.setColor(gfx.kColorWhite)
-    gfx.fillRect(left, top, width, height)
-    gfx.setColor(gfx.kColorBlack)
+    playdate.graphics.setColor(playdate.graphics.kColorWhite)
+    playdate.graphics.fillRect(left, top, width, height)
+    playdate.graphics.setColor(playdate.graphics.kColorBlack)
     for gridY = 1, design.gridHeight do
         -- A row's walls are drawn a run at a time
         local runStart
@@ -57,15 +55,15 @@ function MapView.draw(design, left, top, blockSize)
             local isWall = gridX <= design.gridWidth and not design:isOpen(gridX, gridY)
             if isWall and not runStart then runStart = gridX end
             if not isWall and runStart then
-                gfx.fillRect(left + (runStart - 1) * blockSize, top + (gridY - 1) * blockSize, (gridX - runStart) * blockSize, blockSize)
+                playdate.graphics.fillRect(left + (runStart - 1) * blockSize, top + (gridY - 1) * blockSize, (gridX - runStart) * blockSize, blockSize)
                 runStart = nil
             end
         end
     end
 
     if design.exit then
-        gfx.setPattern(GATE_PATTERN)
-        gfx.fillRect(left + (design.exit.gridX - 1) * blockSize, top + (design.exit.gridY - 1) * blockSize, blockSize, blockSize)
+        playdate.graphics.setPattern(GATE_PATTERN)
+        playdate.graphics.fillRect(left + (design.exit.gridX - 1) * blockSize, top + (design.exit.gridY - 1) * blockSize, blockSize, blockSize)
     end
     drawThings(design, left, top, blockSize)
 end
@@ -73,11 +71,11 @@ end
 -- A frame round a block, which shows up over wall and floor alike
 function MapView.drawCursor(left, top, blockSize, gridX, gridY)
     local x, y = left + (gridX - 1) * blockSize, top + (gridY - 1) * blockSize
-    gfx.setColor(gfx.kColorXOR)
-    gfx.setLineWidth(2)
-    gfx.drawRect(x - 1, y - 1, blockSize + 2, blockSize + 2)
-    gfx.setLineWidth(1)
-    gfx.setColor(gfx.kColorWhite)
-    gfx.drawRect(x + 1, y + 1, blockSize - 2, blockSize - 2)
-    gfx.setColor(gfx.kColorBlack)
+    playdate.graphics.setColor(playdate.graphics.kColorXOR)
+    playdate.graphics.setLineWidth(2)
+    playdate.graphics.drawRect(x - 1, y - 1, blockSize + 2, blockSize + 2)
+    playdate.graphics.setLineWidth(1)
+    playdate.graphics.setColor(playdate.graphics.kColorWhite)
+    playdate.graphics.drawRect(x + 1, y + 1, blockSize - 2, blockSize - 2)
+    playdate.graphics.setColor(playdate.graphics.kColorBlack)
 end

@@ -8,8 +8,6 @@ import "Puzzle"
 import "Shades"
 import "ShapeArt"
 
-local gfx <const> = playdate.graphics
-
 SideView = {}
 
 SideView.CENTER_X = 200
@@ -43,14 +41,12 @@ function SideView.toScreen(worldX, worldY)
     return CENTER_X + (offsetX * cosine - offsetY * sine) * scale, CENTER_Y + (offsetX * sine + offsetY * cosine) * scale
 end
 
-local toScreen <const> = SideView.toScreen
-
 local function fillWorldRect(left, top, right, bottom)
-    local x1, y1 = toScreen(left, top)
-    local x2, y2 = toScreen(right, top)
-    local x3, y3 = toScreen(right, bottom)
-    local x4, y4 = toScreen(left, bottom)
-    gfx.fillPolygon(x1, y1, x2, y2, x3, y3, x4, y4)
+    local x1, y1 = SideView.toScreen(left, top)
+    local x2, y2 = SideView.toScreen(right, top)
+    local x3, y3 = SideView.toScreen(right, bottom)
+    local x4, y4 = SideView.toScreen(left, bottom)
+    playdate.graphics.fillPolygon(x1, y1, x2, y2, x3, y3, x4, y4)
 end
 
 -- The open runs only change when the exit opens
@@ -65,7 +61,7 @@ local function openRuns(maze)
 end
 
 local function drawCorridors(maze)
-    gfx.setColor(gfx.kColorWhite)
+    playdate.graphics.setColor(playdate.graphics.kColorWhite)
     for _, openRun in ipairs(openRuns(maze)) do
         local left, right = openRun.startGridX - 1, openRun.endGridX
         local top, bottom = openRun.gridY - 1, openRun.gridY
@@ -82,22 +78,22 @@ end
 local function drawExit(maze)
     local gridX, gridY = maze.exitGridX, maze.exitGridY
     if maze:blockValue(gridX, gridY) == Maze.BLOCKS.DOOR then
-        gfx.setPattern(GATE_PATTERN)
+        playdate.graphics.setPattern(GATE_PATTERN)
         fillWorldRect(gridX - 1, gridY - 1, gridX, gridY)
     else
-        local x, y = toScreen(maze:blockCenter(gridX, gridY))
-        gfx.setColor(gfx.kColorBlack)
-        gfx.setLineWidth(2)
-        gfx.drawCircleAtPoint(x, y, scale / 4)
-        gfx.drawCircleAtPoint(x, y, scale / 8)
-        gfx.setLineWidth(1)
+        local x, y = SideView.toScreen(maze:blockCenter(gridX, gridY))
+        playdate.graphics.setColor(playdate.graphics.kColorBlack)
+        playdate.graphics.setLineWidth(2)
+        playdate.graphics.drawCircleAtPoint(x, y, scale / 4)
+        playdate.graphics.drawCircleAtPoint(x, y, scale / 8)
+        playdate.graphics.setLineWidth(1)
     end
 end
 
 local function drawShapes()
     for _, item in ipairs(run.puzzle.items) do
         if item.state == Puzzle.STATES.GROUND then
-            local x, y = toScreen(run.maze:blockCenter(item.gridX, item.gridY))
+            local x, y = SideView.toScreen(run.maze:blockCenter(item.gridX, item.gridY))
             ShapeArt.drawSolid(item.shape, x, y, SHAPE_BLOCKS * scale)
         end
     end
@@ -105,8 +101,8 @@ end
 
 -- The walls, the corridors, the exit, and the shapes still to be collected
 function SideView.drawMaze()
-    gfx.setPattern(Shades.pattern(WALL_SHADE))
-    gfx.fillRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT)
+    playdate.graphics.setPattern(Shades.pattern(WALL_SHADE))
+    playdate.graphics.fillRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT)
     drawCorridors(run.maze)
     drawExit(run.maze)
     drawShapes()

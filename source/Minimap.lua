@@ -8,8 +8,6 @@ import "Shades"
 import "ShapeArt"
 import "Sizes"
 
-local gfx <const> = playdate.graphics
-
 Minimap = {}
 
 local MARGIN <const> = 3
@@ -34,17 +32,17 @@ end
 
 local function clearFog(column, row)
     local left, top = cellCorner(column, row)
-    gfx.setColor(gfx.kColorWhite)
-    gfx.fillRect(left, top, cellSize + 1, cellSize + 1)
+    playdate.graphics.setColor(playdate.graphics.kColorWhite)
+    playdate.graphics.fillRect(left, top, cellSize + 1, cellSize + 1)
 end
 
 local function drawCellWalls(maze, column, row)
     local left, top = cellCorner(column, row)
-    gfx.setColor(gfx.kColorBlack)
-    if not maze:hasPassage(column, row, "north") then gfx.drawLine(left, top, left + cellSize, top) end
-    if not maze:hasPassage(column, row, "west") then gfx.drawLine(left, top, left, top + cellSize) end
-    if not maze:hasPassage(column, row, "south") then gfx.drawLine(left, top + cellSize, left + cellSize, top + cellSize) end
-    if not maze:hasPassage(column, row, "east") then gfx.drawLine(left + cellSize, top, left + cellSize, top + cellSize) end
+    playdate.graphics.setColor(playdate.graphics.kColorBlack)
+    if not maze:hasPassage(column, row, "north") then playdate.graphics.drawLine(left, top, left + cellSize, top) end
+    if not maze:hasPassage(column, row, "west") then playdate.graphics.drawLine(left, top, left, top + cellSize) end
+    if not maze:hasPassage(column, row, "south") then playdate.graphics.drawLine(left, top + cellSize, left + cellSize, top + cellSize) end
+    if not maze:hasPassage(column, row, "east") then playdate.graphics.drawLine(left + cellSize, top, left + cellSize, top + cellSize) end
 end
 
 local function forEachRevealedCell(game, action)
@@ -62,11 +60,11 @@ local GATE_PATTERN <const> = { 0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA }
 local function drawBlocks(game)
     local maze = game.maze
     local width, height = Minimap.size(maze)
-    local image = gfx.image.new(width, height, gfx.kColorWhite)
+    local image = playdate.graphics.image.new(width, height, playdate.graphics.kColorWhite)
     local scale = cellSize / blocksPerCell
-    gfx.pushContext(image)
-    gfx.setPattern(Shades.pattern(FOG_SHADE))
-    gfx.fillRect(MARGIN, MARGIN, width - 2 * MARGIN, height - 2 * MARGIN)
+    playdate.graphics.pushContext(image)
+    playdate.graphics.setPattern(Shades.pattern(FOG_SHADE))
+    playdate.graphics.fillRect(MARGIN, MARGIN, width - 2 * MARGIN, height - 2 * MARGIN)
     for gridY = 1, maze.gridHeight do
         for gridX = 1, maze.gridWidth do
             if game:isRevealed(maze:nearestCell(maze:blockCenter(gridX, gridY))) then
@@ -74,17 +72,17 @@ local function drawBlocks(game)
                 local right, bottom = MARGIN + math.floor(gridX * scale), MARGIN + math.floor(gridY * scale)
                 local block = maze:blockValue(gridX, gridY)
                 if block == Maze.BLOCKS.DOOR then
-                    gfx.setPattern(GATE_PATTERN)
+                    playdate.graphics.setPattern(GATE_PATTERN)
                 else
-                    gfx.setColor(block == Maze.BLOCKS.WALL and gfx.kColorBlack or gfx.kColorWhite)
+                    playdate.graphics.setColor(block == Maze.BLOCKS.WALL and playdate.graphics.kColorBlack or playdate.graphics.kColorWhite)
                 end
-                gfx.fillRect(left, top, right - left, bottom - top)
+                playdate.graphics.fillRect(left, top, right - left, bottom - top)
             end
         end
     end
-    gfx.setColor(gfx.kColorBlack)
-    gfx.drawRect(0, 0, width, height)
-    gfx.popContext()
+    playdate.graphics.setColor(playdate.graphics.kColorBlack)
+    playdate.graphics.drawRect(0, 0, width, height)
+    playdate.graphics.popContext()
     return image
 end
 
@@ -92,23 +90,23 @@ local function drawWalls(game)
     if game.isHandMade then return drawBlocks(game) end
     local maze = game.maze
     local width, height = Minimap.size(maze)
-    local image = gfx.image.new(width, height, gfx.kColorWhite)
-    gfx.pushContext(image)
-    gfx.setPattern(Shades.pattern(FOG_SHADE))
-    gfx.fillRect(MARGIN, MARGIN, width - 2 * MARGIN, height - 2 * MARGIN)
+    local image = playdate.graphics.image.new(width, height, playdate.graphics.kColorWhite)
+    playdate.graphics.pushContext(image)
+    playdate.graphics.setPattern(Shades.pattern(FOG_SHADE))
+    playdate.graphics.fillRect(MARGIN, MARGIN, width - 2 * MARGIN, height - 2 * MARGIN)
     -- All the fog goes before any wall, so clearing one cell cannot rub out its neighbour's wall
     forEachRevealedCell(game, clearFog)
     forEachRevealedCell(game, function(column, row) drawCellWalls(maze, column, row) end)
 
-    gfx.setColor(gfx.kColorBlack)
-    gfx.drawRect(0, 0, width, height)
+    playdate.graphics.setColor(playdate.graphics.kColorBlack)
+    playdate.graphics.drawRect(0, 0, width, height)
     -- A locked exit is a thick bar; an open one is a gap in the wall
     local isLocked = maze:blockValue(maze.exitGridX, maze.exitGridY) == Maze.BLOCKS.DOOR
     if isLocked and game:isRevealed(maze.columns, maze.rows) then
         local left, top = cellCorner(maze.columns, maze.rows)
-        gfx.fillRect(left + cellSize - 1, top + 1, 3, cellSize - 1)
+        playdate.graphics.fillRect(left + cellSize - 1, top + 1, 3, cellSize - 1)
     end
-    gfx.popContext()
+    playdate.graphics.popContext()
     return image
 end
 
@@ -144,12 +142,12 @@ end
 
 -- A flipper is a small cross on the map
 local function drawFlippers(game, left, top)
-    gfx.setColor(gfx.kColorBlack)
+    playdate.graphics.setColor(playdate.graphics.kColorBlack)
     for _, flipper in ipairs(game.flippers.all) do
         if isRevealed(game, flipper) then
             local x, y = toMap(left, top, game.maze:blockCenter(flipper.gridX, flipper.gridY))
-            gfx.drawLine(x - 2, y - 2, x + 2, y + 2)
-            gfx.drawLine(x - 2, y + 2, x + 2, y - 2)
+            playdate.graphics.drawLine(x - 2, y - 2, x + 2, y + 2)
+            playdate.graphics.drawLine(x - 2, y + 2, x + 2, y - 2)
         end
     end
 end
@@ -159,12 +157,12 @@ local THREAD_STRIDE <const> = 4
 
 local function drawThread(thread, left, top)
     local points = thread.points
-    gfx.setColor(gfx.kColorBlack)
+    playdate.graphics.setColor(playdate.graphics.kColorBlack)
     local fromX, fromY = toMap(left, top, points[1].x, points[1].y)
     for index = 1 + THREAD_STRIDE, #points + THREAD_STRIDE - 1, THREAD_STRIDE do
         local point = points[math.min(index, #points)]
         local toX, toY = toMap(left, top, point.x, point.y)
-        gfx.drawLine(fromX, fromY, toX, toY)
+        playdate.graphics.drawLine(fromX, fromY, toX, toY)
         fromX, fromY = toX, toY
     end
 end
@@ -187,7 +185,7 @@ function Minimap.draw(game, left, top)
     local player = game.player
     local x, y = toMap(left, top, player.x, player.y)
     local radians = math.rad(player.angle)
-    gfx.setColor(gfx.kColorBlack)
-    gfx.fillCircleAtPoint(x, y, 2)
-    gfx.drawLine(x, y, x + math.cos(radians) * ARROW_LENGTH, y + math.sin(radians) * ARROW_LENGTH)
+    playdate.graphics.setColor(playdate.graphics.kColorBlack)
+    playdate.graphics.fillCircleAtPoint(x, y, 2)
+    playdate.graphics.drawLine(x, y, x + math.cos(radians) * ARROW_LENGTH, y + math.sin(radians) * ARROW_LENGTH)
 end

@@ -18,8 +18,6 @@ import "Sizes"
 import "Sounds"
 import "WalkingActions"
 
-local pd <const> = playdate
-
 FirstPersonScene = {
     SUBMODES = { EXPLORE = "explore", DAILY = "daily", SCREENSAVER = "screensaver", CUSTOM = "custom" },
     game = nil,
@@ -51,7 +49,7 @@ function FirstPersonScene.newGame(isAutopilotOn)
     local random = math.random
     local today
     if FirstPersonScene.submode == FirstPersonScene.SUBMODES.DAILY then
-        today = pd.getTime()
+        today = playdate.getTime()
         random = SeededRandom.new(SeededRandom.seedForDate(today.year, today.month, today.day))
     end
     local game = Game.new({

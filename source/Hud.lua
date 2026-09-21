@@ -6,8 +6,6 @@ import "Minimap"
 import "Puzzle"
 import "ShapeArt"
 
-local gfx <const> = playdate.graphics
-
 Hud = {}
 
 local SCREEN_WIDTH <const> = 400
@@ -26,10 +24,10 @@ local COMPASS_TICK <const> = 4
 local LINE_PADDING <const> = 8
 
 local function drawPanel(left, top, width, height)
-    gfx.setColor(gfx.kColorWhite)
-    gfx.fillRoundRect(left, top, width, height, 4)
-    gfx.setColor(gfx.kColorBlack)
-    gfx.drawRoundRect(left, top, width, height, 4)
+    playdate.graphics.setColor(playdate.graphics.kColorWhite)
+    playdate.graphics.fillRoundRect(left, top, width, height, 4)
+    playdate.graphics.setColor(playdate.graphics.kColorBlack)
+    playdate.graphics.drawRoundRect(left, top, width, height, 4)
 end
 
 -- Which shapes are home: a hollow icon for each one still missing, a black one for each in place
@@ -56,32 +54,32 @@ end
 local function drawCompass(heading)
     local left = (SCREEN_WIDTH - COMPASS_WIDTH) / 2
     drawPanel(left, EDGE, COMPASS_WIDTH, COMPASS_HEIGHT)
-    gfx.setClipRect(left + 2, EDGE, COMPASS_WIDTH - 4, COMPASS_HEIGHT)
-    gfx.setColor(gfx.kColorBlack)
+    playdate.graphics.setClipRect(left + 2, EDGE, COMPASS_WIDTH - 4, COMPASS_HEIGHT)
+    playdate.graphics.setColor(playdate.graphics.kColorBlack)
     for _, mark in ipairs(Compass.marks(heading, COMPASS_WIDTH, COMPASS_SPAN)) do
         if mark.label then
-            gfx.drawTextAligned(mark.label, left + mark.x, EDGE + 2, kTextAlignment.center)
+            playdate.graphics.drawTextAligned(mark.label, left + mark.x, EDGE + 2, kTextAlignment.center)
         else
-            gfx.drawLine(left + mark.x, EDGE + COMPASS_HEIGHT - COMPASS_TICK, left + mark.x, EDGE + COMPASS_HEIGHT - 1)
+            playdate.graphics.drawLine(left + mark.x, EDGE + COMPASS_HEIGHT - COMPASS_TICK, left + mark.x, EDGE + COMPASS_HEIGHT - 1)
         end
     end
-    gfx.clearClipRect()
+    playdate.graphics.clearClipRect()
     -- A notch marks dead ahead
     local middle = SCREEN_WIDTH / 2
-    gfx.fillTriangle(middle - 4, EDGE + COMPASS_HEIGHT, middle + 4, EDGE + COMPASS_HEIGHT, middle, EDGE + COMPASS_HEIGHT - 5)
+    playdate.graphics.fillTriangle(middle - 4, EDGE + COMPASS_HEIGHT, middle + 4, EDGE + COMPASS_HEIGHT, middle, EDGE + COMPASS_HEIGHT - 5)
 end
 
 -- White text on a black pill, centred along the bottom
 function Hud.drawLine(text)
-    local width = gfx.getTextSize(text) + 2 * LINE_PADDING
+    local width = playdate.graphics.getTextSize(text) + 2 * LINE_PADDING
     local left, top = (SCREEN_WIDTH - width) / 2, SCREEN_HEIGHT - EDGE - LINE_HEIGHT
-    gfx.setColor(gfx.kColorBlack)
-    gfx.fillRoundRect(left, top, width, LINE_HEIGHT, 4)
-    gfx.setColor(gfx.kColorWhite)
-    gfx.drawRoundRect(left, top, width, LINE_HEIGHT, 4)
-    gfx.setImageDrawMode(gfx.kDrawModeFillWhite)
-    gfx.drawTextAligned(text, SCREEN_WIDTH / 2, top + 3, kTextAlignment.center)
-    gfx.setImageDrawMode(gfx.kDrawModeCopy)
+    playdate.graphics.setColor(playdate.graphics.kColorBlack)
+    playdate.graphics.fillRoundRect(left, top, width, LINE_HEIGHT, 4)
+    playdate.graphics.setColor(playdate.graphics.kColorWhite)
+    playdate.graphics.drawRoundRect(left, top, width, LINE_HEIGHT, 4)
+    playdate.graphics.setImageDrawMode(playdate.graphics.kDrawModeFillWhite)
+    playdate.graphics.drawTextAligned(text, SCREEN_WIDTH / 2, top + 3, kTextAlignment.center)
+    playdate.graphics.setImageDrawMode(playdate.graphics.kDrawModeCopy)
 end
 
 function Hud.draw(game)

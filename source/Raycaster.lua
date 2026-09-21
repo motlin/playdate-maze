@@ -11,16 +11,14 @@ Raycaster.SIDES = { X = 0, Y = 1 }
 local SIDE_X <const> = Raycaster.SIDES.X
 local SIDE_Y <const> = Raycaster.SIDES.Y
 local OPEN <const> = 0
-local HUGE <const> = math.huge
-local floor <const> = math.floor
 
 -- Returns distance, side, gridX, gridY, block. The distance is in multiples of the direction's
 -- length, so a direction built from a camera plane gives the fisheye-free perpendicular distance.
 function Raycaster.cast(maze, x, y, directionX, directionY)
     local blocks = maze.blocks
-    local gridX, gridY = floor(x) + 1, floor(y) + 1
-    local deltaX = directionX == 0 and HUGE or math.abs(1 / directionX)
-    local deltaY = directionY == 0 and HUGE or math.abs(1 / directionY)
+    local gridX, gridY = math.floor(x) + 1, math.floor(y) + 1
+    local deltaX = directionX == 0 and math.huge or math.abs(1 / directionX)
+    local deltaY = directionY == 0 and math.huge or math.abs(1 / directionY)
     local stepX, stepY, sideDistanceX, sideDistanceY
     if directionX < 0 then
         stepX, sideDistanceX = -1, (x - (gridX - 1)) * deltaX

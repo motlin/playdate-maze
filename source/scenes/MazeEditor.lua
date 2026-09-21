@@ -14,9 +14,6 @@ import "Maze"
 import "PlayInput"
 import "SceneManager"
 
-local pd <const> = playdate
-local gfx <const> = playdate.graphics
-
 EditorScene = { editor = nil, slot = nil }
 
 local MAP_WIDTH <const> = 278
@@ -30,10 +27,10 @@ local CRANK_DEGREES_PER_TOOL <const> = 40
 local MESSAGE_FRAMES <const> = 60
 
 local DIRECTIONS <const> = {
-    { button = pd.kButtonLeft, x = -1, y = 0 },
-    { button = pd.kButtonRight, x = 1, y = 0 },
-    { button = pd.kButtonUp, x = 0, y = -1 },
-    { button = pd.kButtonDown, x = 0, y = 1 },
+    { button = playdate.kButtonLeft, x = -1, y = 0 },
+    { button = playdate.kButtonRight, x = 1, y = 0 },
+    { button = playdate.kButtonUp, x = 0, y = -1 },
+    { button = playdate.kButtonDown, x = 0, y = 1 },
 }
 
 local controls = PlayInput.new()
@@ -116,27 +113,27 @@ function EditorScene.handleInput()
 
     local step = stepFrom(input)
     if step then
-        editor:move(step.x, step.y, input:isDown(pd.kButtonA), input:isDown(pd.kButtonB))
+        editor:move(step.x, step.y, input:isDown(playdate.kButtonA), input:isDown(playdate.kButtonB))
     else
-        if input:isPressed(pd.kButtonA) then editor:add() end
-        if input:isPressed(pd.kButtonB) then editor:remove() end
+        if input:isPressed(playdate.kButtonA) then editor:add() end
+        if input:isPressed(playdate.kButtonB) then editor:remove() end
     end
     if editor.message ~= messageBefore then messageFrames = MESSAGE_FRAMES end
 end
 
 local function drawPanel(editor)
     local tool = editor:tool()
-    gfx.setColor(gfx.kColorWhite)
-    gfx.fillRect(PANEL_LEFT - 4, 0, PANEL_WIDTH + 8, 240)
-    gfx.setColor(gfx.kColorBlack)
-    gfx.drawLine(PANEL_LEFT - 4, 0, PANEL_LEFT - 4, 240)
+    playdate.graphics.setColor(playdate.graphics.kColorWhite)
+    playdate.graphics.fillRect(PANEL_LEFT - 4, 0, PANEL_WIDTH + 8, 240)
+    playdate.graphics.setColor(playdate.graphics.kColorBlack)
+    playdate.graphics.drawLine(PANEL_LEFT - 4, 0, PANEL_LEFT - 4, 240)
 
-    gfx.drawText("*Map " .. EditorScene.slot .. "*", PANEL_LEFT, 6)
-    gfx.drawText("Crank: tool " .. editor.toolIndex .. "/" .. #MapEditor.TOOLS, PANEL_LEFT, 30)
-    gfx.drawTextInRect("*" .. tool.label .. "*", PANEL_LEFT, 50, PANEL_WIDTH, 40)
-    gfx.drawTextInRect(tool.hint, PANEL_LEFT, 94, PANEL_WIDTH, 84)
-    gfx.drawLine(PANEL_LEFT, 182, PANEL_LEFT + PANEL_WIDTH, 182)
-    gfx.drawTextInRect(editor:status(), PANEL_LEFT, 188, PANEL_WIDTH, 50)
+    playdate.graphics.drawText("*Map " .. EditorScene.slot .. "*", PANEL_LEFT, 6)
+    playdate.graphics.drawText("Crank: tool " .. editor.toolIndex .. "/" .. #MapEditor.TOOLS, PANEL_LEFT, 30)
+    playdate.graphics.drawTextInRect("*" .. tool.label .. "*", PANEL_LEFT, 50, PANEL_WIDTH, 40)
+    playdate.graphics.drawTextInRect(tool.hint, PANEL_LEFT, 94, PANEL_WIDTH, 84)
+    playdate.graphics.drawLine(PANEL_LEFT, 182, PANEL_LEFT + PANEL_WIDTH, 182)
+    playdate.graphics.drawTextInRect(editor:status(), PANEL_LEFT, 188, PANEL_WIDTH, 50)
 end
 
 function EditorScene.update()
@@ -144,7 +141,7 @@ function EditorScene.update()
     if not SceneManager.isCurrent(EditorScene) then return end
     local editor = EditorScene.editor
 
-    gfx.clear(gfx.kColorWhite)
+    playdate.graphics.clear(playdate.graphics.kColorWhite)
     local blockSize = MapView.blockSizeToFit(editor.design, MAP_WIDTH, MAP_HEIGHT)
     local width, height = MapView.size(editor.design, blockSize)
     local left, top = (MAP_WIDTH - width) // 2 + 2, (240 - height) // 2

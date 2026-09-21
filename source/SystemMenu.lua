@@ -6,11 +6,9 @@ import "Music"
 import "SceneManager"
 import "Settings"
 
-local pd <const> = playdate
-
 SystemMenu = {}
 
-local menu = pd.getSystemMenu()
+local menu = playdate.getSystemMenu()
 
 function SystemMenu.refresh(scene)
     menu:removeAllMenuItems()

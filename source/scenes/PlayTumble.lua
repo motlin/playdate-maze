@@ -13,8 +13,6 @@ import "Tumble"
 import "TumbleActions"
 import "TumbleView"
 
-local pd <const> = playdate
-
 TumbleScene = { tumble = nil, sizeIndex = Sizes.DEFAULT }
 
 local controls = PlayInput.new()
@@ -56,5 +54,5 @@ function TumbleScene.update()
     TumbleView.draw(tumble)
     Hud.draw(tumble)
     -- Nothing turns the maze but the crank
-    if input.isCrankDocked then pd.ui.crankIndicator:draw() end
+    if input.isCrankDocked then playdate.ui.crankIndicator:draw() end
 end

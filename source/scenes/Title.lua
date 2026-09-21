@@ -8,9 +8,6 @@ import "SaveGame"
 import "SceneManager"
 import "Sizes"
 
-local pd <const> = playdate
-local gfx <const> = playdate.graphics
-
 -- rows is the menu as it stands: it starts with Continue only when there is a game to continue
 TitleScene = { selection = 1, sizeIndex = Sizes.DEFAULT, rows = {} }
 
@@ -87,11 +84,11 @@ local function newBackdrop()
 end
 
 local function drawTitleImage()
-    local width, height = gfx.getTextSize("MAZE")
-    local image = gfx.image.new(width, height)
-    gfx.pushContext(image)
-    gfx.drawText("MAZE", 0, 0)
-    gfx.popContext()
+    local width, height = playdate.graphics.getTextSize("MAZE")
+    local image = playdate.graphics.image.new(width, height)
+    playdate.graphics.pushContext(image)
+    playdate.graphics.drawText("MAZE", 0, 0)
+    playdate.graphics.popContext()
     return image
 end
 
@@ -106,15 +103,15 @@ end
 function TitleScene.handleInput()
     local rows = TitleScene.rows
     local row = rows[TitleScene.selection]
-    local move = crankSteps:turn(pd.getCrankChange())
-    if pd.buttonJustPressed(pd.kButtonUp) then move = -1 end
-    if pd.buttonJustPressed(pd.kButtonDown) then move = 1 end
+    local move = crankSteps:turn(playdate.getCrankChange())
+    if playdate.buttonJustPressed(playdate.kButtonUp) then move = -1 end
+    if playdate.buttonJustPressed(playdate.kButtonDown) then move = 1 end
     -- A press of the D-pad is a fresh start for the crank
-    if move ~= 0 and (pd.buttonJustPressed(pd.kButtonUp) or pd.buttonJustPressed(pd.kButtonDown)) then crankSteps:reset() end
+    if move ~= 0 and (playdate.buttonJustPressed(playdate.kButtonUp) or playdate.buttonJustPressed(playdate.kButtonDown)) then crankSteps:reset() end
     TitleScene.selection = math.max(1, math.min(#rows, TitleScene.selection + move))
-    if pd.buttonJustPressed(pd.kButtonLeft) and row.left then row.left() end
-    if pd.buttonJustPressed(pd.kButtonRight) and row.right then row.right() end
-    if pd.buttonJustPressed(pd.kButtonA) then row.confirm() end
+    if playdate.buttonJustPressed(playdate.kButtonLeft) and row.left then row.left() end
+    if playdate.buttonJustPressed(playdate.kButtonRight) and row.right then row.right() end
+    if playdate.buttonJustPressed(playdate.kButtonA) then row.confirm() end
 end
 
 function TitleScene.update()
@@ -126,12 +123,12 @@ function TitleScene.update()
     headBob:walk(backdrop.distanceWalked)
     MazeView.draw(backdrop, headBob:headOffset())
 
-    gfx.setColor(gfx.kColorWhite)
-    gfx.fillRoundRect(PANEL_LEFT, PANEL_TOP, PANEL_WIDTH, PANEL_HEIGHT, 8)
-    gfx.setColor(gfx.kColorBlack)
-    gfx.setLineWidth(2)
-    gfx.drawRoundRect(PANEL_LEFT, PANEL_TOP, PANEL_WIDTH, PANEL_HEIGHT, 8)
-    gfx.setLineWidth(1)
+    playdate.graphics.setColor(playdate.graphics.kColorWhite)
+    playdate.graphics.fillRoundRect(PANEL_LEFT, PANEL_TOP, PANEL_WIDTH, PANEL_HEIGHT, 8)
+    playdate.graphics.setColor(playdate.graphics.kColorBlack)
+    playdate.graphics.setLineWidth(2)
+    playdate.graphics.drawRoundRect(PANEL_LEFT, PANEL_TOP, PANEL_WIDTH, PANEL_HEIGHT, 8)
+    playdate.graphics.setLineWidth(1)
 
     local titleWidth = titleImage.width * TITLE_SCALE
     titleImage:drawScaled(PANEL_LEFT + (PANEL_WIDTH - titleWidth) / 2, PANEL_TOP + 6, TITLE_SCALE)
@@ -139,11 +136,11 @@ function TitleScene.update()
     for index, row in ipairs(TitleScene.rows) do
         local top = ROWS_TOP + (index - 1) * ROW_HEIGHT
         if index == TitleScene.selection then
-            gfx.setColor(gfx.kColorBlack)
-            gfx.fillRoundRect(PANEL_LEFT + 20, top, PANEL_WIDTH - 40, ROW_HEIGHT - 2, 4)
-            gfx.setImageDrawMode(gfx.kDrawModeFillWhite)
+            playdate.graphics.setColor(playdate.graphics.kColorBlack)
+            playdate.graphics.fillRoundRect(PANEL_LEFT + 20, top, PANEL_WIDTH - 40, ROW_HEIGHT - 2, 4)
+            playdate.graphics.setImageDrawMode(playdate.graphics.kDrawModeFillWhite)
         end
-        gfx.drawTextAligned(row.label(), PANEL_LEFT + PANEL_WIDTH / 2, top + 2, kTextAlignment.center)
-        gfx.setImageDrawMode(gfx.kDrawModeCopy)
+        playdate.graphics.drawTextAligned(row.label(), PANEL_LEFT + PANEL_WIDTH / 2, top + 2, kTextAlignment.center)
+        playdate.graphics.setImageDrawMode(playdate.graphics.kDrawModeCopy)
     end
 end

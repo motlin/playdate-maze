@@ -9,8 +9,6 @@ import "Raycaster"
 import "Shades"
 import "ShapeArt"
 
-local gfx <const> = playdate.graphics
-
 MazeView = {}
 
 MazeView.SCREEN = { width = 400, height = 240, columnWidth = 4, fieldOfView = 70, refinements = 2 }
@@ -61,18 +59,18 @@ local BLOCK_EXIT <const> = 3
 local background
 
 local function drawBackground()
-    local image = gfx.image.new(SCREEN.width, SCREEN.height + 2 * BOB_ROOM, gfx.kColorBlack)
-    gfx.pushContext(image)
+    local image = playdate.graphics.image.new(SCREEN.width, SCREEN.height + 2 * BOB_ROOM, playdate.graphics.kColorBlack)
+    playdate.graphics.pushContext(image)
     local bandHeight <const> = 8
     local middle = HORIZON_AT_REST + BOB_ROOM
     for band = 0, middle // bandHeight do
         -- The floor brightens towards the viewer; the ceiling stays nearly black
-        gfx.setPattern(Shades.pattern(2 + band // 2))
-        gfx.fillRect(0, middle + band * bandHeight, SCREEN.width, bandHeight)
-        gfx.setPattern(Shades.pattern(band // 5))
-        gfx.fillRect(0, middle - (band + 1) * bandHeight, SCREEN.width, bandHeight)
+        playdate.graphics.setPattern(Shades.pattern(2 + band // 2))
+        playdate.graphics.fillRect(0, middle + band * bandHeight, SCREEN.width, bandHeight)
+        playdate.graphics.setPattern(Shades.pattern(band // 5))
+        playdate.graphics.fillRect(0, middle - (band + 1) * bandHeight, SCREEN.width, bandHeight)
     end
-    gfx.popContext()
+    playdate.graphics.popContext()
     return image
 end
 
@@ -109,27 +107,27 @@ local function drawGate(run, startTop, startHeight, endTop, endHeight)
     local startX, endX = run.startX, run.endX
     local shown = 1 - gateLift
     local startFoot, endFoot = startTop + startHeight * shown, endTop + endHeight * shown
-    gfx.setColor(gfx.kColorWhite)
-    gfx.fillPolygon(startX, startFoot, endX, endFoot, endX, endTop + endHeight, startX, startTop + startHeight)
+    playdate.graphics.setColor(playdate.graphics.kColorWhite)
+    playdate.graphics.fillPolygon(startX, startFoot, endX, endFoot, endX, endTop + endHeight, startX, startTop + startHeight)
 
     for _, fraction in ipairs(GATE_CROSSBARS) do
         local height = fraction - gateLift
         if height > 0 then
-            gfx.setLineWidth(math.max(2, (startHeight + endHeight) // 60))
-            gfx.drawLine(startX, startTop + startHeight * height, endX, endTop + endHeight * height)
+            playdate.graphics.setLineWidth(math.max(2, (startHeight + endHeight) // 60))
+            playdate.graphics.drawLine(startX, startTop + startHeight * height, endX, endTop + endHeight * height)
         end
     end
     for bar = 1, GATE_BARS do
         local x, height = projectAlongFace(run, bar / (GATE_BARS + 1))
         -- Only the part of the face inside the run is in view
         if x and x > startX and x < endX then
-            gfx.setLineWidth(math.max(2, height // 30))
-            gfx.drawLine(x, horizon - height / 2, x, horizon - height / 2 + height * shown)
+            playdate.graphics.setLineWidth(math.max(2, height // 30))
+            playdate.graphics.drawLine(x, horizon - height / 2, x, horizon - height / 2 + height * shown)
         end
     end
-    gfx.setLineWidth(1)
-    gfx.setColor(gfx.kColorBlack)
-    gfx.drawLine(startX, startFoot, endX, endFoot)
+    playdate.graphics.setLineWidth(1)
+    playdate.graphics.setColor(playdate.graphics.kColorBlack)
+    playdate.graphics.drawLine(startX, startFoot, endX, endFoot)
 end
 
 -- Landmarks. A picture hangs across the middle half of its wall face, between these heights
@@ -191,26 +189,26 @@ local function drawPicture(run)
     end
 
     -- Only the part of the face inside the run is in view
-    gfx.setClipRect(run.startX, 0, run.endX - run.startX, SCREEN.height)
+    playdate.graphics.setClipRect(run.startX, 0, run.endX - run.startX, SCREEN.height)
     local x1, y1 = place(0, 0)
     local x2, y2 = place(1, 0)
     local x3, y3 = place(1, 1)
     local x4, y4 = place(0, 1)
-    gfx.setColor(gfx.kColorWhite)
-    gfx.fillPolygon(x1, y1, x2, y2, x3, y3, x4, y4)
-    gfx.setColor(gfx.kColorBlack)
-    gfx.setLineWidth(2)
-    gfx.drawPolygon(x1, y1, x2, y2, x3, y3, x4, y4)
-    gfx.setLineWidth(1)
+    playdate.graphics.setColor(playdate.graphics.kColorWhite)
+    playdate.graphics.fillPolygon(x1, y1, x2, y2, x3, y3, x4, y4)
+    playdate.graphics.setColor(playdate.graphics.kColorBlack)
+    playdate.graphics.setLineWidth(2)
+    playdate.graphics.drawPolygon(x1, y1, x2, y2, x3, y3, x4, y4)
+    playdate.graphics.setLineWidth(1)
     for _, stroke in ipairs(MOTIFS[motif]) do
         local previousX, previousY = place(stroke[1], stroke[2])
         for index = 3, #stroke, 2 do
             local x, y = place(stroke[index], stroke[index + 1])
-            gfx.drawLine(previousX, previousY, x, y)
+            playdate.graphics.drawLine(previousX, previousY, x, y)
             previousX, previousY = x, y
         end
     end
-    gfx.clearClipRect()
+    playdate.graphics.clearClipRect()
 end
 
 local jointX, jointHeight = {}, {}
@@ -221,7 +219,7 @@ local function drawBricks(run, startTop, startHeight, endTop, endHeight)
     local startX, endX = run.startX, run.endX
     for course = 1, COURSES - 1 do
         local fraction = course / COURSES
-        gfx.drawLine(startX, startTop + startHeight * fraction, endX, endTop + endHeight * fraction)
+        playdate.graphics.drawLine(startX, startTop + startHeight * fraction, endX, endTop + endHeight * fraction)
     end
     if tallest < SHORTEST_WALL_WITH_JOINTS then return end
 
@@ -234,7 +232,7 @@ local function drawBricks(run, startTop, startHeight, endTop, endHeight)
             -- Only the part of the face inside the run is in view
             if x and x > startX and x < endX then
                 local top = horizon - height / 2
-                gfx.drawLine(x, top + height * (course - 1) / COURSES, x, top + height * course / COURSES)
+                playdate.graphics.drawLine(x, top + height * (course - 1) / COURSES, x, top + height * course / COURSES)
             end
         end
     end
@@ -248,25 +246,25 @@ local function drawRun(run)
     local endTop, endBottom = horizon - endHeight / 2, horizon + endHeight / 2
 
     if run.block == BLOCK_EXIT then
-        gfx.setColor(gfx.kColorWhite)
-        gfx.fillPolygon(startX, startTop, endX, endTop, endX, endBottom, startX, startBottom)
+        playdate.graphics.setColor(playdate.graphics.kColorWhite)
+        playdate.graphics.fillPolygon(startX, startTop, endX, endTop, endX, endBottom, startX, startBottom)
         return
     end
 
     if run.block == BLOCK_DOOR then
-        gfx.setPattern(Shades.pattern(GATE_SHADE))
+        playdate.graphics.setPattern(Shades.pattern(GATE_SHADE))
     else
         local distance = (run.startDistance + run.endDistance) / 2
         local level = BRIGHTEST_WALL - math.floor(distance * SHADE_PER_BLOCK)
         if run.side == Raycaster.SIDES.X then level = level - SIDE_X_DARKENING end
-        gfx.setPattern(Shades.pattern(math.max(DARKEST_WALL, level)))
+        playdate.graphics.setPattern(Shades.pattern(math.max(DARKEST_WALL, level)))
     end
-    gfx.fillPolygon(startX, startTop, endX, endTop, endX, endBottom, startX, startBottom)
+    playdate.graphics.fillPolygon(startX, startTop, endX, endTop, endX, endBottom, startX, startBottom)
 
-    gfx.setColor(gfx.kColorBlack)
-    gfx.drawLine(startX, startTop, endX, endTop)
-    gfx.drawLine(startX, startBottom, endX, endBottom)
-    gfx.drawLine(startX, startTop, startX, startBottom)
+    playdate.graphics.setColor(playdate.graphics.kColorBlack)
+    playdate.graphics.drawLine(startX, startTop, endX, endTop)
+    playdate.graphics.drawLine(startX, startBottom, endX, endBottom)
+    playdate.graphics.drawLine(startX, startTop, startX, startBottom)
     if run.block == BLOCK_DOOR then
         drawGate(run, startTop, startHeight, endTop, endHeight)
     else
@@ -321,7 +319,7 @@ local function clipToVisibleColumns(depths, centerX, halfWidth, depth)
         end
     end
     if not firstVisible then return false end
-    gfx.setClipRect((firstVisible - 1) * columnWidth, 0, (lastVisible - firstVisible + 1) * columnWidth, SCREEN.height)
+    playdate.graphics.setClipRect((firstVisible - 1) * columnWidth, 0, (lastVisible - firstVisible + 1) * columnWidth, SCREEN.height)
     return true
 end
 
@@ -337,14 +335,14 @@ local function drawSprite(sprite, depths)
         local halfWidth = math.max(1, math.abs(math.cos(frame * FLIPPER_SPIN + sprite.index)) * size / 2)
         if not clipToVisibleColumns(depths, centerX, size / 2, sprite.depth) then return end
         local top, bottom = horizon - size / 2, horizon + size / 2
-        gfx.setColor(gfx.kColorWhite)
-        gfx.fillPolygon(centerX, top, centerX + halfWidth, horizon, centerX, bottom, centerX - halfWidth, horizon)
-        gfx.setColor(gfx.kColorBlack)
-        gfx.setLineWidth(2)
-        gfx.drawPolygon(centerX, top, centerX + halfWidth, horizon, centerX, bottom, centerX - halfWidth, horizon)
-        gfx.setLineWidth(1)
-        gfx.drawLine(centerX - halfWidth, horizon, centerX + halfWidth, horizon)
-        gfx.drawLine(centerX, top, centerX, bottom)
+        playdate.graphics.setColor(playdate.graphics.kColorWhite)
+        playdate.graphics.fillPolygon(centerX, top, centerX + halfWidth, horizon, centerX, bottom, centerX - halfWidth, horizon)
+        playdate.graphics.setColor(playdate.graphics.kColorBlack)
+        playdate.graphics.setLineWidth(2)
+        playdate.graphics.drawPolygon(centerX, top, centerX + halfWidth, horizon, centerX, bottom, centerX - halfWidth, horizon)
+        playdate.graphics.setLineWidth(1)
+        playdate.graphics.drawLine(centerX - halfWidth, horizon, centerX + halfWidth, horizon)
+        playdate.graphics.drawLine(centerX, top, centerX, bottom)
     elseif sprite.kind == "item" then
         if not clipToVisibleColumns(depths, centerX, itemSize / 2, sprite.depth) then return end
         local hover = ITEM_HOVER_BELOW_EYE + Bob.hoverOffset(frame, sprite.index)
@@ -352,17 +350,17 @@ local function drawSprite(sprite, depths)
     else
         local width, height = PEDESTAL_WIDTH * scale, PEDESTAL_HEIGHT * scale
         if not clipToVisibleColumns(depths, centerX, width / 2, sprite.depth) then return end
-        gfx.setColor(gfx.kColorWhite)
-        gfx.fillRect(centerX - width / 2, floorY - height, width, height)
-        gfx.setColor(gfx.kColorBlack)
-        gfx.drawRect(centerX - width / 2, floorY - height, width, height)
+        playdate.graphics.setColor(playdate.graphics.kColorWhite)
+        playdate.graphics.fillRect(centerX - width / 2, floorY - height, width, height)
+        playdate.graphics.setColor(playdate.graphics.kColorBlack)
+        playdate.graphics.drawRect(centerX - width / 2, floorY - height, width, height)
         local iconSize = PEDESTAL_ICON_SIZE * scale
         ShapeArt.drawHollow(sprite.thing.shape, centerX, floorY - height + iconSize, iconSize)
         if sprite.thing.isFilled then
             ShapeArt.drawSolid(sprite.thing.shape, centerX, floorY - height - itemSize / 2, itemSize)
         end
     end
-    gfx.clearClipRect()
+    playdate.graphics.clearClipRect()
 end
 
 -- A mark is a square or a diamond lying flat, black on a floor and white on a ceiling, solid or
@@ -390,16 +388,16 @@ local function drawMark(mark, maze, depths)
     end
     if not clipToVisibleColumns(depths, centerX, halfWidth, PROJECTION / centerHeight) then return end
 
-    gfx.setColor(mark.kind == "floor" and gfx.kColorBlack or gfx.kColorWhite)
+    playdate.graphics.setColor(mark.kind == "floor" and playdate.graphics.kColorBlack or playdate.graphics.kColorWhite)
     local x, y = markCornersX, markCornersY
     if mark.motif % 4 < 2 then
-        gfx.fillPolygon(x[1], y[1], x[2], y[2], x[3], y[3], x[4], y[4])
+        playdate.graphics.fillPolygon(x[1], y[1], x[2], y[2], x[3], y[3], x[4], y[4])
     else
-        gfx.setLineWidth(2)
-        gfx.drawPolygon(x[1], y[1], x[2], y[2], x[3], y[3], x[4], y[4])
-        gfx.setLineWidth(1)
+        playdate.graphics.setLineWidth(2)
+        playdate.graphics.drawPolygon(x[1], y[1], x[2], y[2], x[3], y[3], x[4], y[4])
+        playdate.graphics.setLineWidth(1)
     end
-    gfx.clearClipRect()
+    playdate.graphics.clearClipRect()
 end
 
 local function drawScene(game, headOffset)
@@ -431,9 +429,9 @@ function MazeView.draw(game, headOffset)
         drawScene(game, headOffset)
         return
     end
-    flippedScene = flippedScene or gfx.image.new(SCREEN.width, SCREEN.height)
-    gfx.pushContext(flippedScene)
+    flippedScene = flippedScene or playdate.graphics.image.new(SCREEN.width, SCREEN.height)
+    playdate.graphics.pushContext(flippedScene)
     drawScene(game, headOffset)
-    gfx.popContext()
-    flippedScene:draw(0, 0, gfx.kImageFlippedY)
+    playdate.graphics.popContext()
+    flippedScene:draw(0, 0, playdate.graphics.kImageFlippedY)
 end

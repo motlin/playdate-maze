@@ -5,8 +5,6 @@
 import "SideView"
 import "Slime"
 
-local gfx <const> = playdate.graphics
-
 SlimeView = {}
 
 local PIXELS_PER_BLOCK <const> = 24
@@ -43,44 +41,44 @@ end
 
 local function drawBlob(slime)
     local left, top, width, height = blobRect(slime)
-    gfx.setColor(gfx.kColorBlack)
-    gfx.fillEllipseInRect(left, top, width, height)
-    gfx.setColor(gfx.kColorWhite)
+    playdate.graphics.setColor(playdate.graphics.kColorBlack)
+    playdate.graphics.fillEllipseInRect(left, top, width, height)
+    playdate.graphics.setColor(playdate.graphics.kColorWhite)
     local eyeY = top + height / 2 - 2
-    gfx.fillRect(left + width / 2 - 3, eyeY, 2, 3)
-    gfx.fillRect(left + width / 2 + 1, eyeY, 2, 3)
+    playdate.graphics.fillRect(left + width / 2 - 3, eyeY, 2, 3)
+    playdate.graphics.fillRect(left + width / 2 + 1, eyeY, 2, 3)
 end
 
 -- A ring round the slime that empties as its grip on a wall or ceiling runs out
 local function drawClock(slime)
     if slime.state ~= Slime.STATES.CLINGING then return end
-    gfx.setColor(gfx.kColorBlack)
-    gfx.setLineWidth(3)
-    gfx.drawArc(CENTER_X, CENTER_Y, CLOCK_RADIUS, 0, 360 * slime.stickFrames / Slime.STICK_FRAMES)
-    gfx.setLineWidth(1)
+    playdate.graphics.setColor(playdate.graphics.kColorBlack)
+    playdate.graphics.setLineWidth(3)
+    playdate.graphics.drawArc(CENTER_X, CENTER_Y, CLOCK_RADIUS, 0, 360 * slime.stickFrames / Slime.STICK_FRAMES)
+    playdate.graphics.setLineWidth(1)
 end
 
 -- A short tick showing where the crank points, so a throw can be lined up before A is pressed
 local function drawPointer(slime)
     local radians = math.rad(slime.aimAngle)
     local x, y = math.sin(radians), -math.cos(radians)
-    gfx.setColor(gfx.kColorBlack)
-    gfx.setLineWidth(2)
-    gfx.drawLine(CENTER_X + x * POINTER_FROM, CENTER_Y + y * POINTER_FROM, CENTER_X + x * POINTER_TO, CENTER_Y + y * POINTER_TO)
-    gfx.setLineWidth(1)
+    playdate.graphics.setColor(playdate.graphics.kColorBlack)
+    playdate.graphics.setLineWidth(2)
+    playdate.graphics.drawLine(CENTER_X + x * POINTER_FROM, CENTER_Y + y * POINTER_FROM, CENTER_X + x * POINTER_TO, CENTER_Y + y * POINTER_TO)
+    playdate.graphics.setLineWidth(1)
 end
 
 local function drawArc(slime)
     local arc = slime:arc()
-    gfx.setColor(gfx.kColorBlack)
+    playdate.graphics.setColor(playdate.graphics.kColorBlack)
     for _, point in ipairs(arc.points) do
         local x, y = SideView.toScreen(point.x, point.y)
-        gfx.fillCircleAtPoint(x, y, ARC_DOT_RADIUS)
+        playdate.graphics.fillCircleAtPoint(x, y, ARC_DOT_RADIUS)
     end
     local x, y = SideView.toScreen(arc.landingX, arc.landingY)
-    gfx.setLineWidth(2)
-    gfx.drawCircleAtPoint(x, y, LANDING_RADIUS)
-    gfx.setLineWidth(1)
+    playdate.graphics.setLineWidth(2)
+    playdate.graphics.drawCircleAtPoint(x, y, LANDING_RADIUS)
+    playdate.graphics.setLineWidth(1)
 end
 
 function SlimeView.draw(slime)

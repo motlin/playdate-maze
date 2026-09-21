@@ -2,9 +2,6 @@
 
 import "SceneManager"
 
-local pd <const> = playdate
-local gfx <const> = playdate.graphics
-
 EscapedScene = { seconds = 0, playAgain = nil, detail = nil }
 
 local FRAMES_PER_SECOND <const> = 30
@@ -12,11 +9,11 @@ local titleImage
 
 local function drawTitleImage()
     local text <const> = "You escaped!"
-    local width, height = gfx.getTextSize(text)
-    local image = gfx.image.new(width, height)
-    gfx.pushContext(image)
-    gfx.drawText(text, 0, 0)
-    gfx.popContext()
+    local width, height = playdate.graphics.getTextSize(text)
+    local image = playdate.graphics.image.new(width, height)
+    playdate.graphics.pushContext(image)
+    playdate.graphics.drawText(text, 0, 0)
+    playdate.graphics.popContext()
     return image
 end
 
@@ -30,19 +27,19 @@ function EscapedScene.enter(frames, playAgain, detail)
 end
 
 function EscapedScene.update()
-    if pd.buttonJustPressed(pd.kButtonA) then
+    if playdate.buttonJustPressed(playdate.kButtonA) then
         EscapedScene.playAgain()
         return
     end
-    if pd.buttonJustPressed(pd.kButtonB) then
+    if playdate.buttonJustPressed(playdate.kButtonB) then
         SceneManager.switch(TitleScene)
         return
     end
 
-    gfx.clear(gfx.kColorWhite)
+    playdate.graphics.clear(playdate.graphics.kColorWhite)
     titleImage:drawScaled((400 - titleImage.width * 2) / 2, 50, 2)
     local time = string.format("%d:%02d", EscapedScene.seconds // 60, EscapedScene.seconds % 60)
-    gfx.drawTextAligned("Time  *" .. time .. "*", 200, 120, kTextAlignment.center)
-    if EscapedScene.detail then gfx.drawTextAligned(EscapedScene.detail, 200, 146, kTextAlignment.center) end
-    gfx.drawTextAligned("Ⓐ New maze     Ⓑ Title screen", 200, 190, kTextAlignment.center)
+    playdate.graphics.drawTextAligned("Time  *" .. time .. "*", 200, 120, kTextAlignment.center)
+    if EscapedScene.detail then playdate.graphics.drawTextAligned(EscapedScene.detail, 200, 146, kTextAlignment.center) end
+    playdate.graphics.drawTextAligned("Ⓐ New maze     Ⓑ Title screen", 200, 190, kTextAlignment.center)
 end

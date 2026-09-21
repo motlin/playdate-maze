@@ -3,7 +3,6 @@ import "TapOrReel"
 WalkingActions = {}
 WalkingActions.__index = WalkingActions
 
-local pd <const> = playdate
 local DPAD_TURN_SPEED <const> = 5
 
 function WalkingActions.new(controls)
@@ -13,11 +12,11 @@ end
 function WalkingActions:read(suppressItemActions)
     local input = self.controls
     local actions, button = self.actions, self.bButton
-    local sideways = input:axis(pd.kButtonLeft, pd.kButtonRight)
+    local sideways = input:axis(playdate.kButtonLeft, playdate.kButtonRight)
     local reel, isBTapped = button:update(
-        input:isPressed(pd.kButtonB), input:isDown(pd.kButtonB), input:isReleased(pd.kButtonB), input.crankChange
+        input:isPressed(playdate.kButtonB), input:isDown(playdate.kButtonB), input:isReleased(playdate.kButtonB), input.crankChange
     )
-    actions.forward = input:axis(pd.kButtonDown, pd.kButtonUp)
+    actions.forward = input:axis(playdate.kButtonDown, playdate.kButtonUp)
     actions.turn = button:isHeld() and 0 or input.crankChange
     actions.crank = actions.turn
     actions.reel = reel
@@ -27,7 +26,7 @@ function WalkingActions:read(suppressItemActions)
     else
         actions.strafe = sideways
     end
-    actions.pickUp = input:isPressed(pd.kButtonA)
+    actions.pickUp = input:isPressed(playdate.kButtonA)
     actions.drop = isBTapped
     if suppressItemActions then
         button:ignoreThisPress()
