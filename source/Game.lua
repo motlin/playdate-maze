@@ -33,7 +33,6 @@ Game.BUMP_FRAMES_APART = 12
 Game.GATE_NOTCH_DEGREES = 60
 Game.REEL_TICK_BLOCKS = 0.5
 
-local WALK_SPEED <const> = Game.WALK_SPEED
 local ANGLES <const> = { east = 0, south = 90, west = 180, north = 270 }
 
 -- options = { columns, rows, hasPuzzle, random }, where random(n) is like math.random
@@ -285,7 +284,7 @@ function Game:update(input)
     else
         -- While the crank is lifting the gate it does not also swing the view
         if not isCrankingGate then self.player:turn(input.turn or 0) end
-        self.player:move(self.maze, (input.forward or 0) * WALK_SPEED, (input.strafe or 0) * WALK_SPEED)
+        self.player:move(self.maze, (input.forward or 0) * Game.WALK_SPEED, (input.strafe or 0) * Game.WALK_SPEED)
         self.thread:record(self.player.x, fromY)
         self.thread:record(self.player.x, self.player.y)
     end

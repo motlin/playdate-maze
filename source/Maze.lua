@@ -16,11 +16,6 @@ Maze.OFFSETS = {
     west = { -1, 0 },
 }
 
-local OPEN <const> = Maze.BLOCKS.OPEN
-local WALL <const> = Maze.BLOCKS.WALL
-local DOOR <const> = Maze.BLOCKS.DOOR
-local EXIT <const> = Maze.BLOCKS.EXIT
-
 -- The first and last grid index a cell spans along one axis; `number` is its column or row
 local function cellSpan(maze, number)
     local pitch = maze.corridorWidth + 1
@@ -43,7 +38,7 @@ function Maze.new(columns, rows, corridorWidth)
         for gridX = 1, maze.gridWidth do
             -- Wall lines run along every grid index that is one more than a multiple of the pitch
             local isCell = gridX % pitch ~= 1 and gridY % pitch ~= 1
-            line[gridX] = isCell and OPEN or WALL
+            line[gridX] = isCell and Maze.BLOCKS.OPEN or Maze.BLOCKS.WALL
         end
         maze.blocks[gridY] = line
     end
@@ -80,7 +75,7 @@ function Maze.generate(columns, rows, random, corridorWidth)
     local _, lastRowBottom = cellSpan(maze, rows)
     maze.exitGridX = maze.gridWidth
     maze.exitGridY = lastRowBottom
-    maze.blocks[maze.exitGridY][maze.exitGridX] = DOOR
+    maze.blocks[maze.exitGridY][maze.exitGridX] = Maze.BLOCKS.DOOR
     return maze
 end
 
@@ -106,18 +101,18 @@ function Maze:carve(column, row, direction)
     )
     local fromX, toX, fromY, toY = wallBetween(self, column, row, direction)
     for gridY = fromY, toY do
-        for gridX = fromX, toX do self.blocks[gridY][gridX] = OPEN end
+        for gridX = fromX, toX do self.blocks[gridY][gridX] = Maze.BLOCKS.OPEN end
     end
 end
 
 function Maze:blockValue(gridX, gridY)
     local line = self.blocks[gridY]
-    return line and line[gridX] or WALL
+    return line and line[gridX] or Maze.BLOCKS.WALL
 end
 
 function Maze:isWall(gridX, gridY)
     local value = self:blockValue(gridX, gridY)
-    return value == WALL or value == DOOR
+    return value == Maze.BLOCKS.WALL or value == Maze.BLOCKS.DOOR
 end
 
 -- A passage is as wide as the corridor, except the exit, which is only its last block: so look
@@ -128,11 +123,11 @@ function Maze:hasPassage(column, row, direction)
 end
 
 function Maze:openExit()
-    self.blocks[self.exitGridY][self.exitGridX] = EXIT
+    self.blocks[self.exitGridY][self.exitGridX] = Maze.BLOCKS.EXIT
 end
 
 function Maze:isExit(x, y)
-    return self:blockValue(self:blockAt(x, y)) == EXIT
+    return self:blockValue(self:blockAt(x, y)) == Maze.BLOCKS.EXIT
 end
 
 function Maze:cellCenter(column, row)

@@ -15,8 +15,6 @@ SideView.CENTER_Y = 120
 
 local SCREEN_WIDTH <const> = 400
 local SCREEN_HEIGHT <const> = 240
-local CENTER_X <const> = SideView.CENTER_X
-local CENTER_Y <const> = SideView.CENTER_Y
 -- Corridors are drawn this much too big, in blocks, so neighbouring ones leave no hairline between them
 local OVERLAP <const> = 0.02
 local WALL_SHADE <const> = 5
@@ -33,12 +31,12 @@ function SideView.look(viewedRun, angle, pixelsPerBlock)
     run, scale = viewedRun, pixelsPerBlock
     playerX, playerY, sine, cosine = run.player.x, run.player.y, math.sin(radians), math.cos(radians)
     -- Further than this from the player, in blocks, nothing can reach the screen's corners
-    visibleDistance = math.sqrt(CENTER_X * CENTER_X + CENTER_Y * CENTER_Y) / scale + 1
+    visibleDistance = math.sqrt(SideView.CENTER_X * SideView.CENTER_X + SideView.CENTER_Y * SideView.CENTER_Y) / scale + 1
 end
 
 function SideView.toScreen(worldX, worldY)
     local offsetX, offsetY = worldX - playerX, worldY - playerY
-    return CENTER_X + (offsetX * cosine - offsetY * sine) * scale, CENTER_Y + (offsetX * sine + offsetY * cosine) * scale
+    return SideView.CENTER_X + (offsetX * cosine - offsetY * sine) * scale, SideView.CENTER_Y + (offsetX * sine + offsetY * cosine) * scale
 end
 
 local function fillWorldRect(left, top, right, bottom)

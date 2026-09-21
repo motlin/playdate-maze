@@ -22,10 +22,6 @@ Tumble.JUMP_SPEED = 0.17
 -- Less than the body's width, so one frame's move can never step over a wall
 Tumble.MAX_SPEED = 0.35
 
-local GRAVITY <const> = Tumble.GRAVITY
-local WALK_SPEED <const> = Tumble.WALK_SPEED
-local JUMP_SPEED <const> = Tumble.JUMP_SPEED
-local MAX_SPEED <const> = Tumble.MAX_SPEED
 -- How quickly walking reaches full speed, and how quickly the player stops: the share of the
 -- difference made up each frame
 local WALK_GRIP <const> = 0.5
@@ -89,13 +85,13 @@ function Tumble:update(input)
     local rightX, rightY = cosine, -sine
     self.player.angle = (90 - self.angle) % 360
 
-    local velocityX, velocityY = self.velocityX + downX * GRAVITY, self.velocityY + downY * GRAVITY
+    local velocityX, velocityY = self.velocityX + downX * Tumble.GRAVITY, self.velocityY + downY * Tumble.GRAVITY
 
     local move = input.move or 0
     local along = velocityX * rightX + velocityY * rightY
     local wanted
     if move ~= 0 then
-        wanted = along + (move * WALK_SPEED - along) * WALK_GRIP
+        wanted = along + (move * Tumble.WALK_SPEED - along) * WALK_GRIP
         self.facing = move > 0 and 1 or -1
     else
         wanted = along * (1 - (self.isGrounded and GROUND_FRICTION or AIR_FRICTION))
@@ -105,12 +101,12 @@ function Tumble:update(input)
     if input.jump and self.isGrounded then
         self:emit("jump")
         local falling = velocityX * downX + velocityY * downY
-        velocityX, velocityY = velocityX - downX * (falling + JUMP_SPEED), velocityY - downY * (falling + JUMP_SPEED)
+        velocityX, velocityY = velocityX - downX * (falling + Tumble.JUMP_SPEED), velocityY - downY * (falling + Tumble.JUMP_SPEED)
     end
 
     local speed = math.sqrt(velocityX * velocityX + velocityY * velocityY)
-    if speed > MAX_SPEED then
-        velocityX, velocityY = velocityX * MAX_SPEED / speed, velocityY * MAX_SPEED / speed
+    if speed > Tumble.MAX_SPEED then
+        velocityX, velocityY = velocityX * Tumble.MAX_SPEED / speed, velocityY * Tumble.MAX_SPEED / speed
     end
 
     local isBlockedX, isBlockedY = self.player:moveBy(self.maze, velocityX, velocityY)

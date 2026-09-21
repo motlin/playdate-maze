@@ -7,7 +7,6 @@ Player.__index = Player
 
 Player.RADIUS = 0.2
 
-local RADIUS <const> = Player.RADIUS
 local FACINGS <const> = { "east", "south", "west", "north" }
 
 function Player.new(x, y, angle)
@@ -19,10 +18,10 @@ function Player:turn(degrees)
 end
 
 local function isBlocked(maze, x, y)
-    return maze:isWall(maze:blockAt(x - RADIUS, y - RADIUS))
-        or maze:isWall(maze:blockAt(x + RADIUS, y - RADIUS))
-        or maze:isWall(maze:blockAt(x - RADIUS, y + RADIUS))
-        or maze:isWall(maze:blockAt(x + RADIUS, y + RADIUS))
+    return maze:isWall(maze:blockAt(x - Player.RADIUS, y - Player.RADIUS))
+        or maze:isWall(maze:blockAt(x + Player.RADIUS, y - Player.RADIUS))
+        or maze:isWall(maze:blockAt(x - Player.RADIUS, y + Player.RADIUS))
+        or maze:isWall(maze:blockAt(x + Player.RADIUS, y + Player.RADIUS))
 end
 
 -- Just short of touching, so a body resting against a wall is not counted as inside it
@@ -33,9 +32,9 @@ local function slide(from, to, isBlockedAt)
     if not isBlockedAt(to) then return to end
     local edge
     if to > from then
-        edge = math.floor(to + RADIUS) - RADIUS - GAP
+        edge = math.floor(to + Player.RADIUS) - Player.RADIUS - GAP
     else
-        edge = math.ceil(to - RADIUS) + RADIUS + GAP
+        edge = math.ceil(to - Player.RADIUS) + Player.RADIUS + GAP
     end
     -- Only rest somewhere between where the body was and where it wanted to go
     local isBetween = (edge - from) * (to - from) >= 0
@@ -88,12 +87,12 @@ end
 
 -- Sweep the square body along the whole segment, including corners between its endpoints.
 function Player.isPathClear(maze, fromX, fromY, toX, toY)
-    local left, top = maze:blockAt(math.min(fromX, toX) - RADIUS, math.min(fromY, toY) - RADIUS)
-    local right, bottom = maze:blockAt(math.max(fromX, toX) + RADIUS, math.max(fromY, toY) + RADIUS)
+    local left, top = maze:blockAt(math.min(fromX, toX) - Player.RADIUS, math.min(fromY, toY) - Player.RADIUS)
+    local right, bottom = maze:blockAt(math.max(fromX, toX) + Player.RADIUS, math.max(fromY, toY) + Player.RADIUS)
     for gridY = top, bottom do
         for gridX = left, right do
             if maze:isWall(gridX, gridY) and crossesBox(fromX, fromY, toX, toY,
-                gridX - 1 - RADIUS, gridY - 1 - RADIUS, gridX + RADIUS, gridY + RADIUS) then
+                gridX - 1 - Player.RADIUS, gridY - 1 - Player.RADIUS, gridX + Player.RADIUS, gridY + Player.RADIUS) then
                 return false
             end
         end

@@ -8,8 +8,6 @@ Autopilot.__index = Autopilot
 Autopilot.WALK_SPEED = 0.08
 Autopilot.TURN_SPEED = 6
 
-local WALK_SPEED <const> = Autopilot.WALK_SPEED
-local TURN_SPEED <const> = Autopilot.TURN_SPEED
 local ANGLES <const> = { east = 0, south = 90, west = 180, north = 270 }
 local CLOCKWISE <const> = { "north", "east", "south", "west" }
 local CLOCKWISE_INDEX <const> = { north = 1, east = 2, south = 3, west = 4 }
@@ -36,11 +34,11 @@ function Autopilot:update()
     local offsetX, offsetY = self.targetX - player.x, self.targetY - player.y
     local distance = math.sqrt(offsetX * offsetX + offsetY * offsetY)
     if distance > 0 then
-        if distance <= WALK_SPEED then
+        if distance <= Autopilot.WALK_SPEED then
             player.x, player.y = self.targetX, self.targetY
         else
-            player.x = player.x + offsetX / distance * WALK_SPEED
-            player.y = player.y + offsetY / distance * WALK_SPEED
+            player.x = player.x + offsetX / distance * Autopilot.WALK_SPEED
+            player.y = player.y + offsetY / distance * Autopilot.WALK_SPEED
         end
         return
     end
@@ -52,7 +50,7 @@ function Autopilot:update()
     -- so that turning back at a dead end always goes left
     local turn = (ANGLES[self.direction] - player.angle + 180) % 360 - 180
     if turn ~= 0 then
-        player:turn(math.max(-TURN_SPEED, math.min(TURN_SPEED, turn)))
+        player:turn(math.max(-Autopilot.TURN_SPEED, math.min(Autopilot.TURN_SPEED, turn)))
         return
     end
 

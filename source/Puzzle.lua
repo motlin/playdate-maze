@@ -14,14 +14,9 @@ Puzzle.REACH = 1.25
 -- How near the middle of a shape counts as touching it
 Puzzle.TOUCH = 0.45
 
-local GROUND <const> = Puzzle.STATES.GROUND
-local CARRIED <const> = Puzzle.STATES.CARRIED
-local PLACED <const> = Puzzle.STATES.PLACED
-local REACH <const> = Puzzle.REACH
-
 -- items and pedestals are lists of { shape, gridX, gridY }
 function Puzzle.new(items, pedestals)
-    for _, item in ipairs(items) do item.state = GROUND end
+    for _, item in ipairs(items) do item.state = Puzzle.STATES.GROUND end
     for _, pedestal in ipairs(pedestals) do pedestal.isFilled = false end
     return setmetatable({ items = items, pedestals = pedestals, carried = nil }, Puzzle)
 end
@@ -76,10 +71,10 @@ end
 -- The shape A would pick up from here, if any
 function Puzzle:itemInReach(x, y)
     if self.carried then return nil end
-    local nearest, nearestDistance = nil, REACH
+    local nearest, nearestDistance = nil, Puzzle.REACH
     for _, item in ipairs(self.items) do
         local distance = distanceTo(item, x, y)
-        if item.state == GROUND and distance <= nearestDistance then
+        if item.state == Puzzle.STATES.GROUND and distance <= nearestDistance then
             nearest, nearestDistance = item, distance
         end
     end
@@ -89,21 +84,21 @@ end
 -- The shape the player's body is touching, for modes that collect by contact
 function Puzzle:itemTouching(x, y)
     for _, item in ipairs(self.items) do
-        if item.state == GROUND and distanceTo(item, x, y) <= Puzzle.TOUCH then return item end
+        if item.state == Puzzle.STATES.GROUND and distanceTo(item, x, y) <= Puzzle.TOUCH then return item end
     end
     return nil
 end
 
 -- Takes a shape out of the maze for good, as placing it on a pedestal does
 function Puzzle:collect(item)
-    assert(item.state == GROUND, "only a shape lying in the maze can be collected")
-    item.state = PLACED
+    assert(item.state == Puzzle.STATES.GROUND, "only a shape lying in the maze can be collected")
+    item.state = Puzzle.STATES.PLACED
 end
 
 function Puzzle:pickUp(x, y)
     local item = self:itemInReach(x, y)
     if not item then return nil end
-    item.state = CARRIED
+    item.state = Puzzle.STATES.CARRIED
     self.carried = item
     return item
 end
@@ -113,7 +108,7 @@ function Puzzle:pedestalInReach(x, y)
     if not self.carried then return nil end
     for _, pedestal in ipairs(self.pedestals) do
         local isMatch = pedestal.shape == self.carried.shape and not pedestal.isFilled
-        if isMatch and distanceTo(pedestal, x, y) <= REACH then return pedestal end
+        if isMatch and distanceTo(pedestal, x, y) <= Puzzle.REACH then return pedestal end
     end
     return nil
 end
@@ -123,7 +118,7 @@ local function isOccupied(self, gridX, gridY)
         if pedestal.gridX == gridX and pedestal.gridY == gridY then return true end
     end
     for _, item in ipairs(self.items) do
-        if item.state == GROUND and item.gridX == gridX and item.gridY == gridY then return true end
+        if item.state == Puzzle.STATES.GROUND and item.gridX == gridX and item.gridY == gridY then return true end
     end
     return false
 end
@@ -136,14 +131,14 @@ function Puzzle:drop(x, y)
     local pedestal = self:pedestalInReach(x, y)
     if pedestal then
         pedestal.isFilled = true
-        item.gridX, item.gridY, item.state = pedestal.gridX, pedestal.gridY, PLACED
+        item.gridX, item.gridY, item.state = pedestal.gridX, pedestal.gridY, Puzzle.STATES.PLACED
         self.carried = nil
         return Puzzle.RESULTS.PLACED
     end
 
     local gridX, gridY = math.floor(x) + 1, math.floor(y) + 1
     if isOccupied(self, gridX, gridY) then return Puzzle.RESULTS.BLOCKED end
-    item.gridX, item.gridY, item.state = gridX, gridY, GROUND
+    item.gridX, item.gridY, item.state = gridX, gridY, Puzzle.STATES.GROUND
     self.carried = nil
     return Puzzle.RESULTS.DROPPED
 end
@@ -151,7 +146,7 @@ end
 -- Solved once no shape is left lying around or in hand
 function Puzzle:isSolved()
     for _, item in ipairs(self.items) do
-        if item.state ~= PLACED then return false end
+        if item.state ~= Puzzle.STATES.PLACED then return false end
     end
     return true
 end

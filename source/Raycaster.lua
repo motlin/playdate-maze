@@ -8,8 +8,6 @@ Raycaster = {}
 
 Raycaster.SIDES = { X = 0, Y = 1 }
 
-local SIDE_X <const> = Raycaster.SIDES.X
-local SIDE_Y <const> = Raycaster.SIDES.Y
 local OPEN <const> = 0
 
 -- Returns distance, side, gridX, gridY, block. The distance is in multiples of the direction's
@@ -37,15 +35,15 @@ function Raycaster.cast(maze, x, y, directionX, directionY)
         if sideDistanceX < sideDistanceY then
             sideDistanceX = sideDistanceX + deltaX
             gridX = gridX + stepX
-            side = SIDE_X
+            side = Raycaster.SIDES.X
         else
             sideDistanceY = sideDistanceY + deltaY
             gridY = gridY + stepY
-            side = SIDE_Y
+            side = Raycaster.SIDES.Y
         end
         local block = blocks[gridY][gridX]
         if block ~= OPEN then
-            local distance = side == SIDE_X and sideDistanceX - deltaX or sideDistanceY - deltaY
+            local distance = side == Raycaster.SIDES.X and sideDistanceX - deltaX or sideDistanceY - deltaY
             return distance, side, gridX, gridY, block
         end
     end

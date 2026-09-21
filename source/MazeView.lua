@@ -13,14 +13,13 @@ MazeView = {}
 
 MazeView.SCREEN = { width = 400, height = 240, columnWidth = 4, fieldOfView = 70, refinements = 2 }
 
-local SCREEN <const> = MazeView.SCREEN
-local HORIZON_AT_REST <const> = SCREEN.height / 2
+local HORIZON_AT_REST <const> = MazeView.SCREEN.height / 2
 -- Where the horizon is on the frame being drawn: it rises and falls a little with each stride
 local horizon = HORIZON_AT_REST
 -- The floor and ceiling are painted this much taller than the screen, so a bob never shows an edge
 local BOB_ROOM <const> = Bob.HEAD_PIXELS + 1
 -- Pixels per block for something one block away
-local PROJECTION <const> = SCREEN.width / 2 / math.tan(math.rad(SCREEN.fieldOfView / 2))
+local PROJECTION <const> = MazeView.SCREEN.width / 2 / math.tan(math.rad(MazeView.SCREEN.fieldOfView / 2))
 -- Anything nearer than this is drawn as if it were this far away, to keep coordinates sane
 local NEAREST <const> = 0.1
 
@@ -59,16 +58,16 @@ local BLOCK_EXIT <const> = 3
 local background
 
 local function drawBackground()
-    local image = playdate.graphics.image.new(SCREEN.width, SCREEN.height + 2 * BOB_ROOM, playdate.graphics.kColorBlack)
+    local image = playdate.graphics.image.new(MazeView.SCREEN.width, MazeView.SCREEN.height + 2 * BOB_ROOM, playdate.graphics.kColorBlack)
     playdate.graphics.pushContext(image)
     local bandHeight <const> = 8
     local middle = HORIZON_AT_REST + BOB_ROOM
     for band = 0, middle // bandHeight do
         -- The floor brightens towards the viewer; the ceiling stays nearly black
         playdate.graphics.setPattern(Shades.pattern(2 + band // 2))
-        playdate.graphics.fillRect(0, middle + band * bandHeight, SCREEN.width, bandHeight)
+        playdate.graphics.fillRect(0, middle + band * bandHeight, MazeView.SCREEN.width, bandHeight)
         playdate.graphics.setPattern(Shades.pattern(band // 5))
-        playdate.graphics.fillRect(0, middle - (band + 1) * bandHeight, SCREEN.width, bandHeight)
+        playdate.graphics.fillRect(0, middle - (band + 1) * bandHeight, MazeView.SCREEN.width, bandHeight)
     end
     playdate.graphics.popContext()
     return image
@@ -76,7 +75,7 @@ end
 
 -- The view for the frame being drawn, set by MazeView.draw
 local viewX, viewY, forwardX, forwardY
-local PLANE_SCALE <const> = math.tan(math.rad(SCREEN.fieldOfView / 2))
+local PLANE_SCALE <const> = math.tan(math.rad(MazeView.SCREEN.fieldOfView / 2))
 
 -- Returns the screen x of a point in the world and how tall a wall is there, or nil if the
 -- point is too close or behind
@@ -85,7 +84,7 @@ local function projectWallPoint(worldX, worldY)
     local depth = offsetX * forwardX + offsetY * forwardY
     if depth < NEAREST then return nil end
     local sideways = -offsetX * forwardY + offsetY * forwardX
-    return SCREEN.width / 2 * (1 + sideways / (depth * PLANE_SCALE)), PROJECTION / depth
+    return MazeView.SCREEN.width / 2 * (1 + sideways / (depth * PLANE_SCALE)), PROJECTION / depth
 end
 
 -- The point a fraction of the way along the face of the block that a run is looking at, which
@@ -189,7 +188,7 @@ local function drawPicture(run)
     end
 
     -- Only the part of the face inside the run is in view
-    playdate.graphics.setClipRect(run.startX, 0, run.endX - run.startX, SCREEN.height)
+    playdate.graphics.setClipRect(run.startX, 0, run.endX - run.startX, MazeView.SCREEN.height)
     local x1, y1 = place(0, 0)
     local x2, y2 = place(1, 0)
     local x3, y3 = place(1, 1)
@@ -285,7 +284,7 @@ local function collectSprites(game)
     local player = game.player
     local function add(thing, kind, index)
         local worldX, worldY = game.maze:blockCenter(thing.gridX, thing.gridY)
-        local screenX, depth = Raycaster.project(player.x, player.y, player.angle, SCREEN, worldX, worldY)
+        local screenX, depth = Raycaster.project(player.x, player.y, player.angle, MazeView.SCREEN, worldX, worldY)
         if not screenX or depth < NEAREST then return end
         count = count + 1
         local sprite = sprites[count]
@@ -308,7 +307,7 @@ end
 
 -- Clips to the columns where the sprite is nearer than the wall. Returns false if there are none.
 local function clipToVisibleColumns(depths, centerX, halfWidth, depth)
-    local columnWidth = SCREEN.columnWidth
+    local columnWidth = MazeView.SCREEN.columnWidth
     local firstColumn = math.max(1, math.floor((centerX - halfWidth) / columnWidth) + 1)
     local lastColumn = math.min(#depths, math.floor((centerX + halfWidth) / columnWidth) + 1)
     local firstVisible, lastVisible
@@ -319,7 +318,7 @@ local function clipToVisibleColumns(depths, centerX, halfWidth, depth)
         end
     end
     if not firstVisible then return false end
-    playdate.graphics.setClipRect((firstVisible - 1) * columnWidth, 0, (lastVisible - firstVisible + 1) * columnWidth, SCREEN.height)
+    playdate.graphics.setClipRect((firstVisible - 1) * columnWidth, 0, (lastVisible - firstVisible + 1) * columnWidth, MazeView.SCREEN.height)
     return true
 end
 
@@ -411,7 +410,7 @@ local function drawScene(game, headOffset)
     viewX, viewY, forwardX, forwardY = player.x, player.y, math.cos(radians), math.sin(radians)
     gateLift = game.gateLift
     landmarks = game.landmarks
-    local scan = Raycaster.scan(game.maze, player.x, player.y, player.angle, SCREEN)
+    local scan = Raycaster.scan(game.maze, player.x, player.y, player.angle, MazeView.SCREEN)
     local runs = scan.runs
     for index = 1, #runs do drawRun(runs[index]) end
 
@@ -429,7 +428,7 @@ function MazeView.draw(game, headOffset)
         drawScene(game, headOffset)
         return
     end
-    flippedScene = flippedScene or playdate.graphics.image.new(SCREEN.width, SCREEN.height)
+    flippedScene = flippedScene or playdate.graphics.image.new(MazeView.SCREEN.width, MazeView.SCREEN.height)
     playdate.graphics.pushContext(flippedScene)
     drawScene(game, headOffset)
     playdate.graphics.popContext()

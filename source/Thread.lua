@@ -12,9 +12,6 @@ Thread.SPACING = 0.25
 -- Bound trail memory, including extra points that preserve clearance around corners
 Thread.MOST_POINTS = 800
 
-local SPACING <const> = Thread.SPACING
-local MOST_POINTS <const> = Thread.MOST_POINTS
-
 local function distanceBetween(fromX, fromY, toX, toY)
     local offsetX, offsetY = toX - fromX, toY - fromY
     return math.sqrt(offsetX * offsetX + offsetY * offsetY)
@@ -48,10 +45,10 @@ function Thread:record(x, y)
         points[#points + 1] = { x = self.lastX, y = self.lastY }
         last = points[#points]
     end
-    if distanceBetween(x, y, last.x, last.y) >= SPACING then
+    if distanceBetween(x, y, last.x, last.y) >= Thread.SPACING then
         points[#points + 1] = { x = x, y = y }
     end
-    while #points > MOST_POINTS do table.remove(points, 1) end
+    while #points > Thread.MOST_POINTS do table.remove(points, 1) end
     self.lastX, self.lastY = x, y
 end
 

@@ -100,7 +100,7 @@ section('SlimeActions.lua', 'Slime actions', [
 ])
 section('Game.lua', 'First-person rules', [
     step('function Game.new(options)', 9, 'Create the world', '<p>Generate a maze, place the player in its first cell, and combine them in a <code>Run</code>. Face an open passage at the start.</p><p>A Lua table holds state; <code>setmetatable</code> lets it find the module’s methods.</p>'),
-    step('    if self.autopilot then\n        self.autopilot:update()', 15, 'Choose one movement mode', '<p>Autopilot, thread reeling, and manual movement are exclusive branches. Manual movement scales input by <code>WALK_SPEED</code>: 0.08 blocks per frame.</p><p><code>player:move(...)</code> passes the player as <code>self</code>. The colon marks a method call.</p>'),
+    step('    if self.autopilot then\n        self.autopilot:update()', 15, 'Choose one movement mode', '<p>Autopilot, thread reeling, and manual movement are exclusive branches. Manual movement scales input by <code>Game.WALK_SPEED</code>: 0.08 blocks per frame.</p><p><code>player:move(...)</code> passes the player as <code>self</code>. The colon marks a method call.</p>'),
     step('    local walkedX, walkedY', 12, 'Measure what moved', '<p>Subtract the old position and use √(dx² + dy²) for distance. Footsteps follow actual travel; a blocked push can produce a bump.</p>'),
     step('    self:visit()\n    if self.flippers', 11, 'Check interactions', '<p>Record the visited cell, handle flippers and shapes, then check whether the player entered the exit block.</p><p>The drawing code reads this state after the update.</p>'),
 ])

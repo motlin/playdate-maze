@@ -30,12 +30,6 @@ Slime.STICK_FRAMES = 60
 Slime.SLIDE_SPEED = 0.03
 Slime.CRAWL_SPEED = 0.04
 
-local RESTING <const> = Slime.STATES.RESTING
-local CLINGING <const> = Slime.STATES.CLINGING
-local SLIDING <const> = Slime.STATES.SLIDING
-local FLYING <const> = Slime.STATES.FLYING
-local GRAVITY <const> = Slime.GRAVITY
-local MAX_SPEED <const> = Slime.MAX_SPEED
 -- How far beyond the body to feel for the floor or wall it is on
 local PROBE <const> = 0.05
 -- A flight shorter than this that ends on the surface it left was a throw at that surface, which
@@ -50,7 +44,7 @@ function Slime.inMaze(maze, puzzle)
     local startX, startY = maze:cellCenter(1, 1)
     local slime = setmetatable(Run.new(maze, Player.new(startX, startY, 0)), Slime)
     slime.puzzle = puzzle
-    slime.state = FLYING
+    slime.state = Slime.STATES.FLYING
     -- What it is stuck to: "floor", "ceiling", "left", or "right"
     slime.surface = nil
     slime.stickFrames = 0
@@ -79,7 +73,7 @@ end
 
 -- Only from something it is stuck to: there is no throwing in mid-air
 function Slime:canThrow()
-    return self.state ~= FLYING
+    return self.state ~= Slime.STATES.FLYING
 end
 
 local function throwVelocity(angle)
@@ -90,10 +84,10 @@ end
 -- One frame of flight for a body: falls, moves, and says what it ran into, if anything.
 -- Returns the new velocity and the surface hit. The slime and its arc both fly by this.
 local function fly(maze, body, velocityX, velocityY)
-    velocityY = velocityY + GRAVITY
+    velocityY = velocityY + Slime.GRAVITY
     local speed = math.sqrt(velocityX * velocityX + velocityY * velocityY)
-    if speed > MAX_SPEED then
-        velocityX, velocityY = velocityX * MAX_SPEED / speed, velocityY * MAX_SPEED / speed
+    if speed > Slime.MAX_SPEED then
+        velocityX, velocityY = velocityX * Slime.MAX_SPEED / speed, velocityY * Slime.MAX_SPEED / speed
     end
     local isBlockedX, isBlockedY = body:moveBy(maze, velocityX, velocityY)
     local surface
@@ -134,28 +128,28 @@ function Slime:arc()
 end
 
 function Slime:stick(surface)
-    if self.state == FLYING then self:emit("splat") end
+    if self.state == Slime.STATES.FLYING then self:emit("splat") end
     local isSameSurfaceAgain = surface == self.surface and self.flightFrames < SHORTEST_REAL_FLIGHT
     self.velocityX, self.velocityY = 0, 0
     self.surface = surface
     if surface == "floor" then
-        self.state = RESTING
+        self.state = Slime.STATES.RESTING
         return
     end
     if not isSameSurfaceAgain then self.stickFrames = Slime.STICK_FRAMES end
-    self.state = self.stickFrames > 0 and CLINGING or SLIDING
+    self.state = self.stickFrames > 0 and Slime.STATES.CLINGING or Slime.STATES.SLIDING
 end
 
 function Slime:launch()
     self:emit("throw")
     self.velocityX, self.velocityY = throwVelocity(self.aimAngle)
-    self.state = FLYING
+    self.state = Slime.STATES.FLYING
     self.flightFrames = 0
     self.throws = self.throws + 1
 end
 
 function Slime:fall()
-    self.state = FLYING
+    self.state = Slime.STATES.FLYING
     self.isAiming = false
     self.velocityX, self.velocityY = 0, 0
     self.flightFrames = SHORTEST_REAL_FLIGHT
@@ -167,7 +161,7 @@ function Slime:aim(input)
     if input.cancel then
         if self.isAiming then
             self.isAiming, self.isAimCancelled = false, true
-        elseif self.state == CLINGING or self.state == SLIDING then
+        elseif self.state == Slime.STATES.CLINGING or self.state == Slime.STATES.SLIDING then
             self:emit("letGo")
             self:fall()
         end
@@ -182,19 +176,19 @@ end
 
 function Slime:move(input)
     local maze, player = self.maze, self.player
-    if self.state == FLYING then
+    if self.state == Slime.STATES.FLYING then
         local surface
         self.velocityX, self.velocityY, surface = fly(maze, player, self.velocityX, self.velocityY)
         self.flightFrames = self.flightFrames + 1
         if surface then self:stick(surface) end
-    elseif self.state == RESTING then
+    elseif self.state == Slime.STATES.RESTING then
         player:moveBy(maze, (input.move or 0) * Slime.CRAWL_SPEED, 0)
         if not player:wouldHit(maze, 0, PROBE) then self:fall() end
-    elseif self.state == CLINGING then
+    elseif self.state == Slime.STATES.CLINGING then
         self.stickFrames = self.stickFrames - 1
         if self.stickFrames == 0 then
             self:emit("slip")
-            if self.surface == "ceiling" then self:fall() else self.state = SLIDING end
+            if self.surface == "ceiling" then self:fall() else self.state = Slime.STATES.SLIDING end
         end
     else
         local _, hasReachedFloor = player:moveBy(maze, 0, Slime.SLIDE_SPEED)
