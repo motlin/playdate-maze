@@ -53,3 +53,7 @@ smoke: screenshots
 
 # ✅ Pre-commit checks
 precommit: lint test build
+
+# git test add --test default 'just precommit' --forget
+setup-git-test:
+    git test add --test default 'just precommit' --forget
