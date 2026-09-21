@@ -3,7 +3,7 @@ include_files = { "source/**/*.lua", "spec/**/*.lua" }
 globals = {
     "playdate",
     "PlayInput", "WalkingActions", "TumbleActions", "SlimeActions",
-    "Maze", "Raycaster", "Player", "Autopilot", "Puzzle", "Game", "Run", "Tumble", "Slime", "Thread", "TapOrReel", "Landmarks", "Flippers", "SoundBook", "Sounds", "Hum", "ExitDistance", "MusicScore", "Music", "SaveGame", "Settings", "CrankSteps", "DockTimer", "Compass", "Bob", "Shades", "Sizes", "SeededRandom",
+    "Maze", "Raycaster", "Player", "Autopilot", "Puzzle", "Game", "Run", "Tumble", "Slime", "Thread", "TapOrReel", "Landmarks", "Flippers", "SoundBook", "Sounds", "Hum", "ExitDistance", "MusicScore", "Music", "SaveGame", "Settings", "CrankSteps", "MapDesign", "MapSlots", "DockTimer", "Compass", "Bob", "Shades", "Sizes", "SeededRandom",
     "ShapeArt", "MazeView", "SideView", "TumbleView", "SlimeView", "Minimap", "Hud",
     "SceneManager", "SystemMenu",
     "TitleScene", "FirstPersonScene", "TumbleScene", "SlimeScene", "EscapedScene",

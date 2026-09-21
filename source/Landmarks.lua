@@ -45,7 +45,9 @@ function Landmarks.scatter(maze, random)
     local cells = {}
     for row = 1, maze.rows do
         for column = 1, maze.columns do
-            if not (column == 1 and row == 1) then cells[#cells + 1] = { column, row } end
+            -- A map drawn by hand may have cells that have been filled in
+            local isOpen = not maze:isWall(maze:cellBlock(column, row))
+            if isOpen and not (column == 1 and row == 1) then cells[#cells + 1] = { column, row } end
         end
     end
     for index = #cells, 2, -1 do
@@ -54,7 +56,7 @@ function Landmarks.scatter(maze, random)
     end
 
     local landmarks = setmetatable({ all = {}, marks = {}, pictures = {} }, Landmarks)
-    for index = 1, maze.columns * maze.rows // CELLS_PER_LANDMARK do
+    for index = 1, math.min(#cells, maze.columns * maze.rows // CELLS_PER_LANDMARK) do
         local column, row = cells[index][1], cells[index][2]
         local gridX, gridY = maze:cellBlock(column, row)
         local landmark = {

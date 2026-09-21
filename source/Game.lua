@@ -37,24 +37,33 @@ local WALK_SPEED <const> = Game.WALK_SPEED
 local ANGLES <const> = { east = 0, south = 90, west = 180, north = 270 }
 
 -- options = { columns, rows, hasPuzzle, random }, where random(n) is like math.random
-function Game.new(options)
-    local maze = Maze.generate(options.columns, options.rows, options.random)
-    local startX, startY = maze:cellCenter(1, 1)
-    local startAngle = maze:hasPassage(1, 1, "east") and ANGLES.east or ANGLES.south
+-- A game in a maze, with the player at the start and everything else still to be put in it
+local function begin(maze, startX, startY, startAngle)
     local game = setmetatable(Run.new(maze, Player.new(startX, startY, startAngle)), Game)
     game.autopilot = nil
+    -- A maze drawn in the editor, which may have loops, rooms, and dead space
+    game.isHandMade = false
     game.thread = Thread.new(maze, startX, startY)
-    -- The gate over the exit unlocks when the puzzle is solved and is then cranked up by hand.
-    -- gateLift runs from 0, fully down, to 1, where the exit opens for good.
-    -- It is counted in degrees of cranking, because adding up fractions never quite reaches 1.
     -- How far the player walked in the latest frame, for the view's head bob
     game.distanceWalked = 0
     game.blocksSinceStep = 0
     game.blocksSinceReelTick = 0
     game.lastBumpFrame = -Game.BUMP_FRAMES_APART
+    -- The gate over the exit unlocks when the puzzle is solved and is then cranked up by hand.
+    -- gateLift runs from 0, fully down, to 1, where the exit opens for good.
+    -- It is counted in degrees of cranking, because adding up fractions never quite reaches 1.
     game.isGateUnlocked = false
     game.gateDegrees = 0
     game.gateLift = 0
+    game.isFlipped = false
+    return game
+end
+
+function Game.new(options)
+    local maze = Maze.generate(options.columns, options.rows, options.random)
+    local startX, startY = maze:cellCenter(1, 1)
+    local startAngle = maze:hasPassage(1, 1, "east") and ANGLES.east or ANGLES.south
+    local game = begin(maze, startX, startY, startAngle)
     if options.hasPuzzle then
         game.puzzle = Puzzle.scatter(maze, options.random)
     else
@@ -70,7 +79,66 @@ function Game.new(options)
         for _, pedestal in ipairs(game.puzzle.pedestals) do taken[#taken + 1] = pedestal end
     end
     game.flippers = Flippers.scatter(maze, options.random, taken)
-    game.isFlipped = false
+    return game
+end
+
+-- A game in a maze drawn in the editor. The start, the exit, and whatever shapes and pedestals
+-- were placed are where the design says; the rest is scattered where the player can get to.
+-- random(n) is like math.random.
+function Game.fromDesign(design, random)
+    local problems = design:problems()
+    assert(#problems == 0, "this map cannot be played: " .. tostring(problems[1]))
+
+    local maze = Maze.new(design.columns, design.rows)
+    for gridY = 1, maze.gridHeight do
+        for gridX = 1, maze.gridWidth do
+            maze.blocks[gridY][gridX] = design:isOpen(gridX, gridY) and Maze.BLOCKS.OPEN or Maze.BLOCKS.WALL
+        end
+    end
+    maze.exitGridX, maze.exitGridY = design.exit.gridX, design.exit.gridY
+    maze.blocks[maze.exitGridY][maze.exitGridX] = Maze.BLOCKS.DOOR
+
+    local startX, startY = maze:blockCenter(design.start.gridX, design.start.gridY)
+    local startAngle = ANGLES.east
+    for _, direction in ipairs({ "east", "south", "west", "north" }) do
+        local offset = Maze.OFFSETS[direction]
+        if not maze:isWall(design.start.gridX + offset[1], design.start.gridY + offset[2]) then
+            startAngle = ANGLES[direction]
+            break
+        end
+    end
+    local game = begin(maze, startX, startY, startAngle)
+    game.isHandMade = true
+
+    -- The cells left for scattering, in a random order, each used once
+    local free = design:freeCells()
+    for index = #free, 2, -1 do
+        local other = random(index)
+        free[index], free[other] = free[other], free[index]
+    end
+    local function placedOrScattered(place, shape)
+        local block = place or table.remove(free)
+        return { shape = shape, gridX = block.gridX, gridY = block.gridY }
+    end
+    local items, pedestals = {}, {}
+    for index, shape in ipairs(Puzzle.SHAPES) do
+        items[index] = placedOrScattered(design.items[shape], shape)
+        pedestals[index] = placedOrScattered(design.pedestals[shape], shape)
+    end
+    game.puzzle = Puzzle.new(items, pedestals)
+    game.landmarks = Landmarks.scatter(maze, random)
+
+    -- Flippers go only in the cells still free; every other cell counts as taken
+    local isFree, taken = {}, {}
+    for _, block in ipairs(free) do isFree[block.gridY * 256 + block.gridX] = true end
+    for row = 1, maze.rows do
+        for column = 1, maze.columns do
+            local gridX, gridY = maze:cellBlock(column, row)
+            if not isFree[gridY * 256 + gridX] then taken[#taken + 1] = { gridX = gridX, gridY = gridY } end
+        end
+    end
+    for _, mark in ipairs(game.landmarks.marks) do taken[#taken + 1] = mark end
+    game.flippers = Flippers.scatter(maze, random, taken)
     return game
 end
 
@@ -83,7 +151,13 @@ function Game:isAutopilotOn()
     return self.autopilot ~= nil
 end
 
+-- Following a wall only finds the way in a true maze, so a hand-made one has no autopilot
+function Game:canAutopilot()
+    return not self.isHandMade
+end
+
 function Game:setAutopilot(isOn)
+    assert(not isOn or self:canAutopilot(), "a hand-made maze has no autopilot")
     self.autopilot = isOn and Autopilot.new(self.maze, self.player) or nil
 end
 
@@ -260,6 +334,7 @@ function Game:toSave()
         visited = visited,
         frames = self.frames,
         isFlipped = self.isFlipped,
+        isHandMade = self.isHandMade,
         isGateUnlocked = self.isGateUnlocked,
         gateDegrees = self.gateDegrees,
     }
@@ -278,6 +353,8 @@ function Game.fromSave(save)
     game.visited, game.visitedCount = {}, #save.visited
     for _, key in ipairs(save.visited) do game.visited[key] = true end
     game.isFlipped = save.isFlipped
+    -- Saves from before there was an editor have no such entry, and were never hand-made
+    game.isHandMade = save.isHandMade == true
     game.isGateUnlocked = save.isGateUnlocked
     game.gateDegrees = save.gateDegrees
     game.gateLift = save.gateDegrees / Game.GATE_DEGREES
