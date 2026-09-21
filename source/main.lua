@@ -2,8 +2,6 @@ import "CoreLibs/graphics"
 
 import "SceneManager"
 import "Settings"
-import "Music"
-import "Sounds"
 import "SystemMenu"
 import "scenes/Title"
 import "scenes/FirstPerson"
@@ -15,12 +13,7 @@ import "scenes/MazeEditor"
 
 function playdate.update() SceneManager.update() end
 
-function playdate.gameWillPause()
-    SceneManager.save()
-    -- Held notes would otherwise drone on behind the system menu
-    Sounds.stopHum()
-    Music.stop()
-end
+playdate.gameWillPause = SceneManager.pause
 
 -- Work must survive the console sleeping or the game being closed
 playdate.deviceWillSleep = SceneManager.save

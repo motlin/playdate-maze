@@ -29,7 +29,9 @@ function SlimeScene.enter(sizeIndex)
     SlimeScene.newGame()
 end
 
-function SlimeScene.exit() Music.stop() end
+function SlimeScene.pause() Music.stop() end
+
+function SlimeScene.exit() SlimeScene.pause() end
 
 function SlimeScene.restart() SlimeScene.newGame() end
 

@@ -1,5 +1,5 @@
 -- Runs one scene at a time. A scene is a table with update(), which handles a frame's input and
--- drawing, and optionally enter(...), exit(), and save(). SceneManager.onSwitch, if set, is called with
+-- drawing, and optionally enter(...), exit(), save(), and pause(). SceneManager.onSwitch, if set, is called with
 -- the new scene after each switch.
 
 SceneManager = {}
@@ -17,6 +17,11 @@ function SceneManager.update() currentScene.update() end
 
 function SceneManager.save()
     if currentScene and currentScene.save then currentScene.save() end
+end
+
+function SceneManager.pause()
+    SceneManager.save()
+    if currentScene and currentScene.pause then currentScene.pause() end
 end
 
 function SceneManager.isCurrent(scene) return currentScene == scene end

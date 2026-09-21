@@ -29,7 +29,9 @@ function TumbleScene.enter(sizeIndex)
     TumbleScene.newGame()
 end
 
-function TumbleScene.exit() Music.stop() end
+function TumbleScene.pause() Music.stop() end
+
+function TumbleScene.exit() TumbleScene.pause() end
 
 function TumbleScene.restart() TumbleScene.newGame() end
 

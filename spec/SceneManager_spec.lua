@@ -71,6 +71,49 @@ describe("SceneManager", function()
 
     it("does nothing before the first scene is selected", function() assert.has_no.errors(SceneManager.save) end)
 
+    it("saves before pausing only the current scene and keeps it selected", function()
+        local log = {}
+        local previous = {
+            save = function() log[#log + 1] = "previous save" end,
+            pause = function() log[#log + 1] = "previous pause" end,
+        }
+        local current = {
+            save = function() log[#log + 1] = "save" end,
+            pause = function() log[#log + 1] = "pause" end,
+            update = function() log[#log + 1] = "update" end,
+        }
+        SceneManager.switch(previous)
+        SceneManager.switch(current)
+
+        SceneManager.pause()
+        SceneManager.update()
+
+        assert.are.same({ "save", "pause", "update" }, log)
+        assert.is_true(SceneManager.isCurrent(current))
+    end)
+
+    it("saves a scene without a pause hook", function()
+        local log = {}
+        SceneManager.switch({ save = function() log[#log + 1] = "save" end })
+        SceneManager.pause()
+        assert.are.same({ "save" }, log)
+    end)
+
+    it("pauses a scene without a save hook", function()
+        local log = {}
+        SceneManager.switch({ pause = function() log[#log + 1] = "pause" end })
+        SceneManager.pause()
+        assert.are.same({ "pause" }, log)
+    end)
+
+    it("allows pausing before selection and with neither optional hook", function()
+        SceneManager.pause()
+        local scene = {}
+        SceneManager.switch(scene)
+        SceneManager.pause()
+        assert.is_true(SceneManager.isCurrent(scene))
+    end)
+
     it("reports which scene is current", function()
         local menu, quiz = recordingScene("menu", {}), recordingScene("quiz", {})
         SceneManager.switch(menu)

@@ -118,10 +118,14 @@ function FirstPersonScene.playAgain()
     end
 end
 
-function FirstPersonScene.exit()
-    FirstPersonScene.save()
+function FirstPersonScene.pause()
     Sounds.stopHum()
     Music.stop()
+end
+
+function FirstPersonScene.exit()
+    FirstPersonScene.save()
+    FirstPersonScene.pause()
 end
 
 function FirstPersonScene.restart()
