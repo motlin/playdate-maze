@@ -24,6 +24,16 @@ if playdate.isSimulator then
     -- byte-identical screenshots.
     math.randomseed(1995)
 
+    local function buttonMask(buttons)
+        local mask = 0
+        for button, down in pairs(buttons) do
+            if down then mask = mask | button end
+        end
+        return mask
+    end
+    pd.getButtonState = function()
+        return buttonMask(held), buttonMask(justPressed), buttonMask(justReleased)
+    end
     pd.buttonJustPressed = function(button) return justPressed[button] == true end
     pd.buttonIsPressed = function(button) return held[button] == true end
     pd.buttonJustReleased = function(button) return justReleased[button] == true end
@@ -96,7 +106,7 @@ if playdate.isSimulator then
     -- Stands the player one block away from a shape or pedestal, looking at it
     local ANGLE_TOWARDS <const> = { north = 90, east = 180, south = 270, west = 0 }
     local function standFacing(thing)
-        local game = PlayScene.game
+        local game = FirstPersonScene.game
         for _, direction in ipairs(Maze.DIRECTIONS) do
             local offset = Maze.OFFSETS[direction]
             local gridX, gridY = thing.gridX + offset[1], thing.gridY + offset[2]
@@ -143,21 +153,21 @@ if playdate.isSimulator then
         expect(Sizes.ALL[TitleScene.sizeIndex].name == "Large", "left wraps from small to large")
         titleRow("explore")
         press(pd.kButtonA, 3)
-        expect(PlayScene.game.maze.columns == 12 and PlayScene.game.maze.rows == 9, "Explore starts a maze of the chosen size")
+        expect(FirstPersonScene.game.maze.columns == 12 and FirstPersonScene.game.maze.rows == 9, "Explore starts a maze of the chosen size")
         shot("play-large")
-        PlayScene.game.player.x, PlayScene.game.player.y = PlayScene.game.maze:cellCenter(12, 9)
+        FirstPersonScene.game.player.x, FirstPersonScene.game.player.y = FirstPersonScene.game.maze:cellCenter(12, 9)
         frames(2); shot("play-large-far-corner-on-map")
         SceneManager.switch(TitleScene)
         TitleScene.sizeIndex = Sizes.DEFAULT
         frames(2)
         titleRow("explore")
         press(pd.kButtonA, 3)
-        expect(SceneManager.isCurrent(PlayScene), "A on Explore starts the game")
+        expect(SceneManager.isCurrent(FirstPersonScene), "A on Explore starts the game")
         shot("play-start")
-        expect(PlayScene.game.visitedCount == 1, "the map starts with only the first cell revealed")
-        expect(not PlayScene.game:isRevealed(PlayScene.game.maze.columns, PlayScene.game.maze.rows), "the far corner starts hidden in fog")
+        expect(FirstPersonScene.game.visitedCount == 1, "the map starts with only the first cell revealed")
+        expect(not FirstPersonScene.game:isRevealed(FirstPersonScene.game.maze.columns, FirstPersonScene.game.maze.rows), "the far corner starts hidden in fog")
 
-        local player = PlayScene.game.player
+        local player = FirstPersonScene.game.player
         local startAngle = player.angle
         turnCrank(45); frames(2); shot("play-crank-45")
         expect(player.angle == (startAngle + 45) % 360, "the crank turns the view degree for degree")
@@ -166,7 +176,7 @@ if playdate.isSimulator then
         local startX, startY = player.x, player.y
         hold(pd.kButtonUp, 20); shot("play-walked-forward")
         expect(player.x ~= startX or player.y ~= startY, "holding up walks forward")
-        expect(PlayScene.game.visitedCount == 2, "walking into the next cell reveals it on the map")
+        expect(FirstPersonScene.game.visitedCount == 2, "walking into the next cell reveals it on the map")
         hold(pd.kButtonDown, 20)
         expect(math.abs(player.x - startX) < 0.001 and math.abs(player.y - startY) < 0.001, "holding down walks back")
 
@@ -180,7 +190,7 @@ if playdate.isSimulator then
         -- Ariadne's thread: walk away, then hold B and crank backwards to be reeled back
         hold(pd.kButtonUp, 25)
         local walkedX, walkedY = player.x, player.y
-        expect(PlayScene.game.thread:length() > 1.5, "walking lays the thread")
+        expect(FirstPersonScene.game.thread:length() > 1.5, "walking lays the thread")
         shot("play-thread-laid")
         justPressed[pd.kButtonB], held[pd.kButtonB] = true, true
         coroutine.yield()
@@ -192,7 +202,7 @@ if playdate.isSimulator then
         local reeled = math.sqrt((player.x - walkedX) ^ 2 + (player.y - walkedY) ^ 2)
         expect(reeled > 1.5, "holding B and cranking backwards reels the player back along the thread")
         expect(player.angle == angleBeforeReeling, "and the crank does not turn the view meanwhile")
-        expect(PlayScene.game.message ~= "Nothing to put down", "letting go of B after reeling is not a drop")
+        expect(FirstPersonScene.game.message ~= "Nothing to put down", "letting go of B after reeling is not a drop")
         hold(pd.kButtonUp, 1)
         player.x, player.y = startX, startY
 
@@ -214,17 +224,17 @@ if playdate.isSimulator then
         -- Dock to dream: put the crank away and leave it, and the autopilot takes over
         docked = true
         frames(DockTimer.DELAY_FRAMES - 10)
-        expect(not PlayScene.game:isAutopilotOn(), "the autopilot waits three seconds after the crank is docked")
+        expect(not FirstPersonScene.game:isAutopilotOn(), "the autopilot waits three seconds after the crank is docked")
         frames(15); shot("play-docked-autopilot")
-        expect(PlayScene.game:isAutopilotOn(), "then takes over")
+        expect(FirstPersonScene.game:isAutopilotOn(), "then takes over")
         docked = false
         frames(2); shot("play-undocked-in-control")
-        expect(not PlayScene.game:isAutopilotOn(), "pulling the crank out takes control back")
+        expect(not FirstPersonScene.game:isAutopilotOn(), "pulling the crank out takes control back")
         docked = true
         frames(DockTimer.DELAY_FRAMES + 5)
-        expect(PlayScene.game:isAutopilotOn(), "docking again hands over again")
+        expect(FirstPersonScene.game:isAutopilotOn(), "docking again hands over again")
         press(pd.kButtonA, 2)
-        expect(not PlayScene.game:isAutopilotOn(), "and any button takes control back with the crank still docked")
+        expect(not FirstPersonScene.game:isAutopilotOn(), "and any button takes control back with the crank still docked")
         docked = false
         frames(2)
 
@@ -260,8 +270,8 @@ if playdate.isSimulator then
             frames(1); shot(name .. "-at-an-angle")
         end
         local seenKinds = {}
-        for _, landmark in ipairs(PlayScene.game.landmarks.all) do
-            local x, y, angle = viewOf(PlayScene.game, landmark)
+        for _, landmark in ipairs(FirstPersonScene.game.landmarks.all) do
+            local x, y, angle = viewOf(FirstPersonScene.game, landmark)
             if x and not seenKinds[landmark.kind] then
                 seenKinds[landmark.kind] = true
                 lookAt(x, y, angle, "play-landmark-" .. landmark.kind)
@@ -270,15 +280,15 @@ if playdate.isSimulator then
         expect(seenKinds.picture and seenKinds.floor and seenKinds.ceiling, "a medium maze has every kind of landmark somewhere it can be seen from down a corridor")
 
         -- The flipper: walk into it and the world turns over; walk away and back, and it turns back
-        local flipper = PlayScene.game.flippers.all[1]
+        local flipper = FirstPersonScene.game.flippers.all[1]
         standFacing(flipper); frames(8); shot("play-flipper-ahead")
         frames(6); shot("play-flipper-spinning")
         hold(pd.kButtonUp, 12); shot("play-flipped")
-        expect(PlayScene.game.isFlipped, "walking into the flipper turns the world over")
+        expect(FirstPersonScene.game.isFlipped, "walking into the flipper turns the world over")
         hold(pd.kButtonDown, 20); shot("play-flipped-looking-back")
-        expect(PlayScene.game.isFlipped, "and it stays over after walking away")
+        expect(FirstPersonScene.game.isFlipped, "and it stays over after walking away")
         hold(pd.kButtonUp, 20)
-        expect(not PlayScene.game.isFlipped, "until the flipper is touched again")
+        expect(not FirstPersonScene.game.isFlipped, "until the flipper is touched again")
         hold(pd.kButtonDown, 20)
 
         -- The compass: north in the middle, and the letters carry on across 359 to 0 degrees
@@ -286,7 +296,7 @@ if playdate.isSimulator then
         player.angle = 352; frames(1); shot("play-compass-across-the-join")
 
         -- Look around from the middle of the maze
-        player.x, player.y = PlayScene.game.maze:cellCenter(4, 3)
+        player.x, player.y = FirstPersonScene.game.maze:cellCenter(4, 3)
         for quarter = 0, 3 do
             player.angle = quarter * 90 + 20
             frames(1); shot("play-middle-" .. player.angle)
@@ -297,7 +307,7 @@ if playdate.isSimulator then
     scenarios.escape = function()
         frames(5)
         press(pd.kButtonA, 3)
-        local game = PlayScene.game
+        local game = FirstPersonScene.game
         local puzzle = game.puzzle
 
         for index, item in ipairs(puzzle.items) do
@@ -344,9 +354,9 @@ if playdate.isSimulator then
         expect(SceneManager.isCurrent(EscapedScene), "walking into the exit escapes")
         shot("escaped")
         press(pd.kButtonA, 3); shot("new-maze")
-        expect(SceneManager.isCurrent(PlayScene) and PlayScene.game ~= game, "A starts a new maze")
+        expect(SceneManager.isCurrent(FirstPersonScene) and FirstPersonScene.game ~= game, "A starts a new maze")
 
-        local exit = { gridX = PlayScene.game.maze.exitGridX, gridY = PlayScene.game.maze.exitGridY }
+        local exit = { gridX = FirstPersonScene.game.maze.exitGridX, gridY = FirstPersonScene.game.maze.exitGridY }
         standFacing(exit); frames(2); shot("exit-locked")
         hold(pd.kButtonDown, 12); frames(1); shot("exit-locked-from-further-back")
     end
@@ -357,12 +367,12 @@ if playdate.isSimulator then
         TitleScene.sizeIndex = 3
         titleRow("daily")
         press(pd.kButtonA, 3)
-        expect(PlayScene.mode == PlayScene.MODES.DAILY, "the daily row starts the daily maze")
+        expect(FirstPersonScene.submode == FirstPersonScene.SUBMODES.DAILY, "the daily row starts the daily maze")
         shot("daily-start")
-        expect(PlayScene.game.message == "Daily maze: 19 Sep", "the daily maze says which day it is for")
-        expect(PlayScene.game.maze.columns == 8, "the daily maze is medium whatever size is selected")
-        expect(PlayScene.game.puzzle ~= nil, "the daily maze has the puzzle")
-        local blocks, firstItem = PlayScene.game.maze.blocks, PlayScene.game.puzzle.items[1]
+        expect(FirstPersonScene.game.message == "Daily maze: 19 Sep", "the daily maze says which day it is for")
+        expect(FirstPersonScene.game.maze.columns == 8, "the daily maze is medium whatever size is selected")
+        expect(FirstPersonScene.game.puzzle ~= nil, "the daily maze has the puzzle")
+        local blocks, firstItem = FirstPersonScene.game.maze.blocks, FirstPersonScene.game.puzzle.items[1]
 
         local function isSameMaze(other)
             for gridY, line in ipairs(blocks) do
@@ -374,14 +384,14 @@ if playdate.isSimulator then
         end
 
         math.random(100)
-        PlayScene.restart(); frames(2)
-        expect(PlayScene.game.maze.blocks ~= blocks and isSameMaze(PlayScene.game.maze.blocks), "the same day gives the same maze")
-        local sameItem = PlayScene.game.puzzle.items[1]
+        FirstPersonScene.restart(); frames(2)
+        expect(FirstPersonScene.game.maze.blocks ~= blocks and isSameMaze(FirstPersonScene.game.maze.blocks), "the same day gives the same maze")
+        local sameItem = FirstPersonScene.game.puzzle.items[1]
         expect(sameItem.gridX == firstItem.gridX and sameItem.gridY == firstItem.gridY, "and the same hiding places")
 
         today.day = 20
-        PlayScene.restart(); frames(2); shot("daily-next-day")
-        expect(not isSameMaze(PlayScene.game.maze.blocks), "the next day gives a different maze")
+        FirstPersonScene.restart(); frames(2); shot("daily-next-day")
+        expect(not isSameMaze(FirstPersonScene.game.maze.blocks), "the next day gives a different maze")
     end
 
     -- The platformer: fall, walk, jump, turn the maze, collect the shapes, and leave
@@ -544,7 +554,7 @@ if playdate.isSimulator then
         expect(TitleScene.rows[1].name == "explore", "with nothing saved, the title does not offer Continue")
         titleRow("explore")
         press(pd.kButtonA, 3)
-        local game = PlayScene.game
+        local game = FirstPersonScene.game
         hold(pd.kButtonUp, 25)
         local item = game.puzzle.items[2]
         standFacing(item); frames(2)
@@ -558,17 +568,17 @@ if playdate.isSimulator then
         shot("title-offers-continue")
         expect(TitleScene.rows[1].name == "continue" and TitleScene.selection == 1, "the title now offers Continue, first and selected")
         press(pd.kButtonA, 3)
-        expect(SceneManager.isCurrent(PlayScene) and PlayScene.game ~= game, "Continue loads the game from disk")
-        local resumed = PlayScene.game
+        expect(SceneManager.isCurrent(FirstPersonScene) and FirstPersonScene.game ~= game, "Continue loads the game from disk")
+        local resumed = FirstPersonScene.game
         shot("after-continuing")
         expect(math.abs(resumed.player.x - x) < 0.001 and math.abs(resumed.player.y - y) < 0.001, "in the same place")
         expect(math.abs(resumed.player.angle - angle) < 0.001, "looking the same way")
         expect(resumed.puzzle.carried and resumed.puzzle.carried.shape == item.shape, "holding the same shape")
         expect(resumed.frames >= played and resumed.frames < played + 10, "with the clock where it was")
         expect(resumed.visitedCount == game.visitedCount, "and the same map uncovered")
-        expect(PlayScene.mode == PlayScene.MODES.EXPLORE, "as the same kind of game")
+        expect(FirstPersonScene.submode == FirstPersonScene.SUBMODES.EXPLORE, "as the same kind of game")
 
-        PlayScene.restart(); frames(2)
+        FirstPersonScene.restart(); frames(2)
         expect(not SaveGame.exists(), "starting a new maze throws the old save away")
         SceneManager.switch(TitleScene); frames(3)
         expect(TitleScene.rows[1].name == "continue", "and leaving that one saves it in turn")
@@ -672,28 +682,28 @@ if playdate.isSimulator then
         TitleScene.sizeIndex = 1
         titleRow("screensaver")
         press(pd.kButtonA, 3)
-        expect(PlayScene.game:isAutopilotOn(), "the screensaver starts on autopilot")
-        expect(PlayScene.game:isRevealed(PlayScene.game.maze.columns, PlayScene.game.maze.rows), "the screensaver shows the whole map")
+        expect(FirstPersonScene.game:isAutopilotOn(), "the screensaver starts on autopilot")
+        expect(FirstPersonScene.game:isRevealed(FirstPersonScene.game.maze.columns, FirstPersonScene.game.maze.rows), "the screensaver shows the whole map")
         for index = 1, 8 do
             frames(40); shot("wandering-" .. index)
         end
-        local game = PlayScene.game
+        local game = FirstPersonScene.game
         for _ = 1, 6000 do
-            if PlayScene.game ~= game then break end
+            if FirstPersonScene.game ~= game then break end
             frames(1)
         end
-        expect(PlayScene.game ~= game, "the screensaver finds the exit and starts a new maze")
+        expect(FirstPersonScene.game ~= game, "the screensaver finds the exit and starts a new maze")
         expect(
-            PlayScene.game:isAutopilotOn(),
+            FirstPersonScene.game:isAutopilotOn(),
             string.format(
                 "and keeps wandering (mode %s, old maze escaped %s after %d frames, in play scene %s)",
-                PlayScene.mode, tostring(game.hasEscaped), game.frames, tostring(SceneManager.isCurrent(PlayScene))
+                FirstPersonScene.submode, tostring(game.hasEscaped), game.frames, tostring(SceneManager.isCurrent(FirstPersonScene))
             )
         )
         shot("next-maze")
 
         press(pd.kButtonB, 2); shot("taken-over")
-        expect(not PlayScene.game:isAutopilotOn(), "any button takes over from the autopilot")
+        expect(not FirstPersonScene.game:isAutopilotOn(), "any button takes over from the autopilot")
     end
 
     local co = coroutine.create(function()

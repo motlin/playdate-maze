@@ -6,7 +6,7 @@ import "Music"
 import "Sounds"
 import "SystemMenu"
 import "scenes/Title"
-import "scenes/Play"
+import "scenes/FirstPerson"
 import "scenes/PlayTumble"
 import "scenes/PlaySlime"
 import "scenes/Escaped"
@@ -19,7 +19,7 @@ end
 
 -- Held notes would otherwise drone on behind the system menu
 local function saveRun()
-    if SceneManager.isCurrent(PlayScene) then PlayScene.save() end
+    if SceneManager.isCurrent(FirstPersonScene) then FirstPersonScene.save() end
 end
 
 function playdate.gameWillPause()

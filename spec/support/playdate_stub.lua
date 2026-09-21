@@ -14,6 +14,11 @@ function import(name)
 end
 
 playdate = {
+    kButtonLeft = 1, kButtonRight = 2, kButtonUp = 4, kButtonDown = 8, kButtonB = 16, kButtonA = 32,
+    getButtonState = function() return stub.current, stub.pressed, stub.released end,
+    getCrankChange = function() return stub.crankChange end,
+    getCrankPosition = function() return stub.crankPosition end,
+    isCrankDocked = function() return stub.isCrankDocked end,
     getCurrentTimeMilliseconds = function() return stub.clockMilliseconds end,
     getSecondsSinceEpoch = function() return 0 end,
     datastore = {
@@ -27,6 +32,8 @@ playdate = {
 }
 
 function stub.reset()
+    stub.current, stub.pressed, stub.released = 0, 0, 0
+    stub.crankChange, stub.crankPosition, stub.isCrankDocked = 0, 0, true
     stub.clockMilliseconds = 0
     stub.datastore = {}
     stub.writeCounts = {}

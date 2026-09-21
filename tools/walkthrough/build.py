@@ -75,12 +75,29 @@ section('scenes/Title.lua', 'The imported scene', [
 ])
 section('SceneManager.lua', 'Scene changes', [
     step('function SceneManager.switch(scene, ...)', 6, 'Exit, replace, enter', '<p>Let the old scene clean up, replace <code>currentScene</code>, then initialize the new scene. The <code>...</code> passes its arguments through.</p>'),
-    step('function SceneManager.update()', 3, 'Call the current scene', '<p>Only one scene receives updates. In first-person play, this calls <code>PlayScene.update()</code> in <code>source/scenes/Play.lua</code>.</p>'),
+    step('function SceneManager.update()', 3, 'Call the current scene', '<p>Only one scene receives updates. In first-person play, this calls <code>FirstPersonScene.update()</code> in <code>source/scenes/FirstPerson.lua</code>.</p>'),
 ])
-section('scenes/Play.lua', 'Controls and drawing', [
-    step('local function readInput()', 22, 'Translate controls into input', '<p>Up/down sets <code>forward</code>. Crank movement sets <code>turn</code>. With the crank out, left/right sets <code>strafe</code>; docked, it turns the view.</p><p>The scene reads hardware. The game receives ordinary numbers and booleans.</p>'),
-    step('function PlayScene.update()', 15, 'Advance the rules', '<p><code>game:update(readInput())</code> changes the game state. The other branch lets a button take control from autopilot without also picking up or dropping an item.</p>'),
-    step('    Sounds.play(game.events)', 18, 'Draw the result', '<p>Play sounds, check for escape, then draw the world and HUD. Drawing the HUD last keeps it above the 3D image.</p><p><code>distanceWalked</code> drives head bob from actual movement.</p>'),
+section('scenes/FirstPerson.lua', 'First-person scene', [
+    step('    SUBMODES =', 1, 'Three first-person submodes', '<p>Explore, Daily, and Screensaver share this scene and its 3D maze rules. Daily fixes the maze seed and size; Screensaver starts on autopilot without the puzzle. Tumble and Slime use separate scenes.</p>'),
+    step('local controls = PlayInput.new()', 2, 'Create the input reader and action mapper', '<p><code>PlayInput</code> reads hardware. <code>WalkingActions.new(controls)</code> connects a mapper to that reader. The mapper translates its snapshot into movement and item actions and owns the button history.</p>'),
+    step('    local input = controls:read()', 5, 'Read, map, update', '<p>Read one hardware snapshot. Check whether control should pass to or from autopilot, then map the snapshot into walking actions.</p><p><code>takingOver</code> tells the mapper to consume item actions from the takeover press. The game receives only the resulting action table.</p>'),
+    step('    Sounds.play(game.events)', 18, 'Draw the result', '<p>Play sounds, check for escape, then draw the world and HUD. Drawing the HUD last keeps it above the 3D image.</p><p><code>distanceWalked</code> drives head bob from actual travel.</p>'),
+])
+section('PlayInput.lua', 'Shared hardware input', [
+    step('function PlayInput:read()', 7, 'Capture one frame', '<p>The three play modes use this reader. It records held, pressed, and released buttons, crank movement, crank angle, and whether the crank is docked.</p><p>These are hardware readings; their meaning depends on the game mode.</p>'),
+    step('function PlayInput:isDown(button)', 3, 'Test a button bit', '<p>Each button has its own bit in the mask. <code>&amp;</code> keeps the bits shared by the mask and the requested button. A nonzero result means that button is down.</p>'),
+    step('function PlayInput:axis(', 3, 'Combine opposite directions', '<p>Subtract the negative button from the positive button. Left alone gives −1, right alone gives +1, and both or neither gives 0.</p>'),
+])
+section('WalkingActions.lua', 'Walking actions', [
+    step('function WalkingActions.new(controls)', 3, 'Own the button history', '<p>The constructor stores the supplied <code>controls</code> reader. Each mapper owns a reusable action table and a <code>TapOrReel</code> tracker. The tracker distinguishes tapping B from holding B while reeling.</p>'),
+    step('    actions.forward =', 12, 'Map hardware to actions', '<p>Up/down moves forward/back. The crank turns the view unless B is held. Left/right turns when docked and strafes when undocked.</p><p><code>crank</code> preserves actual crank movement for the gate; D-pad turning does not operate it.</p>'),
+    step('    if suppressItemActions then', 4, 'Consume the takeover press', '<p>Suppress pickup, drop, and reel for this frame. Tell the B tracker to ignore the rest of this press too, so releasing it later cannot drop an item.</p>'),
+])
+section('TumbleActions.lua', 'Tumble actions', [
+    step('    actions.turn =', 3, 'Map the same controls for Tumble', '<p>Crank movement rotates the maze. Left/right moves the player. A, B, or up starts a jump on a fresh press.</p>'),
+])
+section('SlimeActions.lua', 'Slime actions', [
+    step('    actions.aim =', 4, 'Map the same controls for Slime', '<p>Crank angle sets aim, holding A keeps aiming, and a fresh B press cancels. Left/right moves along a surface.</p>'),
 ])
 section('Game.lua', 'First-person rules', [
     step('function Game.new(options)', 9, 'Create the world', '<p>Generate a maze, place the player in its first cell, and combine them in a <code>Run</code>. Face an open passage at the start.</p><p>A Lua table holds state; <code>setmetatable</code> lets it find the module’s methods.</p>'),

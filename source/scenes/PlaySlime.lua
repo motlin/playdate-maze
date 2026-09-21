@@ -5,9 +5,11 @@ import "CoreLibs/ui"
 
 import "Hud"
 import "Music"
+import "PlayInput"
 import "SceneManager"
 import "Sizes"
 import "Slime"
+import "SlimeActions"
 import "SlimeView"
 import "Sounds"
 
@@ -15,7 +17,8 @@ local pd <const> = playdate
 
 SlimeScene = { slime = nil, sizeIndex = Sizes.DEFAULT }
 
-local input = {}
+local controls = PlayInput.new()
+local actions = SlimeActions.new(controls)
 
 local function newSlime()
     local size = Sizes.ALL[SlimeScene.sizeIndex]
@@ -39,19 +42,10 @@ local function playAgain()
     SceneManager.switch(SlimeScene, SlimeScene.sizeIndex)
 end
 
-local function readInput()
-    input.aim = pd.getCrankPosition()
-    input.isAimHeld = pd.buttonIsPressed(pd.kButtonA)
-    input.cancel = pd.buttonJustPressed(pd.kButtonB)
-    input.move = 0
-    if pd.buttonIsPressed(pd.kButtonLeft) then input.move = input.move - 1 end
-    if pd.buttonIsPressed(pd.kButtonRight) then input.move = input.move + 1 end
-    return input
-end
-
 function SlimeScene.update()
     local slime = SlimeScene.slime
-    slime:update(readInput())
+    local input = controls:read()
+    slime:update(actions:read())
     Sounds.play(slime.events)
     Music.update(slime)
     if slime.hasEscaped then
@@ -62,5 +56,5 @@ function SlimeScene.update()
     SlimeView.draw(slime)
     Hud.draw(slime)
     -- Nothing aims a throw but the crank
-    if pd.isCrankDocked() then pd.ui.crankIndicator:draw() end
+    if input.isCrankDocked then pd.ui.crankIndicator:draw() end
 end

@@ -15,7 +15,7 @@
 </head>
 <body>
 <a class="skip" href="#section-1">Skip to code</a>
-<header class="topbar"><h1>Maze<span>Code walkthrough</span></h1><div class="navigation"><label for="sections" hidden>Code section</label><select id="sections" aria-label="Code section"><option value="section-1">01 Game structure — source/main.lua</option><option value="section-2">02 The imported scene — source/scenes/Title.lua</option><option value="section-3">03 Scene changes — source/SceneManager.lua</option><option value="section-4">04 Controls and drawing — source/scenes/Play.lua</option><option value="section-5">05 First-person rules — source/Game.lua</option><option value="section-6">06 Grid and maze generation — source/Maze.lua</option><option value="section-7">07 Movement and collision — source/Player.lua</option><option value="section-8">08 Shortest corridor distances — source/ExitDistance.lua</option><option value="section-9">09 Wall-following navigation — source/Autopilot.lua</option><option value="section-10">10 Recording and reversing a path — source/Thread.lua</option><option value="section-11">11 Rotating gravity — source/Tumble.lua</option><option value="section-12">12 2D drawing coordinates — source/SideView.lua</option><option value="section-13">13 Throwing and trajectory prediction — source/Slime.lua</option><option value="section-14">14 Shape states — source/Puzzle.lua</option><option value="section-15">15 Rays and perspective — source/Raycaster.lua</option><option value="section-16">16 Drawing the 3D image — source/MazeView.lua</option><option value="section-17">17 Black-and-white shading — source/Shades.lua</option></select><button id="previous" aria-label="Previous explanation">←</button><button id="next" aria-label="Next explanation">→</button></div><div class="progress" aria-hidden="true"></div></header>
+<header class="topbar"><h1>Maze<span>Code walkthrough</span></h1><div class="navigation"><label for="sections" hidden>Code section</label><select id="sections" aria-label="Code section"><option value="section-1">01 Game structure — source/main.lua</option><option value="section-2">02 The imported scene — source/scenes/Title.lua</option><option value="section-3">03 Scene changes — source/SceneManager.lua</option><option value="section-4">04 First-person scene — source/scenes/FirstPerson.lua</option><option value="section-5">05 Shared hardware input — source/PlayInput.lua</option><option value="section-6">06 Walking actions — source/WalkingActions.lua</option><option value="section-7">07 Tumble actions — source/TumbleActions.lua</option><option value="section-8">08 Slime actions — source/SlimeActions.lua</option><option value="section-9">09 First-person rules — source/Game.lua</option><option value="section-10">10 Grid and maze generation — source/Maze.lua</option><option value="section-11">11 Movement and collision — source/Player.lua</option><option value="section-12">12 Shortest corridor distances — source/ExitDistance.lua</option><option value="section-13">13 Wall-following navigation — source/Autopilot.lua</option><option value="section-14">14 Recording and reversing a path — source/Thread.lua</option><option value="section-15">15 Rotating gravity — source/Tumble.lua</option><option value="section-16">16 2D drawing coordinates — source/SideView.lua</option><option value="section-17">17 Throwing and trajectory prediction — source/Slime.lua</option><option value="section-18">18 Shape states — source/Puzzle.lua</option><option value="section-19">19 Rays and perspective — source/Raycaster.lua</option><option value="section-20">20 Drawing the 3D image — source/MazeView.lua</option><option value="section-21">21 Black-and-white shading — source/Shades.lua</option></select><button id="previous" aria-label="Previous explanation">←</button><button id="next" aria-label="Next explanation">→</button></div><div class="progress" aria-hidden="true"></div></header>
 <noscript><div class="no-script"><p>Enable JavaScript for synchronized highlights and diagrams. Complete source files and explanations remain readable below.</p></div></noscript>
 <main><section class="section" id="section-1" data-title="Game structure" data-file="source/main.lua"><div class="explanations"><h2><span>01</span> Game structure</h2><article class="step" id="step-1-0" data-first="16" data-last="18">
 <p class="location">source/main.lua<br><a href="#step-1-0">Lines 16–18</a></p>
@@ -36,7 +36,7 @@
 <span class="line" data-line="6"><span class="nv">import</span> <span class="s2">&quot;Sounds&quot;</span></span>
 <span class="line" data-line="7"><span class="nv">import</span> <span class="s2">&quot;SystemMenu&quot;</span></span>
 <span class="line" data-line="8"><span class="nv">import</span> <span class="s2">&quot;scenes/Title&quot;</span></span>
-<span class="line" data-line="9"><span class="nv">import</span> <span class="s2">&quot;scenes/Play&quot;</span></span>
+<span class="line" data-line="9"><span class="nv">import</span> <span class="s2">&quot;scenes/FirstPerson&quot;</span></span>
 <span class="line" data-line="10"><span class="nv">import</span> <span class="s2">&quot;scenes/PlayTumble&quot;</span></span>
 <span class="line" data-line="11"><span class="nv">import</span> <span class="s2">&quot;scenes/PlaySlime&quot;</span></span>
 <span class="line" data-line="12"><span class="nv">import</span> <span class="s2">&quot;scenes/Escaped&quot;</span></span>
@@ -49,7 +49,7 @@
 <span class="line" data-line="19"></span>
 <span class="line" data-line="20"><span class="c1">-- Held notes would otherwise drone on behind the system menu</span></span>
 <span class="line" data-line="21"><span class="kd">local</span> <span class="kr">function</span> <span class="nf">saveRun</span>()</span>
-<span class="line" data-line="22">    <span class="kr">if</span> <span class="nv">SceneManager</span>.<span class="nf">isCurrent</span>(<span class="nv">PlayScene</span>) <span class="kr">then</span> <span class="nv">PlayScene</span>.<span class="nf">save</span>() <span class="kr">end</span></span>
+<span class="line" data-line="22">    <span class="kr">if</span> <span class="nv">SceneManager</span>.<span class="nf">isCurrent</span>(<span class="nv">FirstPersonScene</span>) <span class="kr">then</span> <span class="nv">FirstPersonScene</span>.<span class="nf">save</span>() <span class="kr">end</span></span>
 <span class="line" data-line="23"><span class="kr">end</span></span>
 <span class="line" data-line="24"></span>
 <span class="line" data-line="25"><span class="kr">function</span> <span class="nc">playdate</span>.<span class="nf">gameWillPause</span>()</span>
@@ -101,28 +101,28 @@
 <span class="line" data-line="24"><span class="c1">-- An eighth of a turn of the crank moves the highlight one row</span></span>
 <span class="line" data-line="25"><span class="kd">local</span> <span class="nv">CRANK_DEGREES_PER_ROW</span> <span class="o">&lt;</span><span class="nv">const</span><span class="o">&gt;</span> <span class="o">=</span> <span class="mi">45</span></span>
 <span class="line" data-line="26"></span>
-<span class="line" data-line="27"><span class="kd">local</span> <span class="kr">function</span> <span class="nf">play</span>(<span class="nv">mode</span>)</span>
-<span class="line" data-line="28">    <span class="kr">return</span> <span class="kr">function</span>() <span class="nv">SceneManager</span>.<span class="nf">switch</span>(<span class="nv">PlayScene</span>, <span class="nv">mode</span>, <span class="nv">TitleScene</span>.<span class="py">sizeIndex</span>) <span class="kr">end</span></span>
+<span class="line" data-line="27"><span class="kd">local</span> <span class="kr">function</span> <span class="nf">playFirstPerson</span>(<span class="nv">submode</span>)</span>
+<span class="line" data-line="28">    <span class="kr">return</span> <span class="kr">function</span>() <span class="nv">SceneManager</span>.<span class="nf">switch</span>(<span class="nv">FirstPersonScene</span>, <span class="nv">submode</span>, <span class="nv">TitleScene</span>.<span class="py">sizeIndex</span>) <span class="kr">end</span></span>
 <span class="line" data-line="29"><span class="kr">end</span></span>
 <span class="line" data-line="30"></span>
 <span class="line" data-line="31"><span class="kd">local</span> <span class="kr">function</span> <span class="nf">nextSize</span>() <span class="nv">TitleScene</span>.<span class="py">sizeIndex</span> <span class="o">=</span> <span class="nv">Sizes</span>.<span class="nf">next</span>(<span class="nv">TitleScene</span>.<span class="py">sizeIndex</span>) <span class="kr">end</span></span>
 <span class="line" data-line="32"><span class="kd">local</span> <span class="kr">function</span> <span class="nf">previousSize</span>() <span class="nv">TitleScene</span>.<span class="py">sizeIndex</span> <span class="o">=</span> <span class="nv">Sizes</span>.<span class="nf">previous</span>(<span class="nv">TitleScene</span>.<span class="py">sizeIndex</span>) <span class="kr">end</span></span>
 <span class="line" data-line="33"></span>
 <span class="line" data-line="34"><span class="kd">local</span> <span class="kr">function</span> <span class="nf">continueSavedGame</span>()</span>
-<span class="line" data-line="35">    <span class="kd">local</span> <span class="nv">game</span>, <span class="nv">mode</span>, <span class="nv">sizeIndex</span> <span class="o">=</span> <span class="nv">SaveGame</span>.<span class="nf">read</span>()</span>
+<span class="line" data-line="35">    <span class="kd">local</span> <span class="nv">game</span>, <span class="nv">submode</span>, <span class="nv">sizeIndex</span> <span class="o">=</span> <span class="nv">SaveGame</span>.<span class="nf">read</span>()</span>
 <span class="line" data-line="36">    <span class="c1">-- A save this version cannot read has just been thrown away: show the menu without it</span></span>
 <span class="line" data-line="37">    <span class="kr">if</span> <span class="ow">not</span> <span class="nv">game</span> <span class="kr">then</span></span>
 <span class="line" data-line="38">        <span class="nv">TitleScene</span>.<span class="nf">enter</span>()</span>
 <span class="line" data-line="39">        <span class="kr">return</span></span>
 <span class="line" data-line="40">    <span class="kr">end</span></span>
-<span class="line" data-line="41">    <span class="nv">SceneManager</span>.<span class="nf">switch</span>(<span class="nv">PlayScene</span>, <span class="nv">mode</span>, <span class="nv">sizeIndex</span>, <span class="nv">game</span>)</span>
+<span class="line" data-line="41">    <span class="nv">SceneManager</span>.<span class="nf">switch</span>(<span class="nv">FirstPersonScene</span>, <span class="nv">submode</span>, <span class="nv">sizeIndex</span>, <span class="nv">game</span>)</span>
 <span class="line" data-line="42"><span class="kr">end</span></span>
 <span class="line" data-line="43"></span>
 <span class="line" data-line="44"><span class="c1">-- Each row has a name, a label, and what A does; left and right are optional</span></span>
 <span class="line" data-line="45"><span class="kd">local</span> <span class="nv">CONTINUE_ROW</span> <span class="o">&lt;</span><span class="nv">const</span><span class="o">&gt;</span> <span class="o">=</span> { <span class="nv">name</span> <span class="o">=</span> <span class="s2">&quot;continue&quot;</span>, <span class="nv">label</span> <span class="o">=</span> <span class="kr">function</span>() <span class="kr">return</span> <span class="s2">&quot;Continue&quot;</span> <span class="kr">end</span>, <span class="nv">confirm</span> <span class="o">=</span> <span class="nv">continueSavedGame</span> }</span>
 <span class="line" data-line="46"><span class="kd">local</span> <span class="nv">PLAY_ROWS</span> <span class="o">&lt;</span><span class="nv">const</span><span class="o">&gt;</span> <span class="o">=</span> {</span>
-<span class="line" data-line="47">    { <span class="nv">name</span> <span class="o">=</span> <span class="s2">&quot;explore&quot;</span>, <span class="nv">label</span> <span class="o">=</span> <span class="kr">function</span>() <span class="kr">return</span> <span class="s2">&quot;Explore&quot;</span> <span class="kr">end</span>, <span class="nv">confirm</span> <span class="o">=</span> <span class="nf">play</span>(<span class="s2">&quot;explore&quot;</span>) },</span>
-<span class="line" data-line="48">    { <span class="nv">name</span> <span class="o">=</span> <span class="s2">&quot;daily&quot;</span>, <span class="nv">label</span> <span class="o">=</span> <span class="kr">function</span>() <span class="kr">return</span> <span class="s2">&quot;Daily maze&quot;</span> <span class="kr">end</span>, <span class="nv">confirm</span> <span class="o">=</span> <span class="nf">play</span>(<span class="s2">&quot;daily&quot;</span>) },</span>
+<span class="line" data-line="47">    { <span class="nv">name</span> <span class="o">=</span> <span class="s2">&quot;explore&quot;</span>, <span class="nv">label</span> <span class="o">=</span> <span class="kr">function</span>() <span class="kr">return</span> <span class="s2">&quot;Explore&quot;</span> <span class="kr">end</span>, <span class="nv">confirm</span> <span class="o">=</span> <span class="nf">playFirstPerson</span>(<span class="s2">&quot;explore&quot;</span>) },</span>
+<span class="line" data-line="48">    { <span class="nv">name</span> <span class="o">=</span> <span class="s2">&quot;daily&quot;</span>, <span class="nv">label</span> <span class="o">=</span> <span class="kr">function</span>() <span class="kr">return</span> <span class="s2">&quot;Daily maze&quot;</span> <span class="kr">end</span>, <span class="nv">confirm</span> <span class="o">=</span> <span class="nf">playFirstPerson</span>(<span class="s2">&quot;daily&quot;</span>) },</span>
 <span class="line" data-line="49">    {</span>
 <span class="line" data-line="50">        <span class="nv">name</span> <span class="o">=</span> <span class="s2">&quot;tumble&quot;</span>,</span>
 <span class="line" data-line="51">        <span class="nv">label</span> <span class="o">=</span> <span class="kr">function</span>() <span class="kr">return</span> <span class="s2">&quot;Tumble&quot;</span> <span class="kr">end</span>,</span>
@@ -133,7 +133,7 @@
 <span class="line" data-line="56">        <span class="nv">label</span> <span class="o">=</span> <span class="kr">function</span>() <span class="kr">return</span> <span class="s2">&quot;Slime&quot;</span> <span class="kr">end</span>,</span>
 <span class="line" data-line="57">        <span class="nv">confirm</span> <span class="o">=</span> <span class="kr">function</span>() <span class="nv">SceneManager</span>.<span class="nf">switch</span>(<span class="nv">SlimeScene</span>, <span class="nv">TitleScene</span>.<span class="py">sizeIndex</span>) <span class="kr">end</span>,</span>
 <span class="line" data-line="58">    },</span>
-<span class="line" data-line="59">    { <span class="nv">name</span> <span class="o">=</span> <span class="s2">&quot;screensaver&quot;</span>, <span class="nv">label</span> <span class="o">=</span> <span class="kr">function</span>() <span class="kr">return</span> <span class="s2">&quot;Screensaver&quot;</span> <span class="kr">end</span>, <span class="nv">confirm</span> <span class="o">=</span> <span class="nf">play</span>(<span class="s2">&quot;screensaver&quot;</span>) },</span>
+<span class="line" data-line="59">    { <span class="nv">name</span> <span class="o">=</span> <span class="s2">&quot;screensaver&quot;</span>, <span class="nv">label</span> <span class="o">=</span> <span class="kr">function</span>() <span class="kr">return</span> <span class="s2">&quot;Screensaver&quot;</span> <span class="kr">end</span>, <span class="nv">confirm</span> <span class="o">=</span> <span class="nf">playFirstPerson</span>(<span class="s2">&quot;screensaver&quot;</span>) },</span>
 <span class="line" data-line="60">    {</span>
 <span class="line" data-line="61">        <span class="nv">name</span> <span class="o">=</span> <span class="s2">&quot;size&quot;</span>,</span>
 <span class="line" data-line="62">        <span class="nv">label</span> <span class="o">=</span> <span class="kr">function</span>() <span class="kr">return</span> <span class="s2">&quot;Size: &quot;</span> <span class="o">..</span> <span class="nv">Sizes</span>.<span class="py">ALL</span>[<span class="nv">TitleScene</span>.<span class="py">sizeIndex</span>].<span class="nv">name</span> <span class="kr">end</span>,</span>
@@ -226,7 +226,7 @@
 <p class="location">source/SceneManager.lua<br><a href="#step-3-0">Lines 9–14</a></p>
 <h3>Exit, replace, enter</h3><p>Let the old scene clean up, replace <code>currentScene</code>, then initialize the new scene. The <code>...</code> passes its arguments through.</p></article><article class="step" id="step-3-1" data-first="16" data-last="18">
 <p class="location">source/SceneManager.lua<br><a href="#step-3-1">Lines 16–18</a></p>
-<h3>Call the current scene</h3><p>Only one scene receives updates. In first-person play, this calls <code>PlayScene.update()</code> in <code>source/scenes/Play.lua</code>.</p></article></div><div class="code-panel"><header class="file-header"><div class="file-path"><span>source/</span><strong>SceneManager.lua</strong></div><div class="file-meta"><span>Lua · Complete file · 22 lines</span><output class="range">Lines 9–14</output></div></header>
+<h3>Call the current scene</h3><p>Only one scene receives updates. In first-person play, this calls <code>FirstPersonScene.update()</code> in <code>source/scenes/FirstPerson.lua</code>.</p></article></div><div class="code-panel"><header class="file-header"><div class="file-path"><span>source/</span><strong>SceneManager.lua</strong></div><div class="file-meta"><span>Lua · Complete file · 22 lines</span><output class="range">Lines 9–14</output></div></header>
 <pre tabindex="0" aria-label="Complete source/SceneManager.lua"><code class="language-lua"><span class="line" data-line="1"><span class="c1">-- Runs one scene at a time. A scene is a table with update(), which handles a frame&#39;s input and</span></span>
 <span class="line" data-line="2"><span class="c1">-- drawing, and optionally enter(...) and exit(). SceneManager.onSwitch, if set, is called with</span></span>
 <span class="line" data-line="3"><span class="c1">-- the new scene after each switch.</span></span>
@@ -249,14 +249,16 @@
 <span class="line" data-line="20"><span class="kr">function</span> <span class="nc">SceneManager</span>.<span class="nf">isCurrent</span>(<span class="nv">scene</span>)</span>
 <span class="line" data-line="21">    <span class="kr">return</span> <span class="nv">currentScene</span> <span class="o">==</span> <span class="nv">scene</span></span>
 <span class="line" data-line="22"><span class="kr">end</span></span></code></pre>
-<footer class="code-footer"><span class="focus-label">Highlighted lines follow the explanation</span><button class="follow" type="button" aria-pressed="true">Follow scroll: on</button></footer></div></section><section class="section" id="section-4" data-title="Controls and drawing" data-file="source/scenes/Play.lua"><div class="explanations"><h2><span>04</span> Controls and drawing</h2><article class="step" id="step-4-0" data-first="140" data-last="161">
-<p class="location">source/scenes/Play.lua<br><a href="#step-4-0">Lines 140–161</a></p>
-<h3>Translate controls into input</h3><p>Up/down sets <code>forward</code>. Crank movement sets <code>turn</code>. With the crank out, left/right sets <code>strafe</code>; docked, it turns the view.</p><p>The scene reads hardware. The game receives ordinary numbers and booleans.</p></article><article class="step" id="step-4-1" data-first="164" data-last="178">
-<p class="location">source/scenes/Play.lua<br><a href="#step-4-1">Lines 164–178</a></p>
-<h3>Advance the rules</h3><p><code>game:update(readInput())</code> changes the game state. The other branch lets a button take control from autopilot without also picking up or dropping an item.</p></article><article class="step" id="step-4-2" data-first="178" data-last="195">
-<p class="location">source/scenes/Play.lua<br><a href="#step-4-2">Lines 178–195</a></p>
-<h3>Draw the result</h3><p>Play sounds, check for escape, then draw the world and HUD. Drawing the HUD last keeps it above the 3D image.</p><p><code>distanceWalked</code> drives head bob from actual movement.</p></article></div><div class="code-panel"><header class="file-header"><div class="file-path"><span>source/scenes/</span><strong>Play.lua</strong></div><div class="file-meta"><span>Lua · Complete file · 195 lines</span><output class="range">Lines 140–161</output></div></header>
-<pre tabindex="0" aria-label="Complete source/scenes/Play.lua"><code class="language-lua"><span class="line" data-line="1"><span class="c1">-- Walking the maze, by hand or on autopilot.</span></span>
+<footer class="code-footer"><span class="focus-label">Highlighted lines follow the explanation</span><button class="follow" type="button" aria-pressed="true">Follow scroll: on</button></footer></div></section><section class="section" id="section-4" data-title="First-person scene" data-file="source/scenes/FirstPerson.lua"><div class="explanations"><h2><span>04</span> First-person scene</h2><article class="step" id="step-4-0" data-first="23" data-last="23">
+<p class="location">source/scenes/FirstPerson.lua<br><a href="#step-4-0">Lines 23–23</a></p>
+<h3>Three first-person submodes</h3><p>Explore, Daily, and Screensaver share this scene and its 3D maze rules. Daily fixes the maze seed and size; Screensaver starts on autopilot without the puzzle. Tumble and Slime use separate scenes.</p></article><article class="step" id="step-4-1" data-first="33" data-last="34">
+<p class="location">source/scenes/FirstPerson.lua<br><a href="#step-4-1">Lines 33–34</a></p>
+<h3>Create the input reader and action mapper</h3><p><code>PlayInput</code> reads hardware. <code>WalkingActions.new(controls)</code> connects a mapper to that reader. The mapper translates its snapshot into movement and item actions and owns the button history.</p></article><article class="step" id="step-4-2" data-first="115" data-last="119">
+<p class="location">source/scenes/FirstPerson.lua<br><a href="#step-4-2">Lines 115–119</a></p>
+<h3>Read, map, update</h3><p>Read one hardware snapshot. Check whether control should pass to or from autopilot, then map the snapshot into walking actions.</p><p><code>takingOver</code> tells the mapper to consume item actions from the takeover press. The game receives only the resulting action table.</p></article><article class="step" id="step-4-3" data-first="121" data-last="138">
+<p class="location">source/scenes/FirstPerson.lua<br><a href="#step-4-3">Lines 121–138</a></p>
+<h3>Draw the result</h3><p>Play sounds, check for escape, then draw the world and HUD. Drawing the HUD last keeps it above the 3D image.</p><p><code>distanceWalked</code> drives head bob from actual travel.</p></article></div><div class="code-panel"><header class="file-header"><div class="file-path"><span>source/scenes/</span><strong>FirstPerson.lua</strong></div><div class="file-meta"><span>Lua · Complete file · 138 lines</span><output class="range">Lines 23–23</output></div></header>
+<pre tabindex="0" aria-label="Complete source/scenes/FirstPerson.lua"><code class="language-lua"><span class="line" data-line="1"><span class="c1">-- Walking the maze, by hand or on autopilot.</span></span>
 <span class="line" data-line="2"><span class="c1">-- Explore has the puzzle and ends at the Escaped scene. The daily maze is Explore with the date</span></span>
 <span class="line" data-line="3"><span class="c1">-- as the seed, so everyone gets the same medium maze on the same day. The screensaver has no</span></span>
 <span class="line" data-line="4"><span class="c1">-- puzzle, starts on autopilot, and rolls straight into a new maze whenever it finds the way out.</span></span>
@@ -267,198 +269,265 @@
 <span class="line" data-line="9"><span class="nv">import</span> <span class="s2">&quot;Hud&quot;</span></span>
 <span class="line" data-line="10"><span class="nv">import</span> <span class="s2">&quot;MazeView&quot;</span></span>
 <span class="line" data-line="11"><span class="nv">import</span> <span class="s2">&quot;Music&quot;</span></span>
-<span class="line" data-line="12"><span class="nv">import</span> <span class="s2">&quot;SaveGame&quot;</span></span>
-<span class="line" data-line="13"><span class="nv">import</span> <span class="s2">&quot;SceneManager&quot;</span></span>
-<span class="line" data-line="14"><span class="nv">import</span> <span class="s2">&quot;SeededRandom&quot;</span></span>
-<span class="line" data-line="15"><span class="nv">import</span> <span class="s2">&quot;Sounds&quot;</span></span>
+<span class="line" data-line="12"><span class="nv">import</span> <span class="s2">&quot;PlayInput&quot;</span></span>
+<span class="line" data-line="13"><span class="nv">import</span> <span class="s2">&quot;SaveGame&quot;</span></span>
+<span class="line" data-line="14"><span class="nv">import</span> <span class="s2">&quot;SceneManager&quot;</span></span>
+<span class="line" data-line="15"><span class="nv">import</span> <span class="s2">&quot;SeededRandom&quot;</span></span>
 <span class="line" data-line="16"><span class="nv">import</span> <span class="s2">&quot;Sizes&quot;</span></span>
-<span class="line" data-line="17"><span class="nv">import</span> <span class="s2">&quot;TapOrReel&quot;</span></span>
-<span class="line" data-line="18"></span>
-<span class="line" data-line="19"><span class="kd">local</span> <span class="nv">pd</span> <span class="o">&lt;</span><span class="nv">const</span><span class="o">&gt;</span> <span class="o">=</span> <span class="nv">playdate</span></span>
-<span class="line" data-line="20"></span>
-<span class="line" data-line="21"><span class="nv">PlayScene</span> <span class="o">=</span> {</span>
-<span class="line" data-line="22">    <span class="nv">MODES</span> <span class="o">=</span> { <span class="nv">EXPLORE</span> <span class="o">=</span> <span class="s2">&quot;explore&quot;</span>, <span class="nv">DAILY</span> <span class="o">=</span> <span class="s2">&quot;daily&quot;</span>, <span class="nv">SCREENSAVER</span> <span class="o">=</span> <span class="s2">&quot;screensaver&quot;</span> },</span>
-<span class="line" data-line="23">    <span class="nv">game</span> <span class="o">=</span> <span class="kc">nil</span>,</span>
-<span class="line" data-line="24">    <span class="nv">mode</span> <span class="o">=</span> <span class="kc">nil</span>,</span>
-<span class="line" data-line="25">    <span class="nv">sizeIndex</span> <span class="o">=</span> <span class="nv">Sizes</span>.<span class="py">DEFAULT</span>,</span>
-<span class="line" data-line="26">}</span>
-<span class="line" data-line="27"></span>
-<span class="line" data-line="28"><span class="c1">-- Degrees a frame when turning with the D-pad, which only happens while the crank is docked</span></span>
-<span class="line" data-line="29"><span class="kd">local</span> <span class="nv">DPAD_TURN_SPEED</span> <span class="o">&lt;</span><span class="nv">const</span><span class="o">&gt;</span> <span class="o">=</span> <span class="mi">5</span></span>
-<span class="line" data-line="30"><span class="kd">local</span> <span class="nv">BUTTONS</span> <span class="o">&lt;</span><span class="nv">const</span><span class="o">&gt;</span> <span class="o">=</span> {</span>
-<span class="line" data-line="31">    <span class="nv">pd</span>.<span class="py">kButtonUp</span>, <span class="nv">pd</span>.<span class="py">kButtonDown</span>, <span class="nv">pd</span>.<span class="py">kButtonLeft</span>, <span class="nv">pd</span>.<span class="py">kButtonRight</span>, <span class="nv">pd</span>.<span class="py">kButtonA</span>, <span class="nv">pd</span>.<span class="py">kButtonB</span>,</span>
-<span class="line" data-line="32">}</span>
-<span class="line" data-line="33"></span>
-<span class="line" data-line="34"><span class="c1">-- Where the screensaver&#39;s music sits between far from the exit (0) and beside it (1)</span></span>
-<span class="line" data-line="35"><span class="kd">local</span> <span class="nv">SCREENSAVER_MUSIC</span> <span class="o">&lt;</span><span class="nv">const</span><span class="o">&gt;</span> <span class="o">=</span> <span class="mf">0.3</span></span>
-<span class="line" data-line="36"><span class="kd">local</span> <span class="nv">MONTHS</span> <span class="o">&lt;</span><span class="nv">const</span><span class="o">&gt;</span> <span class="o">=</span> { <span class="s2">&quot;Jan&quot;</span>, <span class="s2">&quot;Feb&quot;</span>, <span class="s2">&quot;Mar&quot;</span>, <span class="s2">&quot;Apr&quot;</span>, <span class="s2">&quot;May&quot;</span>, <span class="s2">&quot;Jun&quot;</span>, <span class="s2">&quot;Jul&quot;</span>, <span class="s2">&quot;Aug&quot;</span>, <span class="s2">&quot;Sep&quot;</span>, <span class="s2">&quot;Oct&quot;</span>, <span class="s2">&quot;Nov&quot;</span>, <span class="s2">&quot;Dec&quot;</span> }</span>
-<span class="line" data-line="37"></span>
-<span class="line" data-line="38"><span class="kd">local</span> <span class="nv">input</span> <span class="o">=</span> {}</span>
-<span class="line" data-line="39"><span class="c1">-- B is tapped to put a shape down, or held while cranking backwards to reel in the thread</span></span>
-<span class="line" data-line="40"><span class="kd">local</span> <span class="nv">bButton</span> <span class="o">=</span> <span class="nv">TapOrReel</span>.<span class="nf">new</span>()</span>
-<span class="line" data-line="41"><span class="c1">-- Putting the crank away and leaving the game alone hands over to the autopilot</span></span>
-<span class="line" data-line="42"><span class="kd">local</span> <span class="nv">dockTimer</span> <span class="o">=</span> <span class="nv">DockTimer</span>.<span class="nf">new</span>()</span>
-<span class="line" data-line="43"><span class="kd">local</span> <span class="nv">headBob</span> <span class="o">=</span> <span class="nv">Bob</span>.<span class="nf">new</span>()</span>
-<span class="line" data-line="44"></span>
-<span class="line" data-line="45"><span class="kd">local</span> <span class="kr">function</span> <span class="nf">newGame</span>(<span class="nv">isAutopilotOn</span>)</span>
-<span class="line" data-line="46">    <span class="kd">local</span> <span class="nv">size</span> <span class="o">=</span> <span class="nv">Sizes</span>.<span class="py">ALL</span>[<span class="nv">PlayScene</span>.<span class="py">sizeIndex</span>]</span>
-<span class="line" data-line="47">    <span class="kd">local</span> <span class="nv">random</span> <span class="o">=</span> <span class="nb">math.random</span></span>
-<span class="line" data-line="48">    <span class="kd">local</span> <span class="nv">today</span></span>
-<span class="line" data-line="49">    <span class="kr">if</span> <span class="nv">PlayScene</span>.<span class="py">mode</span> <span class="o">==</span> <span class="nv">PlayScene</span>.<span class="py">MODES</span>.<span class="py">DAILY</span> <span class="kr">then</span></span>
-<span class="line" data-line="50">        <span class="nv">today</span> <span class="o">=</span> <span class="nv">pd</span>.<span class="nf">getTime</span>()</span>
-<span class="line" data-line="51">        <span class="nv">random</span> <span class="o">=</span> <span class="nv">SeededRandom</span>.<span class="nf">new</span>(<span class="nv">SeededRandom</span>.<span class="nf">seedForDate</span>(<span class="nv">today</span>.<span class="py">year</span>, <span class="nv">today</span>.<span class="py">month</span>, <span class="nv">today</span>.<span class="py">day</span>))</span>
-<span class="line" data-line="52">    <span class="kr">end</span></span>
-<span class="line" data-line="53">    <span class="kd">local</span> <span class="nv">game</span> <span class="o">=</span> <span class="nv">Game</span>.<span class="nf">new</span>({</span>
-<span class="line" data-line="54">        <span class="nv">columns</span> <span class="o">=</span> <span class="nv">size</span>.<span class="py">columns</span>,</span>
-<span class="line" data-line="55">        <span class="nv">rows</span> <span class="o">=</span> <span class="nv">size</span>.<span class="py">rows</span>,</span>
-<span class="line" data-line="56">        <span class="nv">hasPuzzle</span> <span class="o">=</span> <span class="nv">PlayScene</span>.<span class="py">mode</span> <span class="o">~=</span> <span class="nv">PlayScene</span>.<span class="py">MODES</span>.<span class="py">SCREENSAVER</span>,</span>
-<span class="line" data-line="57">        <span class="nv">random</span> <span class="o">=</span> <span class="nv">random</span>,</span>
-<span class="line" data-line="58">    })</span>
-<span class="line" data-line="59">    <span class="nv">game</span>:<span class="nf">setAutopilot</span>(<span class="nv">isAutopilotOn</span>)</span>
-<span class="line" data-line="60">    <span class="kr">if</span> <span class="nv">today</span> <span class="kr">then</span></span>
-<span class="line" data-line="61">        <span class="nv">game</span>:<span class="nf">say</span>(<span class="s2">&quot;Daily maze: &quot;</span> <span class="o">..</span> <span class="nv">today</span>.<span class="py">day</span> <span class="o">..</span> <span class="s2">&quot; &quot;</span> <span class="o">..</span> <span class="nv">MONTHS</span>[<span class="nv">today</span>.<span class="py">month</span>])</span>
-<span class="line" data-line="62">    <span class="kr">elseif</span> <span class="nv">game</span>.<span class="py">puzzle</span> <span class="kr">then</span></span>
-<span class="line" data-line="63">        <span class="nv">game</span>:<span class="nf">say</span>(<span class="s2">&quot;Lost? Hold Ⓑ and crank backwards&quot;</span>)</span>
-<span class="line" data-line="64">    <span class="kr">end</span></span>
-<span class="line" data-line="65">    <span class="nv">PlayScene</span>.<span class="py">game</span> <span class="o">=</span> <span class="nv">game</span></span>
-<span class="line" data-line="66"><span class="kr">end</span></span>
-<span class="line" data-line="67"></span>
-<span class="line" data-line="68"><span class="c1">-- savedGame, if given, is a game from SaveGame to carry on with instead of starting a new one</span></span>
-<span class="line" data-line="69"><span class="kr">function</span> <span class="nc">PlayScene</span>.<span class="nf">enter</span>(<span class="nv">mode</span>, <span class="nv">sizeIndex</span>, <span class="nv">savedGame</span>)</span>
-<span class="line" data-line="70">    <span class="nv">PlayScene</span>.<span class="py">mode</span> <span class="o">=</span> <span class="nv">mode</span></span>
-<span class="line" data-line="71">    <span class="nv">dockTimer</span> <span class="o">=</span> <span class="nv">DockTimer</span>.<span class="nf">new</span>()</span>
-<span class="line" data-line="72">    <span class="nv">headBob</span> <span class="o">=</span> <span class="nv">Bob</span>.<span class="nf">new</span>()</span>
-<span class="line" data-line="73">    <span class="c1">-- The daily maze is the same size for everyone</span></span>
-<span class="line" data-line="74">    <span class="nv">PlayScene</span>.<span class="py">sizeIndex</span> <span class="o">=</span> <span class="nv">mode</span> <span class="o">==</span> <span class="nv">PlayScene</span>.<span class="py">MODES</span>.<span class="py">DAILY</span> <span class="ow">and</span> <span class="nv">Sizes</span>.<span class="py">DEFAULT</span> <span class="ow">or</span> <span class="nv">sizeIndex</span></span>
-<span class="line" data-line="75">    <span class="kr">if</span> <span class="nv">savedGame</span> <span class="kr">then</span></span>
-<span class="line" data-line="76">        <span class="nv">PlayScene</span>.<span class="py">game</span> <span class="o">=</span> <span class="nv">savedGame</span></span>
-<span class="line" data-line="77">        <span class="kr">return</span></span>
-<span class="line" data-line="78">    <span class="kr">end</span></span>
-<span class="line" data-line="79">    <span class="c1">-- A new maze with a puzzle replaces whatever was saved; the screensaver leaves it be</span></span>
-<span class="line" data-line="80">    <span class="kr">if</span> <span class="nv">mode</span> <span class="o">~=</span> <span class="nv">PlayScene</span>.<span class="py">MODES</span>.<span class="py">SCREENSAVER</span> <span class="kr">then</span> <span class="nv">SaveGame</span>.<span class="nf">delete</span>() <span class="kr">end</span></span>
-<span class="line" data-line="81">    <span class="nf">newGame</span>(<span class="nv">mode</span> <span class="o">==</span> <span class="nv">PlayScene</span>.<span class="py">MODES</span>.<span class="py">SCREENSAVER</span>)</span>
-<span class="line" data-line="82"><span class="kr">end</span></span>
-<span class="line" data-line="83"></span>
-<span class="line" data-line="84"><span class="c1">-- Keeps the run on disk so that it can be continued. Called when the game pauses, sleeps,</span></span>
-<span class="line" data-line="85"><span class="c1">-- quits, or is left for the title screen.</span></span>
-<span class="line" data-line="86"><span class="kr">function</span> <span class="nc">PlayScene</span>.<span class="nf">save</span>()</span>
-<span class="line" data-line="87">    <span class="kd">local</span> <span class="nv">game</span> <span class="o">=</span> <span class="nv">PlayScene</span>.<span class="py">game</span></span>
-<span class="line" data-line="88">    <span class="kr">if</span> <span class="nv">game</span>.<span class="py">puzzle</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nv">game</span>.<span class="py">hasEscaped</span> <span class="kr">then</span> <span class="nv">SaveGame</span>.<span class="nf">write</span>(<span class="nv">game</span>, <span class="nv">PlayScene</span>.<span class="py">mode</span>, <span class="nv">PlayScene</span>.<span class="py">sizeIndex</span>) <span class="kr">end</span></span>
-<span class="line" data-line="89"><span class="kr">end</span></span>
-<span class="line" data-line="90"></span>
-<span class="line" data-line="91"><span class="c1">-- After escaping, the next maze is always a fresh random one, even after the daily maze</span></span>
-<span class="line" data-line="92"><span class="kr">function</span> <span class="nc">PlayScene</span>.<span class="nf">playAgain</span>()</span>
-<span class="line" data-line="93">    <span class="nv">SceneManager</span>.<span class="nf">switch</span>(<span class="nv">PlayScene</span>, <span class="nv">PlayScene</span>.<span class="py">MODES</span>.<span class="py">EXPLORE</span>, <span class="nv">PlayScene</span>.<span class="py">sizeIndex</span>)</span>
+<span class="line" data-line="17"><span class="nv">import</span> <span class="s2">&quot;Sounds&quot;</span></span>
+<span class="line" data-line="18"><span class="nv">import</span> <span class="s2">&quot;WalkingActions&quot;</span></span>
+<span class="line" data-line="19"></span>
+<span class="line" data-line="20"><span class="kd">local</span> <span class="nv">pd</span> <span class="o">&lt;</span><span class="nv">const</span><span class="o">&gt;</span> <span class="o">=</span> <span class="nv">playdate</span></span>
+<span class="line" data-line="21"></span>
+<span class="line" data-line="22"><span class="nv">FirstPersonScene</span> <span class="o">=</span> {</span>
+<span class="line" data-line="23">    <span class="nv">SUBMODES</span> <span class="o">=</span> { <span class="nv">EXPLORE</span> <span class="o">=</span> <span class="s2">&quot;explore&quot;</span>, <span class="nv">DAILY</span> <span class="o">=</span> <span class="s2">&quot;daily&quot;</span>, <span class="nv">SCREENSAVER</span> <span class="o">=</span> <span class="s2">&quot;screensaver&quot;</span> },</span>
+<span class="line" data-line="24">    <span class="nv">game</span> <span class="o">=</span> <span class="kc">nil</span>,</span>
+<span class="line" data-line="25">    <span class="nv">submode</span> <span class="o">=</span> <span class="kc">nil</span>,</span>
+<span class="line" data-line="26">    <span class="nv">sizeIndex</span> <span class="o">=</span> <span class="nv">Sizes</span>.<span class="py">DEFAULT</span>,</span>
+<span class="line" data-line="27">}</span>
+<span class="line" data-line="28"></span>
+<span class="line" data-line="29"><span class="c1">-- Where the screensaver&#39;s music sits between far from the exit (0) and beside it (1)</span></span>
+<span class="line" data-line="30"><span class="kd">local</span> <span class="nv">SCREENSAVER_MUSIC</span> <span class="o">&lt;</span><span class="nv">const</span><span class="o">&gt;</span> <span class="o">=</span> <span class="mf">0.3</span></span>
+<span class="line" data-line="31"><span class="kd">local</span> <span class="nv">MONTHS</span> <span class="o">&lt;</span><span class="nv">const</span><span class="o">&gt;</span> <span class="o">=</span> { <span class="s2">&quot;Jan&quot;</span>, <span class="s2">&quot;Feb&quot;</span>, <span class="s2">&quot;Mar&quot;</span>, <span class="s2">&quot;Apr&quot;</span>, <span class="s2">&quot;May&quot;</span>, <span class="s2">&quot;Jun&quot;</span>, <span class="s2">&quot;Jul&quot;</span>, <span class="s2">&quot;Aug&quot;</span>, <span class="s2">&quot;Sep&quot;</span>, <span class="s2">&quot;Oct&quot;</span>, <span class="s2">&quot;Nov&quot;</span>, <span class="s2">&quot;Dec&quot;</span> }</span>
+<span class="line" data-line="32"></span>
+<span class="line" data-line="33"><span class="kd">local</span> <span class="nv">controls</span> <span class="o">=</span> <span class="nv">PlayInput</span>.<span class="nf">new</span>()</span>
+<span class="line" data-line="34"><span class="kd">local</span> <span class="nv">walkingActions</span> <span class="o">=</span> <span class="nv">WalkingActions</span>.<span class="nf">new</span>(<span class="nv">controls</span>)</span>
+<span class="line" data-line="35"><span class="c1">-- Putting the crank away and leaving the game alone hands over to the autopilot</span></span>
+<span class="line" data-line="36"><span class="kd">local</span> <span class="nv">dockTimer</span> <span class="o">=</span> <span class="nv">DockTimer</span>.<span class="nf">new</span>()</span>
+<span class="line" data-line="37"><span class="kd">local</span> <span class="nv">headBob</span> <span class="o">=</span> <span class="nv">Bob</span>.<span class="nf">new</span>()</span>
+<span class="line" data-line="38"></span>
+<span class="line" data-line="39"><span class="kd">local</span> <span class="kr">function</span> <span class="nf">newGame</span>(<span class="nv">isAutopilotOn</span>)</span>
+<span class="line" data-line="40">    <span class="kd">local</span> <span class="nv">size</span> <span class="o">=</span> <span class="nv">Sizes</span>.<span class="py">ALL</span>[<span class="nv">FirstPersonScene</span>.<span class="py">sizeIndex</span>]</span>
+<span class="line" data-line="41">    <span class="kd">local</span> <span class="nv">random</span> <span class="o">=</span> <span class="nb">math.random</span></span>
+<span class="line" data-line="42">    <span class="kd">local</span> <span class="nv">today</span></span>
+<span class="line" data-line="43">    <span class="kr">if</span> <span class="nv">FirstPersonScene</span>.<span class="py">submode</span> <span class="o">==</span> <span class="nv">FirstPersonScene</span>.<span class="py">SUBMODES</span>.<span class="py">DAILY</span> <span class="kr">then</span></span>
+<span class="line" data-line="44">        <span class="nv">today</span> <span class="o">=</span> <span class="nv">pd</span>.<span class="nf">getTime</span>()</span>
+<span class="line" data-line="45">        <span class="nv">random</span> <span class="o">=</span> <span class="nv">SeededRandom</span>.<span class="nf">new</span>(<span class="nv">SeededRandom</span>.<span class="nf">seedForDate</span>(<span class="nv">today</span>.<span class="py">year</span>, <span class="nv">today</span>.<span class="py">month</span>, <span class="nv">today</span>.<span class="py">day</span>))</span>
+<span class="line" data-line="46">    <span class="kr">end</span></span>
+<span class="line" data-line="47">    <span class="kd">local</span> <span class="nv">game</span> <span class="o">=</span> <span class="nv">Game</span>.<span class="nf">new</span>({</span>
+<span class="line" data-line="48">        <span class="nv">columns</span> <span class="o">=</span> <span class="nv">size</span>.<span class="py">columns</span>,</span>
+<span class="line" data-line="49">        <span class="nv">rows</span> <span class="o">=</span> <span class="nv">size</span>.<span class="py">rows</span>,</span>
+<span class="line" data-line="50">        <span class="nv">hasPuzzle</span> <span class="o">=</span> <span class="nv">FirstPersonScene</span>.<span class="py">submode</span> <span class="o">~=</span> <span class="nv">FirstPersonScene</span>.<span class="py">SUBMODES</span>.<span class="py">SCREENSAVER</span>,</span>
+<span class="line" data-line="51">        <span class="nv">random</span> <span class="o">=</span> <span class="nv">random</span>,</span>
+<span class="line" data-line="52">    })</span>
+<span class="line" data-line="53">    <span class="nv">game</span>:<span class="nf">setAutopilot</span>(<span class="nv">isAutopilotOn</span>)</span>
+<span class="line" data-line="54">    <span class="kr">if</span> <span class="nv">today</span> <span class="kr">then</span></span>
+<span class="line" data-line="55">        <span class="nv">game</span>:<span class="nf">say</span>(<span class="s2">&quot;Daily maze: &quot;</span> <span class="o">..</span> <span class="nv">today</span>.<span class="py">day</span> <span class="o">..</span> <span class="s2">&quot; &quot;</span> <span class="o">..</span> <span class="nv">MONTHS</span>[<span class="nv">today</span>.<span class="py">month</span>])</span>
+<span class="line" data-line="56">    <span class="kr">elseif</span> <span class="nv">game</span>.<span class="py">puzzle</span> <span class="kr">then</span></span>
+<span class="line" data-line="57">        <span class="nv">game</span>:<span class="nf">say</span>(<span class="s2">&quot;Lost? Hold Ⓑ and crank backwards&quot;</span>)</span>
+<span class="line" data-line="58">    <span class="kr">end</span></span>
+<span class="line" data-line="59">    <span class="nv">FirstPersonScene</span>.<span class="py">game</span> <span class="o">=</span> <span class="nv">game</span></span>
+<span class="line" data-line="60"><span class="kr">end</span></span>
+<span class="line" data-line="61"></span>
+<span class="line" data-line="62"><span class="c1">-- savedGame, if given, is a game from SaveGame to carry on with instead of starting a new one</span></span>
+<span class="line" data-line="63"><span class="kr">function</span> <span class="nc">FirstPersonScene</span>.<span class="nf">enter</span>(<span class="nv">submode</span>, <span class="nv">sizeIndex</span>, <span class="nv">savedGame</span>)</span>
+<span class="line" data-line="64">    <span class="nv">FirstPersonScene</span>.<span class="py">submode</span> <span class="o">=</span> <span class="nv">submode</span></span>
+<span class="line" data-line="65">    <span class="nv">dockTimer</span> <span class="o">=</span> <span class="nv">DockTimer</span>.<span class="nf">new</span>()</span>
+<span class="line" data-line="66">    <span class="nv">headBob</span> <span class="o">=</span> <span class="nv">Bob</span>.<span class="nf">new</span>()</span>
+<span class="line" data-line="67">    <span class="c1">-- The daily maze is the same size for everyone</span></span>
+<span class="line" data-line="68">    <span class="nv">FirstPersonScene</span>.<span class="py">sizeIndex</span> <span class="o">=</span> <span class="nv">submode</span> <span class="o">==</span> <span class="nv">FirstPersonScene</span>.<span class="py">SUBMODES</span>.<span class="py">DAILY</span> <span class="ow">and</span> <span class="nv">Sizes</span>.<span class="py">DEFAULT</span> <span class="ow">or</span> <span class="nv">sizeIndex</span></span>
+<span class="line" data-line="69">    <span class="kr">if</span> <span class="nv">savedGame</span> <span class="kr">then</span></span>
+<span class="line" data-line="70">        <span class="nv">FirstPersonScene</span>.<span class="py">game</span> <span class="o">=</span> <span class="nv">savedGame</span></span>
+<span class="line" data-line="71">        <span class="kr">return</span></span>
+<span class="line" data-line="72">    <span class="kr">end</span></span>
+<span class="line" data-line="73">    <span class="c1">-- A new maze with a puzzle replaces whatever was saved; the screensaver leaves it be</span></span>
+<span class="line" data-line="74">    <span class="kr">if</span> <span class="nv">submode</span> <span class="o">~=</span> <span class="nv">FirstPersonScene</span>.<span class="py">SUBMODES</span>.<span class="py">SCREENSAVER</span> <span class="kr">then</span> <span class="nv">SaveGame</span>.<span class="nf">delete</span>() <span class="kr">end</span></span>
+<span class="line" data-line="75">    <span class="nf">newGame</span>(<span class="nv">submode</span> <span class="o">==</span> <span class="nv">FirstPersonScene</span>.<span class="py">SUBMODES</span>.<span class="py">SCREENSAVER</span>)</span>
+<span class="line" data-line="76"><span class="kr">end</span></span>
+<span class="line" data-line="77"></span>
+<span class="line" data-line="78"><span class="c1">-- Keeps the run on disk so that it can be continued. Called when the game pauses, sleeps,</span></span>
+<span class="line" data-line="79"><span class="c1">-- quits, or is left for the title screen.</span></span>
+<span class="line" data-line="80"><span class="kr">function</span> <span class="nc">FirstPersonScene</span>.<span class="nf">save</span>()</span>
+<span class="line" data-line="81">    <span class="kd">local</span> <span class="nv">game</span> <span class="o">=</span> <span class="nv">FirstPersonScene</span>.<span class="py">game</span></span>
+<span class="line" data-line="82">    <span class="kr">if</span> <span class="nv">game</span>.<span class="py">puzzle</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nv">game</span>.<span class="py">hasEscaped</span> <span class="kr">then</span> <span class="nv">SaveGame</span>.<span class="nf">write</span>(<span class="nv">game</span>, <span class="nv">FirstPersonScene</span>.<span class="py">submode</span>, <span class="nv">FirstPersonScene</span>.<span class="py">sizeIndex</span>) <span class="kr">end</span></span>
+<span class="line" data-line="83"><span class="kr">end</span></span>
+<span class="line" data-line="84"></span>
+<span class="line" data-line="85"><span class="c1">-- After escaping, the next maze is always a fresh random one, even after the daily maze</span></span>
+<span class="line" data-line="86"><span class="kr">function</span> <span class="nc">FirstPersonScene</span>.<span class="nf">playAgain</span>()</span>
+<span class="line" data-line="87">    <span class="nv">SceneManager</span>.<span class="nf">switch</span>(<span class="nv">FirstPersonScene</span>, <span class="nv">FirstPersonScene</span>.<span class="py">SUBMODES</span>.<span class="py">EXPLORE</span>, <span class="nv">FirstPersonScene</span>.<span class="py">sizeIndex</span>)</span>
+<span class="line" data-line="88"><span class="kr">end</span></span>
+<span class="line" data-line="89"></span>
+<span class="line" data-line="90"><span class="kr">function</span> <span class="nc">FirstPersonScene</span>.<span class="nf">exit</span>()</span>
+<span class="line" data-line="91">    <span class="nv">FirstPersonScene</span>.<span class="nf">save</span>()</span>
+<span class="line" data-line="92">    <span class="nv">Sounds</span>.<span class="nf">stopHum</span>()</span>
+<span class="line" data-line="93">    <span class="nv">Music</span>.<span class="nf">stop</span>()</span>
 <span class="line" data-line="94"><span class="kr">end</span></span>
 <span class="line" data-line="95"></span>
-<span class="line" data-line="96"><span class="kr">function</span> <span class="nc">PlayScene</span>.<span class="nf">exit</span>()</span>
-<span class="line" data-line="97">    <span class="nv">PlayScene</span>.<span class="nf">save</span>()</span>
-<span class="line" data-line="98">    <span class="nv">Sounds</span>.<span class="nf">stopHum</span>()</span>
-<span class="line" data-line="99">    <span class="nv">Music</span>.<span class="nf">stop</span>()</span>
-<span class="line" data-line="100"><span class="kr">end</span></span>
-<span class="line" data-line="101"></span>
-<span class="line" data-line="102"><span class="kr">function</span> <span class="nc">PlayScene</span>.<span class="nf">restart</span>()</span>
-<span class="line" data-line="103">    <span class="kr">if</span> <span class="nv">PlayScene</span>.<span class="py">mode</span> <span class="o">~=</span> <span class="nv">PlayScene</span>.<span class="py">MODES</span>.<span class="py">SCREENSAVER</span> <span class="kr">then</span> <span class="nv">SaveGame</span>.<span class="nf">delete</span>() <span class="kr">end</span></span>
-<span class="line" data-line="104">    <span class="nf">newGame</span>(<span class="nv">PlayScene</span>.<span class="py">game</span>:<span class="nf">isAutopilotOn</span>())</span>
-<span class="line" data-line="105"><span class="kr">end</span></span>
-<span class="line" data-line="106"></span>
-<span class="line" data-line="107"><span class="kd">local</span> <span class="kr">function</span> <span class="nf">isAnyButtonJustPressed</span>()</span>
-<span class="line" data-line="108">    <span class="kr">for</span> <span class="nv">_</span>, <span class="nv">button</span> <span class="kr">in</span> <span class="nb">ipairs</span>(<span class="nv">BUTTONS</span>) <span class="kr">do</span></span>
-<span class="line" data-line="109">        <span class="kr">if</span> <span class="nv">pd</span>.<span class="nf">buttonJustPressed</span>(<span class="nv">button</span>) <span class="kr">then</span> <span class="kr">return</span> <span class="kc">true</span> <span class="kr">end</span></span>
+<span class="line" data-line="96"><span class="kr">function</span> <span class="nc">FirstPersonScene</span>.<span class="nf">restart</span>()</span>
+<span class="line" data-line="97">    <span class="kr">if</span> <span class="nv">FirstPersonScene</span>.<span class="py">submode</span> <span class="o">~=</span> <span class="nv">FirstPersonScene</span>.<span class="py">SUBMODES</span>.<span class="py">SCREENSAVER</span> <span class="kr">then</span> <span class="nv">SaveGame</span>.<span class="nf">delete</span>() <span class="kr">end</span></span>
+<span class="line" data-line="98">    <span class="nf">newGame</span>(<span class="nv">FirstPersonScene</span>.<span class="py">game</span>:<span class="nf">isAutopilotOn</span>())</span>
+<span class="line" data-line="99"><span class="kr">end</span></span>
+<span class="line" data-line="100"></span>
+<span class="line" data-line="101"><span class="kd">local</span> <span class="kr">function</span> <span class="nf">dockToDream</span>(<span class="nv">input</span>)</span>
+<span class="line" data-line="102">    <span class="kd">local</span> <span class="nv">game</span> <span class="o">=</span> <span class="nv">FirstPersonScene</span>.<span class="py">game</span></span>
+<span class="line" data-line="103">    <span class="kd">local</span> <span class="nv">action</span> <span class="o">=</span> <span class="nv">dockTimer</span>:<span class="nf">update</span>(<span class="nv">input</span>.<span class="py">isCrankDocked</span>, <span class="nv">input</span>.<span class="py">current</span> <span class="o">~=</span> <span class="mi">0</span> <span class="ow">or</span> <span class="nv">input</span>.<span class="py">pressed</span> <span class="o">~=</span> <span class="mi">0</span>)</span>
+<span class="line" data-line="104">    <span class="kr">if</span> <span class="nv">action</span> <span class="o">==</span> <span class="nv">DockTimer</span>.<span class="py">ACTIONS</span>.<span class="py">HAND_OVER</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nv">game</span>:<span class="nf">isAutopilotOn</span>() <span class="kr">then</span></span>
+<span class="line" data-line="105">        <span class="nv">game</span>:<span class="nf">setAutopilot</span>(<span class="kc">true</span>)</span>
+<span class="line" data-line="106">        <span class="nv">game</span>:<span class="nf">say</span>(<span class="s2">&quot;Crank docked: autopilot&quot;</span>)</span>
+<span class="line" data-line="107">    <span class="kr">elseif</span> <span class="nv">action</span> <span class="o">==</span> <span class="nv">DockTimer</span>.<span class="py">ACTIONS</span>.<span class="py">TAKE_BACK</span> <span class="ow">and</span> <span class="nv">game</span>:<span class="nf">isAutopilotOn</span>() <span class="kr">then</span></span>
+<span class="line" data-line="108">        <span class="nv">game</span>:<span class="nf">setAutopilot</span>(<span class="kc">false</span>)</span>
+<span class="line" data-line="109">        <span class="nv">game</span>:<span class="nf">say</span>(<span class="s2">&quot;You have the controls&quot;</span>)</span>
 <span class="line" data-line="110">    <span class="kr">end</span></span>
-<span class="line" data-line="111">    <span class="kr">return</span> <span class="kc">false</span></span>
-<span class="line" data-line="112"><span class="kr">end</span></span>
-<span class="line" data-line="113"></span>
-<span class="line" data-line="114"><span class="kd">local</span> <span class="kr">function</span> <span class="nf">isAnyButtonDown</span>()</span>
-<span class="line" data-line="115">    <span class="kr">for</span> <span class="nv">_</span>, <span class="nv">button</span> <span class="kr">in</span> <span class="nb">ipairs</span>(<span class="nv">BUTTONS</span>) <span class="kr">do</span></span>
-<span class="line" data-line="116">        <span class="kr">if</span> <span class="nv">pd</span>.<span class="nf">buttonIsPressed</span>(<span class="nv">button</span>) <span class="kr">then</span> <span class="kr">return</span> <span class="kc">true</span> <span class="kr">end</span></span>
-<span class="line" data-line="117">    <span class="kr">end</span></span>
-<span class="line" data-line="118">    <span class="kr">return</span> <span class="kc">false</span></span>
-<span class="line" data-line="119"><span class="kr">end</span></span>
+<span class="line" data-line="111"><span class="kr">end</span></span>
+<span class="line" data-line="112"></span>
+<span class="line" data-line="113"><span class="kr">function</span> <span class="nc">FirstPersonScene</span>.<span class="nf">update</span>()</span>
+<span class="line" data-line="114">    <span class="kd">local</span> <span class="nv">game</span> <span class="o">=</span> <span class="nv">FirstPersonScene</span>.<span class="py">game</span></span>
+<span class="line" data-line="115">    <span class="kd">local</span> <span class="nv">input</span> <span class="o">=</span> <span class="nv">controls</span>:<span class="nf">read</span>()</span>
+<span class="line" data-line="116">    <span class="nf">dockToDream</span>(<span class="nv">input</span>)</span>
+<span class="line" data-line="117">    <span class="kd">local</span> <span class="nv">takingOver</span> <span class="o">=</span> <span class="nv">game</span>:<span class="nf">isAutopilotOn</span>() <span class="ow">and</span> <span class="nv">input</span>.<span class="py">pressed</span> <span class="o">~=</span> <span class="mi">0</span></span>
+<span class="line" data-line="118">    <span class="kr">if</span> <span class="nv">takingOver</span> <span class="kr">then</span> <span class="nv">game</span>:<span class="nf">setAutopilot</span>(<span class="kc">false</span>) <span class="kr">end</span></span>
+<span class="line" data-line="119">    <span class="nv">game</span>:<span class="nf">update</span>(<span class="nv">walkingActions</span>:<span class="nf">read</span>(<span class="nv">takingOver</span>))</span>
 <span class="line" data-line="120"></span>
-<span class="line" data-line="121"><span class="kd">local</span> <span class="kr">function</span> <span class="nf">dockToDream</span>()</span>
-<span class="line" data-line="122">    <span class="kd">local</span> <span class="nv">game</span> <span class="o">=</span> <span class="nv">PlayScene</span>.<span class="py">game</span></span>
-<span class="line" data-line="123">    <span class="kd">local</span> <span class="nv">action</span> <span class="o">=</span> <span class="nv">dockTimer</span>:<span class="nf">update</span>(<span class="nv">pd</span>.<span class="nf">isCrankDocked</span>(), <span class="nf">isAnyButtonDown</span>() <span class="ow">or</span> <span class="nf">isAnyButtonJustPressed</span>())</span>
-<span class="line" data-line="124">    <span class="kr">if</span> <span class="nv">action</span> <span class="o">==</span> <span class="nv">DockTimer</span>.<span class="py">ACTIONS</span>.<span class="py">HAND_OVER</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nv">game</span>:<span class="nf">isAutopilotOn</span>() <span class="kr">then</span></span>
-<span class="line" data-line="125">        <span class="nv">game</span>:<span class="nf">setAutopilot</span>(<span class="kc">true</span>)</span>
-<span class="line" data-line="126">        <span class="nv">game</span>:<span class="nf">say</span>(<span class="s2">&quot;Crank docked: autopilot&quot;</span>)</span>
-<span class="line" data-line="127">    <span class="kr">elseif</span> <span class="nv">action</span> <span class="o">==</span> <span class="nv">DockTimer</span>.<span class="py">ACTIONS</span>.<span class="py">TAKE_BACK</span> <span class="ow">and</span> <span class="nv">game</span>:<span class="nf">isAutopilotOn</span>() <span class="kr">then</span></span>
-<span class="line" data-line="128">        <span class="nv">game</span>:<span class="nf">setAutopilot</span>(<span class="kc">false</span>)</span>
-<span class="line" data-line="129">        <span class="nv">game</span>:<span class="nf">say</span>(<span class="s2">&quot;You have the controls&quot;</span>)</span>
-<span class="line" data-line="130">    <span class="kr">end</span></span>
-<span class="line" data-line="131"><span class="kr">end</span></span>
-<span class="line" data-line="132"></span>
-<span class="line" data-line="133"><span class="kd">local</span> <span class="kr">function</span> <span class="nf">axis</span>(<span class="nv">negativeButton</span>, <span class="nv">positiveButton</span>)</span>
-<span class="line" data-line="134">    <span class="kd">local</span> <span class="nv">value</span> <span class="o">=</span> <span class="mi">0</span></span>
-<span class="line" data-line="135">    <span class="kr">if</span> <span class="nv">pd</span>.<span class="nf">buttonIsPressed</span>(<span class="nv">negativeButton</span>) <span class="kr">then</span> <span class="nv">value</span> <span class="o">=</span> <span class="nv">value</span> <span class="o">-</span> <span class="mi">1</span> <span class="kr">end</span></span>
-<span class="line" data-line="136">    <span class="kr">if</span> <span class="nv">pd</span>.<span class="nf">buttonIsPressed</span>(<span class="nv">positiveButton</span>) <span class="kr">then</span> <span class="nv">value</span> <span class="o">=</span> <span class="nv">value</span> <span class="o">+</span> <span class="mi">1</span> <span class="kr">end</span></span>
-<span class="line" data-line="137">    <span class="kr">return</span> <span class="nv">value</span></span>
-<span class="line" data-line="138"><span class="kr">end</span></span>
-<span class="line" data-line="139"></span>
-<span class="line" data-line="140"><span class="kd">local</span> <span class="kr">function</span> <span class="nf">readInput</span>()</span>
-<span class="line" data-line="141">    <span class="kd">local</span> <span class="nv">sideways</span> <span class="o">=</span> <span class="nf">axis</span>(<span class="nv">pd</span>.<span class="py">kButtonLeft</span>, <span class="nv">pd</span>.<span class="py">kButtonRight</span>)</span>
-<span class="line" data-line="142">    <span class="kd">local</span> <span class="nv">crankChange</span> <span class="o">=</span> <span class="nv">pd</span>.<span class="nf">getCrankChange</span>()</span>
-<span class="line" data-line="143">    <span class="kd">local</span> <span class="nv">reel</span>, <span class="nv">isBTapped</span> <span class="o">=</span> <span class="nv">bButton</span>:<span class="nf">update</span>(</span>
-<span class="line" data-line="144">        <span class="nv">pd</span>.<span class="nf">buttonJustPressed</span>(<span class="nv">pd</span>.<span class="py">kButtonB</span>), <span class="nv">pd</span>.<span class="nf">buttonIsPressed</span>(<span class="nv">pd</span>.<span class="py">kButtonB</span>), <span class="nv">pd</span>.<span class="nf">buttonJustReleased</span>(<span class="nv">pd</span>.<span class="py">kButtonB</span>), <span class="nv">crankChange</span></span>
-<span class="line" data-line="145">    )</span>
-<span class="line" data-line="146">    <span class="nv">input</span>.<span class="py">forward</span> <span class="o">=</span> <span class="nf">axis</span>(<span class="nv">pd</span>.<span class="py">kButtonDown</span>, <span class="nv">pd</span>.<span class="py">kButtonUp</span>)</span>
-<span class="line" data-line="147">    <span class="c1">-- While B is held the crank belongs to the thread, not the view</span></span>
-<span class="line" data-line="148">    <span class="nv">input</span>.<span class="py">turn</span> <span class="o">=</span> <span class="nv">bButton</span>:<span class="nf">isHeld</span>() <span class="ow">and</span> <span class="mi">0</span> <span class="ow">or</span> <span class="nv">crankChange</span></span>
-<span class="line" data-line="149">    <span class="c1">-- The crank&#39;s own movement, which also works the gate; the D-pad&#39;s turning must not</span></span>
-<span class="line" data-line="150">    <span class="nv">input</span>.<span class="py">crank</span> <span class="o">=</span> <span class="nv">input</span>.<span class="py">turn</span></span>
-<span class="line" data-line="151">    <span class="nv">input</span>.<span class="py">reel</span> <span class="o">=</span> <span class="nv">reel</span></span>
-<span class="line" data-line="152">    <span class="nv">input</span>.<span class="py">strafe</span> <span class="o">=</span> <span class="mi">0</span></span>
-<span class="line" data-line="153">    <span class="c1">-- With the crank out, it does the looking and the D-pad sidesteps. Docked, the D-pad turns.</span></span>
-<span class="line" data-line="154">    <span class="kr">if</span> <span class="nv">pd</span>.<span class="nf">isCrankDocked</span>() <span class="kr">then</span></span>
-<span class="line" data-line="155">        <span class="nv">input</span>.<span class="py">turn</span> <span class="o">=</span> <span class="nv">sideways</span> <span class="o">*</span> <span class="nv">DPAD_TURN_SPEED</span></span>
-<span class="line" data-line="156">    <span class="kr">else</span></span>
-<span class="line" data-line="157">        <span class="nv">input</span>.<span class="py">strafe</span> <span class="o">=</span> <span class="nv">sideways</span></span>
-<span class="line" data-line="158">    <span class="kr">end</span></span>
-<span class="line" data-line="159">    <span class="nv">input</span>.<span class="py">pickUp</span> <span class="o">=</span> <span class="nv">pd</span>.<span class="nf">buttonJustPressed</span>(<span class="nv">pd</span>.<span class="py">kButtonA</span>)</span>
-<span class="line" data-line="160">    <span class="nv">input</span>.<span class="py">drop</span> <span class="o">=</span> <span class="nv">isBTapped</span></span>
-<span class="line" data-line="161">    <span class="kr">return</span> <span class="nv">input</span></span>
-<span class="line" data-line="162"><span class="kr">end</span></span>
-<span class="line" data-line="163"></span>
-<span class="line" data-line="164"><span class="kr">function</span> <span class="nc">PlayScene</span>.<span class="nf">update</span>()</span>
-<span class="line" data-line="165">    <span class="kd">local</span> <span class="nv">game</span> <span class="o">=</span> <span class="nv">PlayScene</span>.<span class="py">game</span></span>
-<span class="line" data-line="166">    <span class="nf">dockToDream</span>()</span>
-<span class="line" data-line="167">    <span class="kr">if</span> <span class="nv">game</span>:<span class="nf">isAutopilotOn</span>() <span class="ow">and</span> <span class="nf">isAnyButtonJustPressed</span>() <span class="kr">then</span></span>
-<span class="line" data-line="168">        <span class="nv">game</span>:<span class="nf">setAutopilot</span>(<span class="kc">false</span>)</span>
-<span class="line" data-line="169">        <span class="c1">-- The press that takes over does nothing else, not even when it is let go</span></span>
-<span class="line" data-line="170">        <span class="nf">readInput</span>()</span>
-<span class="line" data-line="171">        <span class="nv">bButton</span>:<span class="nf">ignoreThisPress</span>()</span>
-<span class="line" data-line="172">        <span class="nv">input</span>.<span class="py">pickUp</span>, <span class="nv">input</span>.<span class="py">drop</span>, <span class="nv">input</span>.<span class="py">reel</span> <span class="o">=</span> <span class="kc">false</span>, <span class="kc">false</span>, <span class="mi">0</span></span>
-<span class="line" data-line="173">        <span class="nv">game</span>:<span class="nf">update</span>(<span class="nv">input</span>)</span>
-<span class="line" data-line="174">    <span class="kr">else</span></span>
-<span class="line" data-line="175">        <span class="nv">game</span>:<span class="nf">update</span>(<span class="nf">readInput</span>())</span>
-<span class="line" data-line="176">    <span class="kr">end</span></span>
-<span class="line" data-line="177"></span>
-<span class="line" data-line="178">    <span class="nv">Sounds</span>.<span class="nf">play</span>(<span class="nv">game</span>.<span class="py">events</span>)</span>
-<span class="line" data-line="179">    <span class="nv">Sounds</span>.<span class="nf">hum</span>(<span class="nv">game</span>)</span>
-<span class="line" data-line="180">    <span class="c1">-- The screensaver&#39;s music stays calm and level; otherwise it follows the way to the exit</span></span>
-<span class="line" data-line="181">    <span class="nv">Music</span>.<span class="nf">update</span>(<span class="nv">game</span>, <span class="nv">PlayScene</span>.<span class="py">mode</span> <span class="o">==</span> <span class="nv">PlayScene</span>.<span class="py">MODES</span>.<span class="py">SCREENSAVER</span> <span class="ow">and</span> <span class="nv">SCREENSAVER_MUSIC</span> <span class="ow">or</span> <span class="kc">nil</span>)</span>
-<span class="line" data-line="182">    <span class="kr">if</span> <span class="nv">game</span>.<span class="py">hasEscaped</span> <span class="kr">then</span></span>
-<span class="line" data-line="183">        <span class="kr">if</span> <span class="nv">PlayScene</span>.<span class="py">mode</span> <span class="o">==</span> <span class="nv">PlayScene</span>.<span class="py">MODES</span>.<span class="py">SCREENSAVER</span> <span class="kr">then</span></span>
-<span class="line" data-line="184">            <span class="nv">PlayScene</span>.<span class="nf">restart</span>()</span>
-<span class="line" data-line="185">        <span class="kr">else</span></span>
-<span class="line" data-line="186">            <span class="nv">SaveGame</span>.<span class="nf">delete</span>()</span>
-<span class="line" data-line="187">            <span class="nv">SceneManager</span>.<span class="nf">switch</span>(<span class="nv">EscapedScene</span>, <span class="nv">game</span>.<span class="py">frames</span>, <span class="nv">PlayScene</span>.<span class="py">playAgain</span>)</span>
-<span class="line" data-line="188">            <span class="kr">return</span></span>
-<span class="line" data-line="189">        <span class="kr">end</span></span>
-<span class="line" data-line="190">    <span class="kr">end</span></span>
-<span class="line" data-line="191"></span>
-<span class="line" data-line="192">    <span class="nv">headBob</span>:<span class="nf">walk</span>(<span class="nv">PlayScene</span>.<span class="py">game</span>.<span class="py">distanceWalked</span>)</span>
-<span class="line" data-line="193">    <span class="nv">MazeView</span>.<span class="nf">draw</span>(<span class="nv">PlayScene</span>.<span class="py">game</span>, <span class="nv">headBob</span>:<span class="nf">headOffset</span>())</span>
-<span class="line" data-line="194">    <span class="nv">Hud</span>.<span class="nf">draw</span>(<span class="nv">PlayScene</span>.<span class="py">game</span>)</span>
-<span class="line" data-line="195"><span class="kr">end</span></span></code></pre>
-<footer class="code-footer"><span class="focus-label">Highlighted lines follow the explanation</span><button class="follow" type="button" aria-pressed="true">Follow scroll: on</button></footer></div></section><section class="section" id="section-5" data-title="First-person rules" data-file="source/Game.lua"><div class="explanations"><h2><span>05</span> First-person rules</h2><article class="step" id="step-5-0" data-first="40" data-last="48">
-<p class="location">source/Game.lua<br><a href="#step-5-0">Lines 40–48</a></p>
-<h3>Create the world</h3><p>Generate a maze, place the player in its first cell, and combine them in a <code>Run</code>. Face an open passage at the start.</p><p>A Lua table holds state; <code>setmetatable</code> lets it find the module’s methods.</p></article><article class="step" id="step-5-1" data-first="204" data-last="216">
-<p class="location">source/Game.lua<br><a href="#step-5-1">Lines 204–216</a></p>
-<h3>Choose one movement mode</h3><p>Autopilot, thread reeling, and manual movement are exclusive branches. Manual movement scales input by <code>WALK_SPEED</code>: 0.08 blocks per frame.</p><p><code>player:move(...)</code> passes the player as <code>self</code>. The colon marks a method call.</p></article><article class="step" id="step-5-2" data-first="216" data-last="227">
-<p class="location">source/Game.lua<br><a href="#step-5-2">Lines 216–227</a></p>
-<h3>Measure what moved</h3><p>Subtract the old position and use √(dx² + dy²) for distance. Footsteps follow actual travel; a blocked push can produce a bump.</p></article><article class="step" id="step-5-3" data-first="228" data-last="238">
-<p class="location">source/Game.lua<br><a href="#step-5-3">Lines 228–238</a></p>
+<span class="line" data-line="121">    <span class="nv">Sounds</span>.<span class="nf">play</span>(<span class="nv">game</span>.<span class="py">events</span>)</span>
+<span class="line" data-line="122">    <span class="nv">Sounds</span>.<span class="nf">hum</span>(<span class="nv">game</span>)</span>
+<span class="line" data-line="123">    <span class="c1">-- The screensaver&#39;s music stays calm and level; otherwise it follows the way to the exit</span></span>
+<span class="line" data-line="124">    <span class="nv">Music</span>.<span class="nf">update</span>(<span class="nv">game</span>, <span class="nv">FirstPersonScene</span>.<span class="py">submode</span> <span class="o">==</span> <span class="nv">FirstPersonScene</span>.<span class="py">SUBMODES</span>.<span class="py">SCREENSAVER</span> <span class="ow">and</span> <span class="nv">SCREENSAVER_MUSIC</span> <span class="ow">or</span> <span class="kc">nil</span>)</span>
+<span class="line" data-line="125">    <span class="kr">if</span> <span class="nv">game</span>.<span class="py">hasEscaped</span> <span class="kr">then</span></span>
+<span class="line" data-line="126">        <span class="kr">if</span> <span class="nv">FirstPersonScene</span>.<span class="py">submode</span> <span class="o">==</span> <span class="nv">FirstPersonScene</span>.<span class="py">SUBMODES</span>.<span class="py">SCREENSAVER</span> <span class="kr">then</span></span>
+<span class="line" data-line="127">            <span class="nv">FirstPersonScene</span>.<span class="nf">restart</span>()</span>
+<span class="line" data-line="128">        <span class="kr">else</span></span>
+<span class="line" data-line="129">            <span class="nv">SaveGame</span>.<span class="nf">delete</span>()</span>
+<span class="line" data-line="130">            <span class="nv">SceneManager</span>.<span class="nf">switch</span>(<span class="nv">EscapedScene</span>, <span class="nv">game</span>.<span class="py">frames</span>, <span class="nv">FirstPersonScene</span>.<span class="py">playAgain</span>)</span>
+<span class="line" data-line="131">            <span class="kr">return</span></span>
+<span class="line" data-line="132">        <span class="kr">end</span></span>
+<span class="line" data-line="133">    <span class="kr">end</span></span>
+<span class="line" data-line="134"></span>
+<span class="line" data-line="135">    <span class="nv">headBob</span>:<span class="nf">walk</span>(<span class="nv">FirstPersonScene</span>.<span class="py">game</span>.<span class="py">distanceWalked</span>)</span>
+<span class="line" data-line="136">    <span class="nv">MazeView</span>.<span class="nf">draw</span>(<span class="nv">FirstPersonScene</span>.<span class="py">game</span>, <span class="nv">headBob</span>:<span class="nf">headOffset</span>())</span>
+<span class="line" data-line="137">    <span class="nv">Hud</span>.<span class="nf">draw</span>(<span class="nv">FirstPersonScene</span>.<span class="py">game</span>)</span>
+<span class="line" data-line="138"><span class="kr">end</span></span></code></pre>
+<footer class="code-footer"><span class="focus-label">Highlighted lines follow the explanation</span><button class="follow" type="button" aria-pressed="true">Follow scroll: on</button></footer></div></section><section class="section" id="section-5" data-title="Shared hardware input" data-file="source/PlayInput.lua"><div class="explanations"><h2><span>05</span> Shared hardware input</h2><article class="step" id="step-5-0" data-first="10" data-last="16">
+<p class="location">source/PlayInput.lua<br><a href="#step-5-0">Lines 10–16</a></p>
+<h3>Capture one frame</h3><p>The three play modes use this reader. It records held, pressed, and released buttons, crank movement, crank angle, and whether the crank is docked.</p><p>These are hardware readings; their meaning depends on the game mode.</p></article><article class="step" id="step-5-1" data-first="18" data-last="20">
+<p class="location">source/PlayInput.lua<br><a href="#step-5-1">Lines 18–20</a></p>
+<h3>Test a button bit</h3><p>Each button has its own bit in the mask. <code>&amp;</code> keeps the bits shared by the mask and the requested button. A nonzero result means that button is down.</p></article><article class="step" id="step-5-2" data-first="30" data-last="32">
+<p class="location">source/PlayInput.lua<br><a href="#step-5-2">Lines 30–32</a></p>
+<h3>Combine opposite directions</h3><p>Subtract the negative button from the positive button. Left alone gives −1, right alone gives +1, and both or neither gives 0.</p></article></div><div class="code-panel"><header class="file-header"><div class="file-path"><span>source/</span><strong>PlayInput.lua</strong></div><div class="file-meta"><span>Lua · Complete file · 32 lines</span><output class="range">Lines 10–16</output></div></header>
+<pre tabindex="0" aria-label="Complete source/PlayInput.lua"><code class="language-lua"><span class="line" data-line="1"><span class="nv">PlayInput</span> <span class="o">=</span> {}</span>
+<span class="line" data-line="2"><span class="nv">PlayInput</span>.<span class="py">__index</span> <span class="o">=</span> <span class="nv">PlayInput</span></span>
+<span class="line" data-line="3"></span>
+<span class="line" data-line="4"><span class="kd">local</span> <span class="nv">pd</span> <span class="o">&lt;</span><span class="nv">const</span><span class="o">&gt;</span> <span class="o">=</span> <span class="nv">playdate</span></span>
+<span class="line" data-line="5"></span>
+<span class="line" data-line="6"><span class="kr">function</span> <span class="nc">PlayInput</span>.<span class="nf">new</span>()</span>
+<span class="line" data-line="7">    <span class="kr">return</span> <span class="nb">setmetatable</span>({ <span class="nv">current</span> <span class="o">=</span> <span class="mi">0</span>, <span class="nv">pressed</span> <span class="o">=</span> <span class="mi">0</span>, <span class="nv">released</span> <span class="o">=</span> <span class="mi">0</span>, <span class="nv">crankChange</span> <span class="o">=</span> <span class="mi">0</span>, <span class="nv">crankPosition</span> <span class="o">=</span> <span class="mi">0</span>, <span class="nv">isCrankDocked</span> <span class="o">=</span> <span class="kc">true</span> }, <span class="nv">PlayInput</span>)</span>
+<span class="line" data-line="8"><span class="kr">end</span></span>
+<span class="line" data-line="9"></span>
+<span class="line" data-line="10"><span class="kr">function</span> <span class="nc">PlayInput</span>:<span class="nf">read</span>()</span>
+<span class="line" data-line="11">    <span class="nv">self</span>.<span class="py">current</span>, <span class="nv">self</span>.<span class="py">pressed</span>, <span class="nv">self</span>.<span class="py">released</span> <span class="o">=</span> <span class="nv">pd</span>.<span class="nf">getButtonState</span>()</span>
+<span class="line" data-line="12">    <span class="nv">self</span>.<span class="py">crankChange</span> <span class="o">=</span> <span class="nv">pd</span>.<span class="nf">getCrankChange</span>()</span>
+<span class="line" data-line="13">    <span class="nv">self</span>.<span class="py">crankPosition</span> <span class="o">=</span> <span class="nv">pd</span>.<span class="nf">getCrankPosition</span>()</span>
+<span class="line" data-line="14">    <span class="nv">self</span>.<span class="py">isCrankDocked</span> <span class="o">=</span> <span class="nv">pd</span>.<span class="nf">isCrankDocked</span>()</span>
+<span class="line" data-line="15">    <span class="kr">return</span> <span class="nv">self</span></span>
+<span class="line" data-line="16"><span class="kr">end</span></span>
+<span class="line" data-line="17"></span>
+<span class="line" data-line="18"><span class="kr">function</span> <span class="nc">PlayInput</span>:<span class="nf">isDown</span>(<span class="nv">button</span>)</span>
+<span class="line" data-line="19">    <span class="kr">return</span> <span class="nv">self</span>.<span class="py">current</span> <span class="o">&amp;</span> <span class="nv">button</span> <span class="o">~=</span> <span class="mi">0</span></span>
+<span class="line" data-line="20"><span class="kr">end</span></span>
+<span class="line" data-line="21"></span>
+<span class="line" data-line="22"><span class="kr">function</span> <span class="nc">PlayInput</span>:<span class="nf">isPressed</span>(<span class="nv">button</span>)</span>
+<span class="line" data-line="23">    <span class="kr">return</span> <span class="nv">self</span>.<span class="py">pressed</span> <span class="o">&amp;</span> <span class="nv">button</span> <span class="o">~=</span> <span class="mi">0</span></span>
+<span class="line" data-line="24"><span class="kr">end</span></span>
+<span class="line" data-line="25"></span>
+<span class="line" data-line="26"><span class="kr">function</span> <span class="nc">PlayInput</span>:<span class="nf">isReleased</span>(<span class="nv">button</span>)</span>
+<span class="line" data-line="27">    <span class="kr">return</span> <span class="nv">self</span>.<span class="py">released</span> <span class="o">&amp;</span> <span class="nv">button</span> <span class="o">~=</span> <span class="mi">0</span></span>
+<span class="line" data-line="28"><span class="kr">end</span></span>
+<span class="line" data-line="29"></span>
+<span class="line" data-line="30"><span class="kr">function</span> <span class="nc">PlayInput</span>:<span class="nf">axis</span>(<span class="nv">negativeButton</span>, <span class="nv">positiveButton</span>)</span>
+<span class="line" data-line="31">    <span class="kr">return</span> (<span class="nv">self</span>:<span class="nf">isDown</span>(<span class="nv">positiveButton</span>) <span class="ow">and</span> <span class="mi">1</span> <span class="ow">or</span> <span class="mi">0</span>) <span class="o">-</span> (<span class="nv">self</span>:<span class="nf">isDown</span>(<span class="nv">negativeButton</span>) <span class="ow">and</span> <span class="mi">1</span> <span class="ow">or</span> <span class="mi">0</span>)</span>
+<span class="line" data-line="32"><span class="kr">end</span></span></code></pre>
+<footer class="code-footer"><span class="focus-label">Highlighted lines follow the explanation</span><button class="follow" type="button" aria-pressed="true">Follow scroll: on</button></footer></div></section><section class="section" id="section-6" data-title="Walking actions" data-file="source/WalkingActions.lua"><div class="explanations"><h2><span>06</span> Walking actions</h2><article class="step" id="step-6-0" data-first="9" data-last="11">
+<p class="location">source/WalkingActions.lua<br><a href="#step-6-0">Lines 9–11</a></p>
+<h3>Own the button history</h3><p>The constructor stores the supplied <code>controls</code> reader. Each mapper owns a reusable action table and a <code>TapOrReel</code> tracker. The tracker distinguishes tapping B from holding B while reeling.</p></article><article class="step" id="step-6-1" data-first="20" data-last="31">
+<p class="location">source/WalkingActions.lua<br><a href="#step-6-1">Lines 20–31</a></p>
+<h3>Map hardware to actions</h3><p>Up/down moves forward/back. The crank turns the view unless B is held. Left/right turns when docked and strafes when undocked.</p><p><code>crank</code> preserves actual crank movement for the gate; D-pad turning does not operate it.</p></article><article class="step" id="step-6-2" data-first="32" data-last="35">
+<p class="location">source/WalkingActions.lua<br><a href="#step-6-2">Lines 32–35</a></p>
+<h3>Consume the takeover press</h3><p>Suppress pickup, drop, and reel for this frame. Tell the B tracker to ignore the rest of this press too, so releasing it later cannot drop an item.</p></article></div><div class="code-panel"><header class="file-header"><div class="file-path"><span>source/</span><strong>WalkingActions.lua</strong></div><div class="file-meta"><span>Lua · Complete file · 37 lines</span><output class="range">Lines 9–11</output></div></header>
+<pre tabindex="0" aria-label="Complete source/WalkingActions.lua"><code class="language-lua"><span class="line" data-line="1"><span class="nv">import</span> <span class="s2">&quot;TapOrReel&quot;</span></span>
+<span class="line" data-line="2"></span>
+<span class="line" data-line="3"><span class="nv">WalkingActions</span> <span class="o">=</span> {}</span>
+<span class="line" data-line="4"><span class="nv">WalkingActions</span>.<span class="py">__index</span> <span class="o">=</span> <span class="nv">WalkingActions</span></span>
+<span class="line" data-line="5"></span>
+<span class="line" data-line="6"><span class="kd">local</span> <span class="nv">pd</span> <span class="o">&lt;</span><span class="nv">const</span><span class="o">&gt;</span> <span class="o">=</span> <span class="nv">playdate</span></span>
+<span class="line" data-line="7"><span class="kd">local</span> <span class="nv">DPAD_TURN_SPEED</span> <span class="o">&lt;</span><span class="nv">const</span><span class="o">&gt;</span> <span class="o">=</span> <span class="mi">5</span></span>
+<span class="line" data-line="8"></span>
+<span class="line" data-line="9"><span class="kr">function</span> <span class="nc">WalkingActions</span>.<span class="nf">new</span>(<span class="nv">controls</span>)</span>
+<span class="line" data-line="10">    <span class="kr">return</span> <span class="nb">setmetatable</span>({ <span class="nv">controls</span> <span class="o">=</span> <span class="nv">controls</span>, <span class="nv">actions</span> <span class="o">=</span> {}, <span class="nv">bButton</span> <span class="o">=</span> <span class="nv">TapOrReel</span>.<span class="nf">new</span>() }, <span class="nv">WalkingActions</span>)</span>
+<span class="line" data-line="11"><span class="kr">end</span></span>
+<span class="line" data-line="12"></span>
+<span class="line" data-line="13"><span class="kr">function</span> <span class="nc">WalkingActions</span>:<span class="nf">read</span>(<span class="nv">suppressItemActions</span>)</span>
+<span class="line" data-line="14">    <span class="kd">local</span> <span class="nv">input</span> <span class="o">=</span> <span class="nv">self</span>.<span class="py">controls</span></span>
+<span class="line" data-line="15">    <span class="kd">local</span> <span class="nv">actions</span>, <span class="nv">button</span> <span class="o">=</span> <span class="nv">self</span>.<span class="py">actions</span>, <span class="nv">self</span>.<span class="py">bButton</span></span>
+<span class="line" data-line="16">    <span class="kd">local</span> <span class="nv">sideways</span> <span class="o">=</span> <span class="nv">input</span>:<span class="nf">axis</span>(<span class="nv">pd</span>.<span class="py">kButtonLeft</span>, <span class="nv">pd</span>.<span class="py">kButtonRight</span>)</span>
+<span class="line" data-line="17">    <span class="kd">local</span> <span class="nv">reel</span>, <span class="nv">isBTapped</span> <span class="o">=</span> <span class="nv">button</span>:<span class="nf">update</span>(</span>
+<span class="line" data-line="18">        <span class="nv">input</span>:<span class="nf">isPressed</span>(<span class="nv">pd</span>.<span class="py">kButtonB</span>), <span class="nv">input</span>:<span class="nf">isDown</span>(<span class="nv">pd</span>.<span class="py">kButtonB</span>), <span class="nv">input</span>:<span class="nf">isReleased</span>(<span class="nv">pd</span>.<span class="py">kButtonB</span>), <span class="nv">input</span>.<span class="py">crankChange</span></span>
+<span class="line" data-line="19">    )</span>
+<span class="line" data-line="20">    <span class="nv">actions</span>.<span class="py">forward</span> <span class="o">=</span> <span class="nv">input</span>:<span class="nf">axis</span>(<span class="nv">pd</span>.<span class="py">kButtonDown</span>, <span class="nv">pd</span>.<span class="py">kButtonUp</span>)</span>
+<span class="line" data-line="21">    <span class="nv">actions</span>.<span class="py">turn</span> <span class="o">=</span> <span class="nv">button</span>:<span class="nf">isHeld</span>() <span class="ow">and</span> <span class="mi">0</span> <span class="ow">or</span> <span class="nv">input</span>.<span class="py">crankChange</span></span>
+<span class="line" data-line="22">    <span class="nv">actions</span>.<span class="py">crank</span> <span class="o">=</span> <span class="nv">actions</span>.<span class="py">turn</span></span>
+<span class="line" data-line="23">    <span class="nv">actions</span>.<span class="py">reel</span> <span class="o">=</span> <span class="nv">reel</span></span>
+<span class="line" data-line="24">    <span class="nv">actions</span>.<span class="py">strafe</span> <span class="o">=</span> <span class="mi">0</span></span>
+<span class="line" data-line="25">    <span class="kr">if</span> <span class="nv">input</span>.<span class="py">isCrankDocked</span> <span class="kr">then</span></span>
+<span class="line" data-line="26">        <span class="nv">actions</span>.<span class="py">turn</span> <span class="o">=</span> <span class="nv">sideways</span> <span class="o">*</span> <span class="nv">DPAD_TURN_SPEED</span></span>
+<span class="line" data-line="27">    <span class="kr">else</span></span>
+<span class="line" data-line="28">        <span class="nv">actions</span>.<span class="py">strafe</span> <span class="o">=</span> <span class="nv">sideways</span></span>
+<span class="line" data-line="29">    <span class="kr">end</span></span>
+<span class="line" data-line="30">    <span class="nv">actions</span>.<span class="py">pickUp</span> <span class="o">=</span> <span class="nv">input</span>:<span class="nf">isPressed</span>(<span class="nv">pd</span>.<span class="py">kButtonA</span>)</span>
+<span class="line" data-line="31">    <span class="nv">actions</span>.<span class="py">drop</span> <span class="o">=</span> <span class="nv">isBTapped</span></span>
+<span class="line" data-line="32">    <span class="kr">if</span> <span class="nv">suppressItemActions</span> <span class="kr">then</span></span>
+<span class="line" data-line="33">        <span class="nv">button</span>:<span class="nf">ignoreThisPress</span>()</span>
+<span class="line" data-line="34">        <span class="nv">actions</span>.<span class="py">pickUp</span>, <span class="nv">actions</span>.<span class="py">drop</span>, <span class="nv">actions</span>.<span class="py">reel</span> <span class="o">=</span> <span class="kc">false</span>, <span class="kc">false</span>, <span class="mi">0</span></span>
+<span class="line" data-line="35">    <span class="kr">end</span></span>
+<span class="line" data-line="36">    <span class="kr">return</span> <span class="nv">actions</span></span>
+<span class="line" data-line="37"><span class="kr">end</span></span></code></pre>
+<footer class="code-footer"><span class="focus-label">Highlighted lines follow the explanation</span><button class="follow" type="button" aria-pressed="true">Follow scroll: on</button></footer></div></section><section class="section" id="section-7" data-title="Tumble actions" data-file="source/TumbleActions.lua"><div class="explanations"><h2><span>07</span> Tumble actions</h2><article class="step" id="step-7-0" data-first="13" data-last="15">
+<p class="location">source/TumbleActions.lua<br><a href="#step-7-0">Lines 13–15</a></p>
+<h3>Map the same controls for Tumble</h3><p>Crank movement rotates the maze. Left/right moves the player. A, B, or up starts a jump on a fresh press.</p></article></div><div class="code-panel"><header class="file-header"><div class="file-path"><span>source/</span><strong>TumbleActions.lua</strong></div><div class="file-meta"><span>Lua · Complete file · 17 lines</span><output class="range">Lines 13–15</output></div></header>
+<pre tabindex="0" aria-label="Complete source/TumbleActions.lua"><code class="language-lua"><span class="line" data-line="1"><span class="nv">TumbleActions</span> <span class="o">=</span> {}</span>
+<span class="line" data-line="2"><span class="nv">TumbleActions</span>.<span class="py">__index</span> <span class="o">=</span> <span class="nv">TumbleActions</span></span>
+<span class="line" data-line="3"></span>
+<span class="line" data-line="4"><span class="kd">local</span> <span class="nv">pd</span> <span class="o">&lt;</span><span class="nv">const</span><span class="o">&gt;</span> <span class="o">=</span> <span class="nv">playdate</span></span>
+<span class="line" data-line="5"></span>
+<span class="line" data-line="6"><span class="kr">function</span> <span class="nc">TumbleActions</span>.<span class="nf">new</span>(<span class="nv">controls</span>)</span>
+<span class="line" data-line="7">    <span class="kr">return</span> <span class="nb">setmetatable</span>({ <span class="nv">controls</span> <span class="o">=</span> <span class="nv">controls</span>, <span class="nv">actions</span> <span class="o">=</span> {} }, <span class="nv">TumbleActions</span>)</span>
+<span class="line" data-line="8"><span class="kr">end</span></span>
+<span class="line" data-line="9"></span>
+<span class="line" data-line="10"><span class="kr">function</span> <span class="nc">TumbleActions</span>:<span class="nf">read</span>()</span>
+<span class="line" data-line="11">    <span class="kd">local</span> <span class="nv">input</span> <span class="o">=</span> <span class="nv">self</span>.<span class="py">controls</span></span>
+<span class="line" data-line="12">    <span class="kd">local</span> <span class="nv">actions</span> <span class="o">=</span> <span class="nv">self</span>.<span class="py">actions</span></span>
+<span class="line" data-line="13">    <span class="nv">actions</span>.<span class="py">turn</span> <span class="o">=</span> <span class="nv">input</span>.<span class="py">crankChange</span></span>
+<span class="line" data-line="14">    <span class="nv">actions</span>.<span class="py">move</span> <span class="o">=</span> <span class="nv">input</span>:<span class="nf">axis</span>(<span class="nv">pd</span>.<span class="py">kButtonLeft</span>, <span class="nv">pd</span>.<span class="py">kButtonRight</span>)</span>
+<span class="line" data-line="15">    <span class="nv">actions</span>.<span class="py">jump</span> <span class="o">=</span> <span class="nv">input</span>:<span class="nf">isPressed</span>(<span class="nv">pd</span>.<span class="py">kButtonA</span>) <span class="ow">or</span> <span class="nv">input</span>:<span class="nf">isPressed</span>(<span class="nv">pd</span>.<span class="py">kButtonB</span>) <span class="ow">or</span> <span class="nv">input</span>:<span class="nf">isPressed</span>(<span class="nv">pd</span>.<span class="py">kButtonUp</span>)</span>
+<span class="line" data-line="16">    <span class="kr">return</span> <span class="nv">actions</span></span>
+<span class="line" data-line="17"><span class="kr">end</span></span></code></pre>
+<footer class="code-footer"><span class="focus-label">Highlighted lines follow the explanation</span><button class="follow" type="button" aria-pressed="true">Follow scroll: on</button></footer></div></section><section class="section" id="section-8" data-title="Slime actions" data-file="source/SlimeActions.lua"><div class="explanations"><h2><span>08</span> Slime actions</h2><article class="step" id="step-8-0" data-first="13" data-last="16">
+<p class="location">source/SlimeActions.lua<br><a href="#step-8-0">Lines 13–16</a></p>
+<h3>Map the same controls for Slime</h3><p>Crank angle sets aim, holding A keeps aiming, and a fresh B press cancels. Left/right moves along a surface.</p></article></div><div class="code-panel"><header class="file-header"><div class="file-path"><span>source/</span><strong>SlimeActions.lua</strong></div><div class="file-meta"><span>Lua · Complete file · 18 lines</span><output class="range">Lines 13–16</output></div></header>
+<pre tabindex="0" aria-label="Complete source/SlimeActions.lua"><code class="language-lua"><span class="line" data-line="1"><span class="nv">SlimeActions</span> <span class="o">=</span> {}</span>
+<span class="line" data-line="2"><span class="nv">SlimeActions</span>.<span class="py">__index</span> <span class="o">=</span> <span class="nv">SlimeActions</span></span>
+<span class="line" data-line="3"></span>
+<span class="line" data-line="4"><span class="kd">local</span> <span class="nv">pd</span> <span class="o">&lt;</span><span class="nv">const</span><span class="o">&gt;</span> <span class="o">=</span> <span class="nv">playdate</span></span>
+<span class="line" data-line="5"></span>
+<span class="line" data-line="6"><span class="kr">function</span> <span class="nc">SlimeActions</span>.<span class="nf">new</span>(<span class="nv">controls</span>)</span>
+<span class="line" data-line="7">    <span class="kr">return</span> <span class="nb">setmetatable</span>({ <span class="nv">controls</span> <span class="o">=</span> <span class="nv">controls</span>, <span class="nv">actions</span> <span class="o">=</span> {} }, <span class="nv">SlimeActions</span>)</span>
+<span class="line" data-line="8"><span class="kr">end</span></span>
+<span class="line" data-line="9"></span>
+<span class="line" data-line="10"><span class="kr">function</span> <span class="nc">SlimeActions</span>:<span class="nf">read</span>()</span>
+<span class="line" data-line="11">    <span class="kd">local</span> <span class="nv">input</span> <span class="o">=</span> <span class="nv">self</span>.<span class="py">controls</span></span>
+<span class="line" data-line="12">    <span class="kd">local</span> <span class="nv">actions</span> <span class="o">=</span> <span class="nv">self</span>.<span class="py">actions</span></span>
+<span class="line" data-line="13">    <span class="nv">actions</span>.<span class="py">aim</span> <span class="o">=</span> <span class="nv">input</span>.<span class="py">crankPosition</span></span>
+<span class="line" data-line="14">    <span class="nv">actions</span>.<span class="py">isAimHeld</span> <span class="o">=</span> <span class="nv">input</span>:<span class="nf">isDown</span>(<span class="nv">pd</span>.<span class="py">kButtonA</span>)</span>
+<span class="line" data-line="15">    <span class="nv">actions</span>.<span class="py">cancel</span> <span class="o">=</span> <span class="nv">input</span>:<span class="nf">isPressed</span>(<span class="nv">pd</span>.<span class="py">kButtonB</span>)</span>
+<span class="line" data-line="16">    <span class="nv">actions</span>.<span class="py">move</span> <span class="o">=</span> <span class="nv">input</span>:<span class="nf">axis</span>(<span class="nv">pd</span>.<span class="py">kButtonLeft</span>, <span class="nv">pd</span>.<span class="py">kButtonRight</span>)</span>
+<span class="line" data-line="17">    <span class="kr">return</span> <span class="nv">actions</span></span>
+<span class="line" data-line="18"><span class="kr">end</span></span></code></pre>
+<footer class="code-footer"><span class="focus-label">Highlighted lines follow the explanation</span><button class="follow" type="button" aria-pressed="true">Follow scroll: on</button></footer></div></section><section class="section" id="section-9" data-title="First-person rules" data-file="source/Game.lua"><div class="explanations"><h2><span>09</span> First-person rules</h2><article class="step" id="step-9-0" data-first="40" data-last="48">
+<p class="location">source/Game.lua<br><a href="#step-9-0">Lines 40–48</a></p>
+<h3>Create the world</h3><p>Generate a maze, place the player in its first cell, and combine them in a <code>Run</code>. Face an open passage at the start.</p><p>A Lua table holds state; <code>setmetatable</code> lets it find the module’s methods.</p></article><article class="step" id="step-9-1" data-first="204" data-last="216">
+<p class="location">source/Game.lua<br><a href="#step-9-1">Lines 204–216</a></p>
+<h3>Choose one movement mode</h3><p>Autopilot, thread reeling, and manual movement are exclusive branches. Manual movement scales input by <code>WALK_SPEED</code>: 0.08 blocks per frame.</p><p><code>player:move(...)</code> passes the player as <code>self</code>. The colon marks a method call.</p></article><article class="step" id="step-9-2" data-first="216" data-last="227">
+<p class="location">source/Game.lua<br><a href="#step-9-2">Lines 216–227</a></p>
+<h3>Measure what moved</h3><p>Subtract the old position and use √(dx² + dy²) for distance. Footsteps follow actual travel; a blocked push can produce a bump.</p></article><article class="step" id="step-9-3" data-first="228" data-last="238">
+<p class="location">source/Game.lua<br><a href="#step-9-3">Lines 228–238</a></p>
 <h3>Check interactions</h3><p>Record the visited cell, handle flippers and shapes, then check whether the player entered the exit block.</p><p>The drawing code reads this state after the update.</p></article></div><div class="code-panel"><header class="file-header"><div class="file-path"><span>source/</span><strong>Game.lua</strong></div><div class="file-meta"><span>Lua · Complete file · 285 lines</span><output class="range">Lines 40–48</output></div></header>
 <pre tabindex="0" aria-label="Complete source/Game.lua"><code class="language-lua"><span class="line" data-line="1"><span class="c1">-- Walking the 3D maze: a Run with the puzzle that locks the exit and, optionally, an autopilot</span></span>
 <span class="line" data-line="2"><span class="c1">-- doing the walking. update() advances it by one frame of input.</span></span>
@@ -745,14 +814,14 @@
 <span class="line" data-line="283">    <span class="nv">game</span>.<span class="py">lastBumpFrame</span> <span class="o">=</span> <span class="nv">save</span>.<span class="py">frames</span> <span class="o">-</span> <span class="nv">Game</span>.<span class="py">BUMP_FRAMES_APART</span></span>
 <span class="line" data-line="284">    <span class="kr">return</span> <span class="nv">game</span></span>
 <span class="line" data-line="285"><span class="kr">end</span></span></code></pre>
-<footer class="code-footer"><span class="focus-label">Highlighted lines follow the explanation</span><button class="follow" type="button" aria-pressed="true">Follow scroll: on</button></footer></div></section><section class="section" id="section-6" data-title="Grid and maze generation" data-file="source/Maze.lua"><div class="explanations"><h2><span>06</span> Grid and maze generation</h2><article class="step" id="step-6-0" data-first="155" data-last="157">
-<p class="location">source/Maze.lua<br><a href="#step-6-0">Lines 155–157</a></p>
-<h3>World positions to grid indices</h3><p>World x grows right; y grows down. Positions can be fractional. Grid indices start at 1.</p><p><code>(1.5, 1.5)</code> becomes block <code>(2, 2)</code>: floor each coordinate, then add one.</p></article><article class="step" id="step-6-1" data-first="40" data-last="49">
-<p class="location">source/Maze.lua<br><a href="#step-6-1">Lines 40–49</a></p>
-<h3>Rooms separated by walls</h3><p><code>pitch</code> is corridor width plus one wall block. The remainder operator <code>%</code> places wall rows and columns.</p><p>With width 1, a 3 × 2-cell maze occupies 7 × 5 blocks. Slime uses wider corridors.</p></article><article class="step" id="step-6-2" data-first="56" data-last="68">
-<p class="location">source/Maze.lua<br><a href="#step-6-2">Lines 56–68</a></p>
-<h3>Find unvisited neighbors</h3><p>Start at cell (1, 1). The last entry of <code>stack</code> is the current cell; <code>#stack</code> is the list length.</p><p>The loop gathers neighboring cells that are inside the maze and have not been visited.</p></article><article class="step" id="step-6-3" data-first="69" data-last="78">
-<p class="location">source/Maze.lua<br><a href="#step-6-3">Lines 69–78</a></p>
+<footer class="code-footer"><span class="focus-label">Highlighted lines follow the explanation</span><button class="follow" type="button" aria-pressed="true">Follow scroll: on</button></footer></div></section><section class="section" id="section-10" data-title="Grid and maze generation" data-file="source/Maze.lua"><div class="explanations"><h2><span>10</span> Grid and maze generation</h2><article class="step" id="step-10-0" data-first="155" data-last="157">
+<p class="location">source/Maze.lua<br><a href="#step-10-0">Lines 155–157</a></p>
+<h3>World positions to grid indices</h3><p>World x grows right; y grows down. Positions can be fractional. Grid indices start at 1.</p><p><code>(1.5, 1.5)</code> becomes block <code>(2, 2)</code>: floor each coordinate, then add one.</p></article><article class="step" id="step-10-1" data-first="40" data-last="49">
+<p class="location">source/Maze.lua<br><a href="#step-10-1">Lines 40–49</a></p>
+<h3>Rooms separated by walls</h3><p><code>pitch</code> is corridor width plus one wall block. The remainder operator <code>%</code> places wall rows and columns.</p><p>With width 1, a 3 × 2-cell maze occupies 7 × 5 blocks. Slime uses wider corridors.</p></article><article class="step" id="step-10-2" data-first="56" data-last="68">
+<p class="location">source/Maze.lua<br><a href="#step-10-2">Lines 56–68</a></p>
+<h3>Find unvisited neighbors</h3><p>Start at cell (1, 1). The last entry of <code>stack</code> is the current cell; <code>#stack</code> is the list length.</p><p>The loop gathers neighboring cells that are inside the maze and have not been visited.</p></article><article class="step" id="step-10-3" data-first="69" data-last="78">
+<p class="location">source/Maze.lua<br><a href="#step-10-3">Lines 69–78</a></p>
 <h3>Carve or backtrack</h3><p>Choose a random unvisited neighbor, carve the wall, and push that cell. If none remain, remove the stack’s last entry by assigning <code>nil</code>.</p><p>This is depth-first search. Connecting only new cells prevents loops: N cells get N − 1 internal passages.</p></article></div><div class="code-panel"><header class="file-header"><div class="file-path"><span>source/</span><strong>Maze.lua</strong></div><div class="file-meta"><span>Lua · Complete file · 215 lines</span><output class="range">Lines 155–157</output></div></header>
 <pre tabindex="0" aria-label="Complete source/Maze.lua"><code class="language-lua"><span class="line" data-line="1"><span class="c1">-- A perfect maze of cells, stored as a grid of unit blocks so it can be raycast or drawn.</span></span>
 <span class="line" data-line="2"><span class="c1">-- Walls are one block thick and corridors are corridorWidth blocks across: usually 1, so that</span></span>
@@ -970,14 +1039,14 @@
 <span class="line" data-line="214">    <span class="kr">return</span> <span class="nv">maze</span></span>
 <span class="line" data-line="215"><span class="kr">end</span></span></code></pre>
 <footer class="code-footer"><span class="focus-label">Highlighted lines follow the explanation</span><button class="follow" type="button" aria-pressed="true">Follow scroll: on</button></footer></div></section><section class="lab-section" id="lab-maze"><div class="lab-intro"><p class="location">source/Maze.lua · Interactive model</p><h2>Watch the stack work</h2><p>Step through carving and backtracking. Cyan marks the current stack; gold marks its last cell.</p></div><div class="lab"><canvas id="maze-demo" width="720" height="310" role="img" aria-label="Step-by-step depth-first maze generation"></canvas><div class="controls"><button id="maze-step">Next step</button><button id="maze-reset">Start over</button><output id="maze-status" aria-live="polite"></output></div></div>
-</section><section class="section" id="section-7" data-title="Movement and collision" data-file="source/Player.lua"><div class="explanations"><h2><span>07</span> Movement and collision</h2><article class="step" id="step-7-0" data-first="21" data-last="26">
-<p class="location">source/Player.lua<br><a href="#step-7-0">Lines 21–26</a></p>
-<h3>Check the body’s four corners</h3><p>The player is a square, 0.4 blocks wide. Test all four corners at the proposed position. Walls and closed doors block movement.</p></article><article class="step" id="step-7-1" data-first="32" data-last="44">
-<p class="location">source/Player.lua<br><a href="#step-7-1">Lines 32–44</a></p>
-<h3>Stop at the wall edge</h3><p>Try the target first. If blocked, calculate a position just short of the wall. <code>GAP</code> avoids rounding a touching body into it.</p><p>This checks destinations, not the entire path. The game must use small movement steps.</p></article><article class="step" id="step-7-2" data-first="47" data-last="53">
-<p class="location">source/Player.lua<br><a href="#step-7-2">Lines 47–53</a></p>
-<h3>Slide along walls</h3><p>Move x first, then y using the updated x. A wall can block one axis while allowing movement along the other.</p></article><article class="step" id="step-7-3" data-first="61" data-last="65">
-<p class="location">source/Player.lua<br><a href="#step-7-3">Lines 61–65</a></p>
+</section><section class="section" id="section-11" data-title="Movement and collision" data-file="source/Player.lua"><div class="explanations"><h2><span>11</span> Movement and collision</h2><article class="step" id="step-11-0" data-first="21" data-last="26">
+<p class="location">source/Player.lua<br><a href="#step-11-0">Lines 21–26</a></p>
+<h3>Check the body’s four corners</h3><p>The player is a square, 0.4 blocks wide. Test all four corners at the proposed position. Walls and closed doors block movement.</p></article><article class="step" id="step-11-1" data-first="32" data-last="44">
+<p class="location">source/Player.lua<br><a href="#step-11-1">Lines 32–44</a></p>
+<h3>Stop at the wall edge</h3><p>Try the target first. If blocked, calculate a position just short of the wall. <code>GAP</code> avoids rounding a touching body into it.</p><p>This checks destinations, not the entire path. The game must use small movement steps.</p></article><article class="step" id="step-11-2" data-first="47" data-last="53">
+<p class="location">source/Player.lua<br><a href="#step-11-2">Lines 47–53</a></p>
+<h3>Slide along walls</h3><p>Move x first, then y using the updated x. A wall can block one axis while allowing movement along the other.</p></article><article class="step" id="step-11-3" data-first="61" data-last="65">
+<p class="location">source/Player.lua<br><a href="#step-11-3">Lines 61–65</a></p>
 <h3>Rotate forward and sideways motion</h3><p><code>cos(angle)</code> gives the horizontal part of forward; <code>sin(angle)</code> gives its vertical part. Lua takes radians, so convert degrees first.</p><p>Forward = (cos θ, sin θ). Right = (−sin θ, cos θ). At 90°, forward is down and right is left on the map.</p></article></div><div class="code-panel"><header class="file-header"><div class="file-path"><span>source/</span><strong>Player.lua</strong></div><div class="file-meta"><span>Lua · Complete file · 69 lines</span><output class="range">Lines 21–26</output></div></header>
 <pre tabindex="0" aria-label="Complete source/Player.lua"><code class="language-lua"><span class="line" data-line="1"><span class="c1">-- Where the player stands and which way they look.</span></span>
 <span class="line" data-line="2"><span class="c1">-- Angles are in degrees, 0 facing east and growing clockwise. The body is a square of</span></span>
@@ -1049,12 +1118,12 @@
 <span class="line" data-line="68">    <span class="kr">return</span> <span class="nv">FACINGS</span>[<span class="nb">math.floor</span>((<span class="nv">self</span>.<span class="py">angle</span> <span class="o">+</span> <span class="mi">45</span>) <span class="o">/</span> <span class="mi">90</span>) <span class="o">%</span> <span class="mi">4</span> <span class="o">+</span> <span class="mi">1</span>]</span>
 <span class="line" data-line="69"><span class="kr">end</span></span></code></pre>
 <footer class="code-footer"><span class="focus-label">Highlighted lines follow the explanation</span><button class="follow" type="button" aria-pressed="true">Follow scroll: on</button></footer></div></section><section class="lab-section" id="lab-movement"><div class="lab-intro"><p class="location">source/Player.lua · Interactive model</p><h2>Direction and angle</h2><p>Change the heading. Compare the forward vector with its horizontal and vertical components.</p></div><div class="lab"><label for="angle">Heading <output id="angle-label">35°</output></label><input id="angle" type="range" min="0" max="360" value="35"><canvas id="trig-demo" width="720" height="300" role="img" aria-label="Direction vector with cosine and sine components"></canvas><p id="trig-values" class="readout"></p></div>
-</section><section class="section" id="section-8" data-title="Shortest corridor distances" data-file="source/ExitDistance.lua"><div class="explanations"><h2><span>08</span> Shortest corridor distances</h2><article class="step" id="step-8-0" data-first="13" data-last="18">
-<p class="location">source/ExitDistance.lua<br><a href="#step-8-0">Lines 13–18</a></p>
-<h3>Start a queue at the exit</h3><p>The exit cell has distance zero. Process the oldest queued cell first by advancing <code>head</code>.</p><p>This is breadth-first search: visit distance 0, then 1, then 2, and so on.</p></article><article class="step" id="step-8-1" data-first="23" data-last="27">
-<p class="location">source/ExitDistance.lua<br><a href="#step-8-1">Lines 23–27</a></p>
-<h3>Visit each reachable neighbor once</h3><p>Follow passages, assign the neighbor’s distance, and enqueue it. Every passage costs one step, so the first assigned distance is shortest.</p><p>Zero is true in Lua. The exit’s zero distance therefore still marks it as visited.</p></article><article class="step" id="step-8-2" data-first="39" data-last="42">
-<p class="location">source/ExitDistance.lua<br><a href="#step-8-2">Lines 39–42</a></p>
+</section><section class="section" id="section-12" data-title="Shortest corridor distances" data-file="source/ExitDistance.lua"><div class="explanations"><h2><span>12</span> Shortest corridor distances</h2><article class="step" id="step-12-0" data-first="13" data-last="18">
+<p class="location">source/ExitDistance.lua<br><a href="#step-12-0">Lines 13–18</a></p>
+<h3>Start a queue at the exit</h3><p>The exit cell has distance zero. Process the oldest queued cell first by advancing <code>head</code>.</p><p>This is breadth-first search: visit distance 0, then 1, then 2, and so on.</p></article><article class="step" id="step-12-1" data-first="23" data-last="27">
+<p class="location">source/ExitDistance.lua<br><a href="#step-12-1">Lines 23–27</a></p>
+<h3>Visit each reachable neighbor once</h3><p>Follow passages, assign the neighbor’s distance, and enqueue it. Every passage costs one step, so the first assigned distance is shortest.</p><p>Zero is true in Lua. The exit’s zero distance therefore still marks it as visited.</p></article><article class="step" id="step-12-2" data-first="39" data-last="42">
+<p class="location">source/ExitDistance.lua<br><a href="#step-12-2">Lines 39–42</a></p>
 <h3>Convert distance to proximity</h3><p>Proximity is 1 at the exit’s cell and 0 at the farthest cell. Music follows this corridor distance rather than straight-line distance through walls.</p></article></div><div class="code-panel"><header class="file-header"><div class="file-path"><span>source/</span><strong>ExitDistance.lua</strong></div><div class="file-meta"><span>Lua · Complete file · 42 lines</span><output class="range">Lines 13–18</output></div></header>
 <pre tabindex="0" aria-label="Complete source/ExitDistance.lua"><code class="language-lua"><span class="line" data-line="1"><span class="c1">-- How far every cell of a maze is from the exit, walking along the corridors: the music follows</span></span>
 <span class="line" data-line="2"><span class="c1">-- this, so it must not be fooled by a cell that is next door to the exit but a long walk away.</span></span>
@@ -1098,10 +1167,10 @@
 <span class="line" data-line="40">    <span class="kd">local</span> <span class="nv">column</span>, <span class="nv">row</span> <span class="o">=</span> <span class="nv">self</span>.<span class="py">maze</span>:<span class="nf">nearestCell</span>(<span class="nv">x</span>, <span class="nv">y</span>)</span>
 <span class="line" data-line="41">    <span class="kr">return</span> <span class="mi">1</span> <span class="o">-</span> <span class="nv">self</span>:<span class="nf">cells</span>(<span class="nv">column</span>, <span class="nv">row</span>) <span class="o">/</span> <span class="nv">self</span>.<span class="py">farthest</span></span>
 <span class="line" data-line="42"><span class="kr">end</span></span></code></pre>
-<footer class="code-footer"><span class="focus-label">Highlighted lines follow the explanation</span><button class="follow" type="button" aria-pressed="true">Follow scroll: on</button></footer></div></section><section class="section" id="section-9" data-title="Wall-following navigation" data-file="source/Autopilot.lua"><div class="explanations"><h2><span>09</span> Wall-following navigation</h2><article class="step" id="step-9-0" data-first="17" data-last="25">
-<p class="location">source/Autopilot.lua<br><a href="#step-9-0">Lines 17–25</a></p>
-<h3>Try left, ahead, right, back</h3><p>The numbers are quarter-turn offsets from the current heading. Choose the first open passage.</p><p>This works for the game’s tree-shaped maze, but does not choose the shortest route.</p></article><article class="step" id="step-9-1" data-first="53" data-last="57">
-<p class="location">source/Autopilot.lua<br><a href="#step-9-1">Lines 53–57</a></p>
+<footer class="code-footer"><span class="focus-label">Highlighted lines follow the explanation</span><button class="follow" type="button" aria-pressed="true">Follow scroll: on</button></footer></div></section><section class="section" id="section-13" data-title="Wall-following navigation" data-file="source/Autopilot.lua"><div class="explanations"><h2><span>13</span> Wall-following navigation</h2><article class="step" id="step-13-0" data-first="17" data-last="25">
+<p class="location">source/Autopilot.lua<br><a href="#step-13-0">Lines 17–25</a></p>
+<h3>Try left, ahead, right, back</h3><p>The numbers are quarter-turn offsets from the current heading. Choose the first open passage.</p><p>This works for the game’s tree-shaped maze, but does not choose the shortest route.</p></article><article class="step" id="step-13-1" data-first="53" data-last="57">
+<p class="location">source/Autopilot.lua<br><a href="#step-13-1">Lines 53–57</a></p>
 <h3>Turn by the shorter angle</h3><p>Wrap the turn into [−180°, 180°). From 350° to 10°, the result is +20°.</p><p>Limit turning to six degrees per frame before moving toward the next cell center.</p></article></div><div class="code-panel"><header class="file-header"><div class="file-path"><span>source/</span><strong>Autopilot.lua</strong></div><div class="file-meta"><span>Lua · Complete file · 63 lines</span><output class="range">Lines 17–25</output></div></header>
 <pre tabindex="0" aria-label="Complete source/Autopilot.lua"><code class="language-lua"><span class="line" data-line="1"><span class="c1">-- Walks the player through the maze like a screensaver, keeping its left hand on the wall.</span></span>
 <span class="line" data-line="2"><span class="c1">-- A perfect maze is a tree, so following one wall visits every cell. Each update() moves the</span></span>
@@ -1166,10 +1235,10 @@
 <span class="line" data-line="61">    <span class="nv">self</span>.<span class="py">targetX</span>, <span class="nv">self</span>.<span class="py">targetY</span> <span class="o">=</span> <span class="nv">self</span>.<span class="py">maze</span>:<span class="nf">cellCenter</span>(<span class="nv">self</span>.<span class="py">column</span>, <span class="nv">self</span>.<span class="py">row</span>)</span>
 <span class="line" data-line="62">    <span class="nv">self</span>.<span class="py">direction</span> <span class="o">=</span> <span class="kc">nil</span></span>
 <span class="line" data-line="63"><span class="kr">end</span></span></code></pre>
-<footer class="code-footer"><span class="focus-label">Highlighted lines follow the explanation</span><button class="follow" type="button" aria-pressed="true">Follow scroll: on</button></footer></div></section><section class="section" id="section-10" data-title="Recording and reversing a path" data-file="source/Thread.lua"><div class="explanations"><h2><span>10</span> Recording and reversing a path</h2><article class="step" id="step-10-0" data-first="35" data-last="49">
-<p class="location">source/Thread.lua<br><a href="#step-10-0">Lines 35–49</a></p>
-<h3>Add points; remove retraced points</h3><p>Record a point every 0.25 blocks. Moving closer to the previous point removes the last point.</p><p>The list is capped at 800 points; older trail positions are eventually forgotten.</p></article><article class="step" id="step-10-1" data-first="60" data-last="66">
-<p class="location">source/Thread.lua<br><a href="#step-10-1">Lines 60–66</a></p>
+<footer class="code-footer"><span class="focus-label">Highlighted lines follow the explanation</span><button class="follow" type="button" aria-pressed="true">Follow scroll: on</button></footer></div></section><section class="section" id="section-14" data-title="Recording and reversing a path" data-file="source/Thread.lua"><div class="explanations"><h2><span>14</span> Recording and reversing a path</h2><article class="step" id="step-14-0" data-first="35" data-last="49">
+<p class="location">source/Thread.lua<br><a href="#step-14-0">Lines 35–49</a></p>
+<h3>Add points; remove retraced points</h3><p>Record a point every 0.25 blocks. Moving closer to the previous point removes the last point.</p><p>The list is capped at 800 points; older trail positions are eventually forgotten.</p></article><article class="step" id="step-14-1" data-first="60" data-last="66">
+<p class="location">source/Thread.lua<br><a href="#step-14-1">Lines 60–66</a></p>
 <h3>Stop partway along a segment</h3><p>If the segment is longer than the reel distance, move a fraction of the way toward its end.</p><p><code>share = distance / stretch</code>. Reeling 0.1 blocks along 0.25 blocks moves 40% of the segment.</p></article></div><div class="code-panel"><header class="file-header"><div class="file-path"><span>source/</span><strong>Thread.lua</strong></div><div class="file-meta"><span>Lua · Complete file · 80 lines</span><output class="range">Lines 35–49</output></div></header>
 <pre tabindex="0" aria-label="Complete source/Thread.lua"><code class="language-lua"><span class="line" data-line="1"><span class="c1">-- Ariadne&#39;s thread: the way back to where the player started. It is laid as the player walks and</span></span>
 <span class="line" data-line="2"><span class="c1">-- winds itself back in when they retrace their steps, so in a maze without loops it is always</span></span>
@@ -1251,12 +1320,12 @@
 <span class="line" data-line="78">    <span class="nb">assert</span>(<span class="o">#</span><span class="nv">points</span> <span class="o">&gt;=</span> <span class="mi">1</span>, <span class="s2">&quot;a thread has at least the point it started from&quot;</span>)</span>
 <span class="line" data-line="79">    <span class="kr">return</span> <span class="nb">setmetatable</span>({ <span class="nv">points</span> <span class="o">=</span> <span class="nv">points</span> }, <span class="nv">Thread</span>)</span>
 <span class="line" data-line="80"><span class="kr">end</span></span></code></pre>
-<footer class="code-footer"><span class="focus-label">Highlighted lines follow the explanation</span><button class="follow" type="button" aria-pressed="true">Follow scroll: on</button></footer></div></section><section class="section" id="section-11" data-title="Rotating gravity" data-file="source/Tumble.lua"><div class="explanations"><h2><span>11</span> Rotating gravity</h2><article class="step" id="step-11-0" data-first="84" data-last="92">
-<p class="location">source/Tumble.lua<br><a href="#step-11-0">Lines 84–92</a></p>
-<h3>Convert screen directions to maze directions</h3><p>The view rotates clockwise by <code>angle</code>. Gravity must still point down the screen.</p><p>In maze coordinates, down = (sin θ, cos θ). At 90°, gravity points east. Right = (cos θ, −sin θ).</p></article><article class="step" id="step-11-1" data-first="95" data-last="104">
-<p class="location">source/Tumble.lua<br><a href="#step-11-1">Lines 95–104</a></p>
-<h3>Change the sideways velocity</h3><p>The dot product measures velocity along the screen’s right direction: multiply corresponding components and add.</p><p>Walking changes that component toward the desired speed. With no input, friction reduces it.</p></article><article class="step" id="step-11-2" data-first="105" data-last="114">
-<p class="location">source/Tumble.lua<br><a href="#step-11-2">Lines 105–114</a></p>
+<footer class="code-footer"><span class="focus-label">Highlighted lines follow the explanation</span><button class="follow" type="button" aria-pressed="true">Follow scroll: on</button></footer></div></section><section class="section" id="section-15" data-title="Rotating gravity" data-file="source/Tumble.lua"><div class="explanations"><h2><span>15</span> Rotating gravity</h2><article class="step" id="step-15-0" data-first="84" data-last="92">
+<p class="location">source/Tumble.lua<br><a href="#step-15-0">Lines 84–92</a></p>
+<h3>Convert screen directions to maze directions</h3><p>The view rotates clockwise by <code>angle</code>. Gravity must still point down the screen.</p><p>In maze coordinates, down = (sin θ, cos θ). At 90°, gravity points east. Right = (cos θ, −sin θ).</p></article><article class="step" id="step-15-1" data-first="95" data-last="104">
+<p class="location">source/Tumble.lua<br><a href="#step-15-1">Lines 95–104</a></p>
+<h3>Change the sideways velocity</h3><p>The dot product measures velocity along the screen’s right direction: multiply corresponding components and add.</p><p>Walking changes that component toward the desired speed. With no input, friction reduces it.</p></article><article class="step" id="step-15-2" data-first="105" data-last="114">
+<p class="location">source/Tumble.lua<br><a href="#step-15-2">Lines 105–114</a></p>
 <h3>Jump, then cap speed</h3><p>Replace the downward velocity with an upward jump speed. Limit total speed to 0.35 blocks per frame before collision checks.</p></article></div><div class="code-panel"><header class="file-header"><div class="file-path"><span>source/</span><strong>Tumble.lua</strong></div><div class="file-meta"><span>Lua · Complete file · 128 lines</span><output class="range">Lines 84–92</output></div></header>
 <pre tabindex="0" aria-label="Complete source/Tumble.lua"><code class="language-lua"><span class="line" data-line="1"><span class="c1">-- The maze as a platformer, seen from the side. Left and right walk, a button jumps, and gravity</span></span>
 <span class="line" data-line="2"><span class="c1">-- always pulls down the screen. The crank turns the whole maze around the player, which inside</span></span>
@@ -1386,10 +1455,10 @@
 <span class="line" data-line="126">    <span class="nv">self</span>.<span class="py">hasEscaped</span> <span class="o">=</span> <span class="nv">self</span>.<span class="py">maze</span>:<span class="nf">isExit</span>(<span class="nv">self</span>.<span class="py">player</span>.<span class="py">x</span>, <span class="nv">self</span>.<span class="py">player</span>.<span class="py">y</span>)</span>
 <span class="line" data-line="127">    <span class="kr">if</span> <span class="nv">self</span>.<span class="py">hasEscaped</span> <span class="kr">then</span> <span class="nv">self</span>:<span class="nf">emit</span>(<span class="s2">&quot;escape&quot;</span>) <span class="kr">end</span></span>
 <span class="line" data-line="128"><span class="kr">end</span></span></code></pre>
-<footer class="code-footer"><span class="focus-label">Highlighted lines follow the explanation</span><button class="follow" type="button" aria-pressed="true">Follow scroll: on</button></footer></div></section><section class="section" id="section-12" data-title="2D drawing coordinates" data-file="source/SideView.lua"><div class="explanations"><h2><span>12</span> 2D drawing coordinates</h2><article class="step" id="step-12-0" data-first="41" data-last="44">
-<p class="location">source/SideView.lua<br><a href="#step-12-0">Lines 41–44</a></p>
-<h3>Translate, rotate, scale</h3><p>Subtract the player position, rotate the offset, multiply by pixels per block, then add screen center (200, 120).</p><p>The player stays centered while the maze rotates around them.</p></article><article class="step" id="step-12-1" data-first="48" data-last="54">
-<p class="location">source/SideView.lua<br><a href="#step-12-1">Lines 48–54</a></p>
+<footer class="code-footer"><span class="focus-label">Highlighted lines follow the explanation</span><button class="follow" type="button" aria-pressed="true">Follow scroll: on</button></footer></div></section><section class="section" id="section-16" data-title="2D drawing coordinates" data-file="source/SideView.lua"><div class="explanations"><h2><span>16</span> 2D drawing coordinates</h2><article class="step" id="step-16-0" data-first="41" data-last="44">
+<p class="location">source/SideView.lua<br><a href="#step-16-0">Lines 41–44</a></p>
+<h3>Translate, rotate, scale</h3><p>Subtract the player position, rotate the offset, multiply by pixels per block, then add screen center (200, 120).</p><p>The player stays centered while the maze rotates around them.</p></article><article class="step" id="step-16-1" data-first="48" data-last="54">
+<p class="location">source/SideView.lua<br><a href="#step-16-1">Lines 48–54</a></p>
 <h3>A rotated rectangle becomes a polygon</h3><p>Transform all four corners with the same function. Draw the resulting polygon to show a corridor.</p></article></div><div class="code-panel"><header class="file-header"><div class="file-path"><span>source/</span><strong>SideView.lua</strong></div><div class="file-meta"><span>Lua · Complete file · 113 lines</span><output class="range">Lines 41–44</output></div></header>
 <pre tabindex="0" aria-label="Complete source/SideView.lua"><code class="language-lua"><span class="line" data-line="1"><span class="c1">-- Draws a maze from the side, for the modes played that way: the screen starts as solid wall and</span></span>
 <span class="line" data-line="2"><span class="c1">-- the corridors are cut out of it as white rectangles, one for each of the maze&#39;s open runs, so</span></span>
@@ -1504,12 +1573,12 @@
 <span class="line" data-line="111">    <span class="nf">drawExit</span>(<span class="nv">run</span>.<span class="py">maze</span>)</span>
 <span class="line" data-line="112">    <span class="nf">drawShapes</span>()</span>
 <span class="line" data-line="113"><span class="kr">end</span></span></code></pre>
-<footer class="code-footer"><span class="focus-label">Highlighted lines follow the explanation</span><button class="follow" type="button" aria-pressed="true">Follow scroll: on</button></footer></div></section><section class="section" id="section-13" data-title="Throwing and trajectory prediction" data-file="source/Slime.lua"><div class="explanations"><h2><span>13</span> Throwing and trajectory prediction</h2><article class="step" id="step-13-0" data-first="85" data-last="88">
-<p class="location">source/Slime.lua<br><a href="#step-13-0">Lines 85–88</a></p>
-<h3>Convert the crank angle to velocity</h3><p>Slime uses 0° up, unlike the first-person camera’s 0° east. Its launch direction is (sin θ, −cos θ).</p><p>Multiply by <code>THROW_SPEED</code> to get blocks per frame.</p></article><article class="step" id="step-13-1" data-first="92" data-last="108">
-<p class="location">source/Slime.lua<br><a href="#step-13-1">Lines 92–108</a></p>
-<h3>Simulate one frame</h3><p>Add gravity, cap speed, then call the shared collision method. A downward hit is a floor; other blocked directions identify walls or the ceiling.</p></article><article class="step" id="step-13-2" data-first="112" data-last="124">
-<p class="location">source/Slime.lua<br><a href="#step-13-2">Lines 112–124</a></p>
+<footer class="code-footer"><span class="focus-label">Highlighted lines follow the explanation</span><button class="follow" type="button" aria-pressed="true">Follow scroll: on</button></footer></div></section><section class="section" id="section-17" data-title="Throwing and trajectory prediction" data-file="source/Slime.lua"><div class="explanations"><h2><span>17</span> Throwing and trajectory prediction</h2><article class="step" id="step-17-0" data-first="85" data-last="88">
+<p class="location">source/Slime.lua<br><a href="#step-17-0">Lines 85–88</a></p>
+<h3>Convert the crank angle to velocity</h3><p>Slime uses 0° up, unlike the first-person camera’s 0° east. Its launch direction is (sin θ, −cos θ).</p><p>Multiply by <code>THROW_SPEED</code> to get blocks per frame.</p></article><article class="step" id="step-17-1" data-first="92" data-last="108">
+<p class="location">source/Slime.lua<br><a href="#step-17-1">Lines 92–108</a></p>
+<h3>Simulate one frame</h3><p>Add gravity, cap speed, then call the shared collision method. A downward hit is a floor; other blocked directions identify walls or the ceiling.</p></article><article class="step" id="step-17-2" data-first="112" data-last="124">
+<p class="location">source/Slime.lua<br><a href="#step-17-2">Lines 112–124</a></p>
 <h3>Preview with the same simulation</h3><p>A spare player, <code>scout</code>, starts at the current position and repeats <code>fly</code> until collision or 240 frames.</p><p>The real flight uses this same function. The preview therefore includes the same gravity, speed cap, and collisions.</p></article></div><div class="code-panel"><header class="file-header"><div class="file-path"><span>source/</span><strong>Slime.lua</strong></div><div class="file-meta"><span>Lua · Complete file · 242 lines</span><output class="range">Lines 85–88</output></div></header>
 <pre tabindex="0" aria-label="Complete source/Slime.lua"><code class="language-lua"><span class="line" data-line="1"><span class="c1">-- The maze as a side-on throwing game. You are a slime: hold A and the crank handle points the</span></span>
 <span class="line" data-line="2"><span class="c1">-- way you will throw yourself, along the arc shown; let go to fly, always at full power. There is</span></span>
@@ -1753,12 +1822,12 @@
 <span class="line" data-line="240">    <span class="nv">self</span>.<span class="py">hasEscaped</span> <span class="o">=</span> <span class="nv">self</span>.<span class="py">maze</span>:<span class="nf">isExit</span>(<span class="nv">self</span>.<span class="py">player</span>.<span class="py">x</span>, <span class="nv">self</span>.<span class="py">player</span>.<span class="py">y</span>)</span>
 <span class="line" data-line="241">    <span class="kr">if</span> <span class="nv">self</span>.<span class="py">hasEscaped</span> <span class="kr">then</span> <span class="nv">self</span>:<span class="nf">emit</span>(<span class="s2">&quot;escape&quot;</span>) <span class="kr">end</span></span>
 <span class="line" data-line="242"><span class="kr">end</span></span></code></pre>
-<footer class="code-footer"><span class="focus-label">Highlighted lines follow the explanation</span><button class="follow" type="button" aria-pressed="true">Follow scroll: on</button></footer></div></section><section class="section" id="section-14" data-title="Shape states" data-file="source/Puzzle.lua"><div class="explanations"><h2><span>14</span> Shape states</h2><article class="step" id="step-14-0" data-first="103" data-last="109">
-<p class="location">source/Puzzle.lua<br><a href="#step-14-0">Lines 103–109</a></p>
-<h3>Ground → carried</h3><p>Find an item within reach, change its state, and remember it in <code>self.carried</code>. Only one item can be carried.</p></article><article class="step" id="step-14-1" data-first="136" data-last="143">
-<p class="location">source/Puzzle.lua<br><a href="#step-14-1">Lines 136–143</a></p>
-<h3>Carried → placed</h3><p>A matching empty pedestal within reach receives the item. Mark both as filled or placed, then empty the player’s hands.</p></article><article class="step" id="step-14-2" data-first="152" data-last="157">
-<p class="location">source/Puzzle.lua<br><a href="#step-14-2">Lines 152–157</a></p>
+<footer class="code-footer"><span class="focus-label">Highlighted lines follow the explanation</span><button class="follow" type="button" aria-pressed="true">Follow scroll: on</button></footer></div></section><section class="section" id="section-18" data-title="Shape states" data-file="source/Puzzle.lua"><div class="explanations"><h2><span>18</span> Shape states</h2><article class="step" id="step-18-0" data-first="103" data-last="109">
+<p class="location">source/Puzzle.lua<br><a href="#step-18-0">Lines 103–109</a></p>
+<h3>Ground → carried</h3><p>Find an item within reach, change its state, and remember it in <code>self.carried</code>. Only one item can be carried.</p></article><article class="step" id="step-18-1" data-first="136" data-last="143">
+<p class="location">source/Puzzle.lua<br><a href="#step-18-1">Lines 136–143</a></p>
+<h3>Carried → placed</h3><p>A matching empty pedestal within reach receives the item. Mark both as filled or placed, then empty the player’s hands.</p></article><article class="step" id="step-18-2" data-first="152" data-last="157">
+<p class="location">source/Puzzle.lua<br><a href="#step-18-2">Lines 152–157</a></p>
 <h3>Check all shapes</h3><p>Any shape not placed means the puzzle is unfinished. In first-person play, solving it unlocks the gate; the player must still crank it open.</p></article></div><div class="code-panel"><header class="file-header"><div class="file-path"><span>source/</span><strong>Puzzle.lua</strong></div><div class="file-meta"><span>Lua · Complete file · 173 lines</span><output class="range">Lines 103–109</output></div></header>
 <pre tabindex="0" aria-label="Complete source/Puzzle.lua"><code class="language-lua"><span class="line" data-line="1"><span class="c1">-- The way out: three shapes lie around the maze and each has a pedestal somewhere else.</span></span>
 <span class="line" data-line="2"><span class="c1">-- The player carries one shape at a time. Standing every shape on its own pedestal solves it.</span></span>
@@ -1933,28 +2002,28 @@
 <span class="line" data-line="171">    <span class="kr">if</span> <span class="nv">save</span>.<span class="py">carriedIndex</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="kr">then</span> <span class="nv">puzzle</span>.<span class="py">carried</span> <span class="o">=</span> <span class="nv">save</span>.<span class="py">items</span>[<span class="nv">save</span>.<span class="py">carriedIndex</span>] <span class="kr">end</span></span>
 <span class="line" data-line="172">    <span class="kr">return</span> <span class="nv">puzzle</span></span>
 <span class="line" data-line="173"><span class="kr">end</span></span></code></pre>
-<footer class="code-footer"><span class="focus-label">Highlighted lines follow the explanation</span><button class="follow" type="button" aria-pressed="true">Follow scroll: on</button></footer></div></section><section class="section" id="section-15" data-title="Rays and perspective" data-file="source/Raycaster.lua"><div class="explanations"><h2><span>15</span> Rays and perspective</h2><article class="step" id="step-15-0" data-first="69" data-last="73">
-<p class="location">source/Raycaster.lua<br><a href="#step-15-0">Lines 69–73</a></p>
-<h3>Build the camera directions</h3><p>Forward = (cos θ, sin θ). The camera plane is perpendicular to forward and has half-width <code>tan(FOV / 2)</code>.</p><p>For 70° FOV, tan(35°) ≈ 0.700. Tangent is opposite ÷ adjacent: plane half-width divided by one unit forward.</p></article><article class="step" id="step-15-1" data-first="76" data-last="79">
-<p class="location">source/Raycaster.lua<br><a href="#step-15-1">Lines 76–79</a></p>
-<h3>Aim one ray through the screen</h3><p><code>cameraX</code> maps screen x to −1 at the left edge, 0 at center, and +1 at the right edge.</p><p>Add that share of the camera plane to forward. The resulting ray direction is deliberately not normalized.</p></article><article class="step" id="step-15-2" data-first="21" data-last="23">
-<p class="location">source/Raycaster.lua<br><a href="#step-15-2">Lines 21–23</a></p>
-<h3>Calculate grid-crossing intervals</h3><p>Write a ray as position + t × direction. Crossing one block in x takes <code>abs(1 / directionX)</code> units of t.</p><p>A zero component gets infinity: an exactly horizontal ray never crosses a horizontal grid line.</p></article><article class="step" id="step-15-3" data-first="25" data-last="34">
-<p class="location">source/Raycaster.lua<br><a href="#step-15-3">Lines 25–34</a></p>
-<h3>Find the first boundaries</h3><p>Choose −1 or +1 for each grid direction. Multiply the distance to the first boundary by that axis’s interval.</p><p>From x = 1.5 pointing east with directionX = 1, the first x boundary is reached at t = 0.5.</p></article><article class="step" id="step-15-4" data-first="39" data-last="47">
-<p class="location">source/Raycaster.lua<br><a href="#step-15-4">Lines 39–47</a></p>
-<h3>Visit the next crossed block</h3><p>Advance whichever boundary comes first, then schedule its next crossing. This is DDA: digital differential analysis.</p><p>It jumps from boundary to boundary instead of taking tiny steps through empty space.</p></article><article class="step" id="step-15-5" data-first="48" data-last="52">
-<p class="location">source/Raycaster.lua<br><a href="#step-15-5">Lines 48–52</a></p>
-<h3>Stop at the first nonempty block</h3><p>Return the hit and t. Subtract the delta because the next boundary time was already advanced.</p><p>EXIT also stops a ray, although the player can enter it. The renderer draws it as white light.</p></article><article class="step" id="step-15-6" data-first="77" data-last="78">
-<p class="location">source/Raycaster.lua<br><a href="#step-15-6">Lines 77–78</a></p>
-<h3>Equal screen spacing, unequal angles</h3><p>Pixels are evenly spaced on a flat camera plane. The angle of a ray is <code>atan(cameraX × tan(FOV / 2))</code> relative to forward.</p><p>At 70° FOV, halfway from center to edge is about 19.3°, not 17.5°. Incrementing the angle by a fixed amount would not match this projection.</p></article><article class="step" id="step-15-7" data-first="78" data-last="78">
-<p class="location">source/Raycaster.lua<br><a href="#step-15-7">Lines 78–78</a></p>
-<h3>Why t is the correct depth</h3><p>Forward has length 1; the plane is perpendicular to it. Thus dot(forward, ray) = 1, and a hit at t × ray has forward depth t.</p><p>A flat wall ahead keeps the same depth across the screen. Using diagonal travel distance would shrink its edges: the fisheye error.</p></article><article class="step" id="step-15-8" data-first="103" data-last="109">
-<p class="location">source/Raycaster.lua<br><a href="#step-15-8">Lines 103–109</a></p>
-<h3>Group samples by wall face</h3><p>Save each column’s depth. Consecutive hits on the same block face form a run, drawn later as one trapezoid.</p><p>At 400 pixels with 4-pixel columns, there are 100 depth samples plus edge and refinement rays.</p></article><article class="step" id="step-15-9" data-first="110" data-last="122">
-<p class="location">source/Raycaster.lua<br><a href="#step-15-9">Lines 110–122</a></p>
-<h3>Refine the edge by bisection</h3><p>Cast halfway between the two samples. Replace one endpoint, then repeat. Two refinements reduce the search interval to a quarter.</p><p>A thin third face can be folded into the boundary; this is sampled visibility.</p></article><article class="step" id="step-15-10" data-first="141" data-last="146">
-<p class="location">source/Raycaster.lua<br><a href="#step-15-10">Lines 141–146</a></p>
+<footer class="code-footer"><span class="focus-label">Highlighted lines follow the explanation</span><button class="follow" type="button" aria-pressed="true">Follow scroll: on</button></footer></div></section><section class="section" id="section-19" data-title="Rays and perspective" data-file="source/Raycaster.lua"><div class="explanations"><h2><span>19</span> Rays and perspective</h2><article class="step" id="step-19-0" data-first="69" data-last="73">
+<p class="location">source/Raycaster.lua<br><a href="#step-19-0">Lines 69–73</a></p>
+<h3>Build the camera directions</h3><p>Forward = (cos θ, sin θ). The camera plane is perpendicular to forward and has half-width <code>tan(FOV / 2)</code>.</p><p>For 70° FOV, tan(35°) ≈ 0.700. Tangent is opposite ÷ adjacent: plane half-width divided by one unit forward.</p></article><article class="step" id="step-19-1" data-first="76" data-last="79">
+<p class="location">source/Raycaster.lua<br><a href="#step-19-1">Lines 76–79</a></p>
+<h3>Aim one ray through the screen</h3><p><code>cameraX</code> maps screen x to −1 at the left edge, 0 at center, and +1 at the right edge.</p><p>Add that share of the camera plane to forward. The resulting ray direction is deliberately not normalized.</p></article><article class="step" id="step-19-2" data-first="21" data-last="23">
+<p class="location">source/Raycaster.lua<br><a href="#step-19-2">Lines 21–23</a></p>
+<h3>Calculate grid-crossing intervals</h3><p>Write a ray as position + t × direction. Crossing one block in x takes <code>abs(1 / directionX)</code> units of t.</p><p>A zero component gets infinity: an exactly horizontal ray never crosses a horizontal grid line.</p></article><article class="step" id="step-19-3" data-first="25" data-last="34">
+<p class="location">source/Raycaster.lua<br><a href="#step-19-3">Lines 25–34</a></p>
+<h3>Find the first boundaries</h3><p>Choose −1 or +1 for each grid direction. Multiply the distance to the first boundary by that axis’s interval.</p><p>From x = 1.5 pointing east with directionX = 1, the first x boundary is reached at t = 0.5.</p></article><article class="step" id="step-19-4" data-first="39" data-last="47">
+<p class="location">source/Raycaster.lua<br><a href="#step-19-4">Lines 39–47</a></p>
+<h3>Visit the next crossed block</h3><p>Advance whichever boundary comes first, then schedule its next crossing. This is DDA: digital differential analysis.</p><p>It jumps from boundary to boundary instead of taking tiny steps through empty space.</p></article><article class="step" id="step-19-5" data-first="48" data-last="52">
+<p class="location">source/Raycaster.lua<br><a href="#step-19-5">Lines 48–52</a></p>
+<h3>Stop at the first nonempty block</h3><p>Return the hit and t. Subtract the delta because the next boundary time was already advanced.</p><p>EXIT also stops a ray, although the player can enter it. The renderer draws it as white light.</p></article><article class="step" id="step-19-6" data-first="77" data-last="78">
+<p class="location">source/Raycaster.lua<br><a href="#step-19-6">Lines 77–78</a></p>
+<h3>Equal screen spacing, unequal angles</h3><p>Pixels are evenly spaced on a flat camera plane. The angle of a ray is <code>atan(cameraX × tan(FOV / 2))</code> relative to forward.</p><p>At 70° FOV, halfway from center to edge is about 19.3°, not 17.5°. Incrementing the angle by a fixed amount would not match this projection.</p></article><article class="step" id="step-19-7" data-first="78" data-last="78">
+<p class="location">source/Raycaster.lua<br><a href="#step-19-7">Lines 78–78</a></p>
+<h3>Why t is the correct depth</h3><p>Forward has length 1; the plane is perpendicular to it. Thus dot(forward, ray) = 1, and a hit at t × ray has forward depth t.</p><p>A flat wall ahead keeps the same depth across the screen. Using diagonal travel distance would shrink its edges: the fisheye error.</p></article><article class="step" id="step-19-8" data-first="103" data-last="109">
+<p class="location">source/Raycaster.lua<br><a href="#step-19-8">Lines 103–109</a></p>
+<h3>Group samples by wall face</h3><p>Save each column’s depth. Consecutive hits on the same block face form a run, drawn later as one trapezoid.</p><p>At 400 pixels with 4-pixel columns, there are 100 depth samples plus edge and refinement rays.</p></article><article class="step" id="step-19-9" data-first="110" data-last="122">
+<p class="location">source/Raycaster.lua<br><a href="#step-19-9">Lines 110–122</a></p>
+<h3>Refine the edge by bisection</h3><p>Cast halfway between the two samples. Replace one endpoint, then repeat. Two refinements reduce the search interval to a quarter.</p><p>A thin third face can be folded into the boundary; this is sampled visibility.</p></article><article class="step" id="step-19-10" data-first="141" data-last="146">
+<p class="location">source/Raycaster.lua<br><a href="#step-19-10">Lines 141–146</a></p>
 <h3>Project an object onto the screen</h3><p>Subtract camera position. Dot products measure forward depth and sideways offset. Reject points behind the camera.</p><p>For an object 2 blocks ahead and 0.5 right: screen x = 200 × (1 + 0.5 / (2 × 0.700)) ≈ 271.4.</p></article></div><div class="code-panel"><header class="file-header"><div class="file-path"><span>source/</span><strong>Raycaster.lua</strong></div><div class="file-meta"><span>Lua · Complete file · 147 lines</span><output class="range">Lines 69–73</output></div></header>
 <pre tabindex="0" aria-label="Complete source/Raycaster.lua"><code class="language-lua"><span class="line" data-line="1"><span class="c1">-- Finds what is visible from a point in a Maze.</span></span>
 <span class="line" data-line="2"><span class="c1">-- cast() walks one ray through the block grid. scan() casts a ray per screen column and groups</span></span>
@@ -2104,20 +2173,20 @@
 <span class="line" data-line="146">    <span class="kr">return</span> <span class="nv">screen</span>.<span class="py">width</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">*</span> (<span class="mi">1</span> <span class="o">+</span> <span class="nv">sideways</span> <span class="o">/</span> (<span class="nv">depth</span> <span class="o">*</span> <span class="nv">planeScale</span>)), <span class="nv">depth</span></span>
 <span class="line" data-line="147"><span class="kr">end</span></span></code></pre>
 <footer class="code-footer"><span class="focus-label">Highlighted lines follow the explanation</span><button class="follow" type="button" aria-pressed="true">Follow scroll: on</button></footer></div></section><section class="lab-section" id="lab-rays"><div class="lab-intro"><p class="location">source/Raycaster.lua · Interactive model</p><h2>Ray traversal</h2><p>Turn the camera and select a ray. Change the field of view, then compare grid crossings and distances. “Face a flat wall” makes the fisheye error easy to see. Cyan marks the camera plane.</p></div><div class="lab"><label for="view-angle">Camera heading <output id="view-angle-label">0°</output></label><input id="view-angle" type="range" min="0" max="359" value="0"><label for="view-fov">Field of view <output id="view-fov-label">70°</output></label><input id="view-fov" type="range" min="40" max="100" value="70"><label for="ray-column">Selected screen column <output id="ray-column-label">200</output></label><input id="ray-column" type="range" min="0" max="400" value="200"><label for="ray-steps">Grid crossings shown <output id="ray-steps-label">1</output></label><input id="ray-steps" type="range" min="1" max="10" value="1"><div class="controls"><button id="flat-wall">Face a flat wall</button><label class="check"><input id="wrong-depth" type="checkbox"> Use travel distance (incorrect)</label></div><canvas id="ray-demo" width="800" height="320" role="img" aria-label="Top-down ray traversal beside a matching first-person wall projection"></canvas><p id="boundary-values" class="readout"></p><p id="crossing-values" class="readout"></p><p id="ray-values" class="readout"></p></div>
-</section><section class="section" id="section-16" data-title="Drawing the 3D image" data-file="source/MazeView.lua"><div class="explanations"><h2><span>16</span> Drawing the 3D image</h2><article class="step" id="step-16-0" data-first="25" data-last="27">
-<p class="location">source/MazeView.lua<br><a href="#step-16-0">Lines 25–27</a></p>
-<h3>Set the perspective scale</h3><p><code>PROJECTION = 200 / tan(35°)</code> ≈ 285.63 pixels for a one-block wall one block ahead.</p><p>Clamp very near depths to 0.1 so screen coordinates remain manageable.</p></article><article class="step" id="step-16-1" data-first="243" data-last="249">
-<p class="location">source/MazeView.lua<br><a href="#step-16-1">Lines 243–249</a></p>
-<h3>Divide by depth</h3><p>Wall height = 285.63 ÷ depth. At depth 2, it is 142.81 pixels; at depth 4, 71.41 pixels.</p><p>Center both ends around the horizon. Their top and bottom edges form a trapezoid.</p></article><article class="step" id="step-16-2" data-first="259" data-last="264">
-<p class="location">source/MazeView.lua<br><a href="#step-16-2">Lines 259–264</a></p>
-<h3>Shade and fill each face</h3><p>Darken with distance and make x-facing walls slightly darker. <code>fillPolygon</code> draws the four projected corners.</p></article><article class="step" id="step-16-3" data-first="218" data-last="234">
-<p class="location">source/MazeView.lua<br><a href="#step-16-3">Lines 218–234</a></p>
-<h3>Draw brickwork in world coordinates</h3><p>Horizontal courses divide the wall’s height. Vertical joints are placed along the block face, then projected onto the screen.</p><p>Bitmap textures instead use the fractional hit position to choose an image column. This game draws lines; it does not sample a wall texture. Distant walls omit small brick details.</p></article><article class="step" id="step-16-4" data-first="63" data-last="76">
-<p class="location">source/MazeView.lua<br><a href="#step-16-4">Lines 63–76</a></p>
-<h3>The floor is a cached gradient</h3><p>These horizontal bands suggest a floor and ceiling without locating a world point for every pixel.</p><p>A textured floor needs another projection: intersect viewing rays with the floor plane and sample its texture. This renderer only projects individual floor marks.</p></article><article class="step" id="step-16-5" data-first="314" data-last="325">
-<p class="location">source/MazeView.lua<br><a href="#step-16-5">Lines 314–325</a></p>
-<h3>Hide sprites behind walls</h3><p>Compare the sprite’s depth with each wall-column depth. Clip drawing between the first and last visible columns.</p><p>This single rectangle can include a hidden middle strip. It is approximate occlusion, not a per-pixel depth buffer.</p></article><article class="step" id="step-16-6" data-first="416" data-last="422">
-<p class="location">source/MazeView.lua<br><a href="#step-16-6">Lines 416–422</a></p>
+</section><section class="section" id="section-20" data-title="Drawing the 3D image" data-file="source/MazeView.lua"><div class="explanations"><h2><span>20</span> Drawing the 3D image</h2><article class="step" id="step-20-0" data-first="25" data-last="27">
+<p class="location">source/MazeView.lua<br><a href="#step-20-0">Lines 25–27</a></p>
+<h3>Set the perspective scale</h3><p><code>PROJECTION = 200 / tan(35°)</code> ≈ 285.63 pixels for a one-block wall one block ahead.</p><p>Clamp very near depths to 0.1 so screen coordinates remain manageable.</p></article><article class="step" id="step-20-1" data-first="243" data-last="249">
+<p class="location">source/MazeView.lua<br><a href="#step-20-1">Lines 243–249</a></p>
+<h3>Divide by depth</h3><p>Wall height = 285.63 ÷ depth. At depth 2, it is 142.81 pixels; at depth 4, 71.41 pixels.</p><p>Center both ends around the horizon. Their top and bottom edges form a trapezoid.</p></article><article class="step" id="step-20-2" data-first="259" data-last="264">
+<p class="location">source/MazeView.lua<br><a href="#step-20-2">Lines 259–264</a></p>
+<h3>Shade and fill each face</h3><p>Darken with distance and make x-facing walls slightly darker. <code>fillPolygon</code> draws the four projected corners.</p></article><article class="step" id="step-20-3" data-first="218" data-last="234">
+<p class="location">source/MazeView.lua<br><a href="#step-20-3">Lines 218–234</a></p>
+<h3>Draw brickwork in world coordinates</h3><p>Horizontal courses divide the wall’s height. Vertical joints are placed along the block face, then projected onto the screen.</p><p>Bitmap textures instead use the fractional hit position to choose an image column. This game draws lines; it does not sample a wall texture. Distant walls omit small brick details.</p></article><article class="step" id="step-20-4" data-first="63" data-last="76">
+<p class="location">source/MazeView.lua<br><a href="#step-20-4">Lines 63–76</a></p>
+<h3>The floor is a cached gradient</h3><p>These horizontal bands suggest a floor and ceiling without locating a world point for every pixel.</p><p>A textured floor needs another projection: intersect viewing rays with the floor plane and sample its texture. This renderer only projects individual floor marks.</p></article><article class="step" id="step-20-5" data-first="314" data-last="325">
+<p class="location">source/MazeView.lua<br><a href="#step-20-5">Lines 314–325</a></p>
+<h3>Hide sprites behind walls</h3><p>Compare the sprite’s depth with each wall-column depth. Clip drawing between the first and last visible columns.</p><p>This single rectangle can include a hidden middle strip. It is approximate occlusion, not a per-pixel depth buffer.</p></article><article class="step" id="step-20-6" data-first="416" data-last="422">
+<p class="location">source/MazeView.lua<br><a href="#step-20-6">Lines 416–422</a></p>
 <h3>Draw walls, marks, then sprites</h3><p>Scan from the player’s position and draw the wall runs. Add floor and ceiling marks, then sprites sorted farthest first.</p><p>Nearby sprites paint over farther ones. The scene draws the HUD afterward.</p></article></div><div class="code-panel"><header class="file-header"><div class="file-path"><span>source/</span><strong>MazeView.lua</strong></div><div class="file-meta"><span>Lua · Complete file · 439 lines</span><output class="range">Lines 25–27</output></div></header>
 <pre tabindex="0" aria-label="Complete source/MazeView.lua"><code class="language-lua"><span class="line" data-line="1"><span class="c1">-- The first-person view of a Game. Walls come from Raycaster.scan as runs, each drawn as one</span></span>
 <span class="line" data-line="2"><span class="c1">-- shaded trapezoid with a black edge. Shapes and pedestals are drawn over the walls, far to near,</span></span>
@@ -2565,10 +2634,10 @@
 <canvas id="occlusion-demo" width="800" height="370" role="img" aria-label="Wall depths and sprite visibility compared with a single clipping rectangle"></canvas>
 <p id="occlusion-values" class="readout"></p>
 </div>
-</section><section class="section" id="section-17" data-title="Black-and-white shading" data-file="source/Shades.lua"><div class="explanations"><h2><span>17</span> Black-and-white shading</h2><article class="step" id="step-17-0" data-first="8" data-last="13">
-<p class="location">source/Shades.lua<br><a href="#step-17-0">Lines 8–13</a></p>
-<h3>Use a repeating threshold pattern</h3><p>Playdate pixels are black or white. The Bayer matrix orders which pixels turn white to imitate gray.</p><p>At level 8, eight of the sixteen pixels are white. At level 16, all are white.</p></article><article class="step" id="step-17-1" data-first="16" data-last="28">
-<p class="location">source/Shades.lua<br><a href="#step-17-1">Lines 16–28</a></p>
+</section><section class="section" id="section-21" data-title="Black-and-white shading" data-file="source/Shades.lua"><div class="explanations"><h2><span>21</span> Black-and-white shading</h2><article class="step" id="step-21-0" data-first="8" data-last="13">
+<p class="location">source/Shades.lua<br><a href="#step-21-0">Lines 8–13</a></p>
+<h3>Use a repeating threshold pattern</h3><p>Playdate pixels are black or white. The Bayer matrix orders which pixels turn white to imitate gray.</p><p>At level 8, eight of the sixteen pixels are white. At level 16, all are white.</p></article><article class="step" id="step-21-1" data-first="16" data-last="28">
+<p class="location">source/Shades.lua<br><a href="#step-21-1">Lines 16–28</a></p>
 <h3>Build the drawing patterns once</h3><p>Repeat the matrix over an 8 × 8 tile. A pixel is white when its matrix value is below the shade level.</p><p><code>byte * 2</code> shifts the row’s bits left; adding 0 or 1 appends a pixel. Store the eight rows for <code>gfx.setPattern</code>.</p></article></div><div class="code-panel"><header class="file-header"><div class="file-path"><span>source/</span><strong>Shades.lua</strong></div><div class="file-meta"><span>Lua · Complete file · 31 lines</span><output class="range">Lines 8–13</output></div></header>
 <pre tabindex="0" aria-label="Complete source/Shades.lua"><code class="language-lua"><span class="line" data-line="1"><span class="c1">-- Shades of grey for a 1-bit screen: 8x8 ordered-dither patterns for gfx.setPattern.</span></span>
 <span class="line" data-line="2"><span class="c1">-- Level 0 is black and Shades.WHITE is white. Each level lights one more pixel of every 4x4 tile.</span></span>

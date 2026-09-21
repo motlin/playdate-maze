@@ -24,28 +24,28 @@ local ROW_HEIGHT <const> = 22
 -- An eighth of a turn of the crank moves the highlight one row
 local CRANK_DEGREES_PER_ROW <const> = 45
 
-local function play(mode)
-    return function() SceneManager.switch(PlayScene, mode, TitleScene.sizeIndex) end
+local function playFirstPerson(submode)
+    return function() SceneManager.switch(FirstPersonScene, submode, TitleScene.sizeIndex) end
 end
 
 local function nextSize() TitleScene.sizeIndex = Sizes.next(TitleScene.sizeIndex) end
 local function previousSize() TitleScene.sizeIndex = Sizes.previous(TitleScene.sizeIndex) end
 
 local function continueSavedGame()
-    local game, mode, sizeIndex = SaveGame.read()
+    local game, submode, sizeIndex = SaveGame.read()
     -- A save this version cannot read has just been thrown away: show the menu without it
     if not game then
         TitleScene.enter()
         return
     end
-    SceneManager.switch(PlayScene, mode, sizeIndex, game)
+    SceneManager.switch(FirstPersonScene, submode, sizeIndex, game)
 end
 
 -- Each row has a name, a label, and what A does; left and right are optional
 local CONTINUE_ROW <const> = { name = "continue", label = function() return "Continue" end, confirm = continueSavedGame }
 local PLAY_ROWS <const> = {
-    { name = "explore", label = function() return "Explore" end, confirm = play("explore") },
-    { name = "daily", label = function() return "Daily maze" end, confirm = play("daily") },
+    { name = "explore", label = function() return "Explore" end, confirm = playFirstPerson("explore") },
+    { name = "daily", label = function() return "Daily maze" end, confirm = playFirstPerson("daily") },
     {
         name = "tumble",
         label = function() return "Tumble" end,
@@ -56,7 +56,7 @@ local PLAY_ROWS <const> = {
         label = function() return "Slime" end,
         confirm = function() SceneManager.switch(SlimeScene, TitleScene.sizeIndex) end,
     },
-    { name = "screensaver", label = function() return "Screensaver" end, confirm = play("screensaver") },
+    { name = "screensaver", label = function() return "Screensaver" end, confirm = playFirstPerson("screensaver") },
     {
         name = "size",
         label = function() return "Size: " .. Sizes.ALL[TitleScene.sizeIndex].name end,

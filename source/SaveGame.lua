@@ -13,16 +13,16 @@ function SaveGame.exists()
     return datastore.read(SaveGame.FILE) ~= nil
 end
 
--- mode and sizeIndex are the play scene's, so that the run resumes as the kind of game it was
-function SaveGame.write(game, mode, sizeIndex)
-    datastore.write({ game = game:toSave(), mode = mode, sizeIndex = sizeIndex }, SaveGame.FILE)
+-- Keep the on-disk "mode" key so existing saves retain their first-person submode.
+function SaveGame.write(game, submode, sizeIndex)
+    datastore.write({ game = game:toSave(), mode = submode, sizeIndex = sizeIndex }, SaveGame.FILE)
 end
 
 function SaveGame.delete()
     datastore.delete(SaveGame.FILE)
 end
 
--- Returns the game, its mode, and its size, or nil if there is nothing that can be continued.
+-- Returns the game, its first-person submode, and its size, or nil if there is no saved game.
 -- A save from a version of the game that cannot read it is thrown away: an update to the game
 -- must never leave the player with a Continue that crashes.
 function SaveGame.read()
