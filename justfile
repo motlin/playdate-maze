@@ -38,6 +38,7 @@ screenshots output="builds/screenshots":
     tools/screenshots/run.sh tumble "{{output}}"
     tools/screenshots/run.sh slime "{{output}}"
     tools/screenshots/run.sh resume "{{output}}"
+    tools/screenshots/run.sh editor "{{output}}"
 
 # 🎴 Draw the launcher card and icon from the game itself
 launcher:

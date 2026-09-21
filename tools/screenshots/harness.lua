@@ -16,6 +16,12 @@ if playdate.isSimulator then
     local pendingShot = nil
     local shotCount = 0
 
+    -- The game this one replaced saves its run or its map as it quits, which can be after run.sh
+    -- has emptied the data folder. So start every scenario from nothing, whatever is on disk.
+    SaveGame.delete()
+    for _, name in ipairs(MapSlots.NAMES) do MapSlots.delete(name) end
+    TitleScene.enter()
+
     -- Silent, but still playing every note, so that the sound code runs here as it will for a player
     Sounds.setVolume(0)
     Music.setVolume(0)
@@ -673,6 +679,102 @@ if playdate.isSimulator then
         gfx.popContext()
         pd.simulator.writeToFile(icon, OUT .. "/icon.png")
         frames(1)
+    end
+
+    -- Draw a map in the editor, play it, find it saved, edit it again, and throw it away
+    scenarios.editor = function()
+        local function holdDown(button)
+            justPressed[button], held[button] = true, true
+            coroutine.yield()
+            justPressed[button] = nil
+        end
+        local function pickTool(name)
+            for _ = 1, #MapEditor.TOOLS do
+                if EditorScene.editor:tool().name == name then return end
+                turnCrank(40); frames(1)
+            end
+            error("the crank never reached the " .. name .. " tool")
+        end
+
+        frames(5)
+        titleRow("myMazes"); shot("title-my-mazes")
+        press(pd.kButtonA, 3)
+        expect(SceneManager.isCurrent(MyMazesScene), "the My mazes row opens the list of maps")
+        shot("my-mazes-all-empty")
+        press(pd.kButtonA, 3)
+        expect(SceneManager.isCurrent(EditorScene) and EditorScene.slot == "A", "A on an empty slot starts a new map in it")
+        local design = EditorScene.editor.design
+        expect(design.columns == 8 and design.rows == 6, "at the size chosen on the title screen")
+        shot("editor-blank")
+        expect(EditorScene.editor:status() == "There is no exit", "a blank map says what it lacks")
+
+        -- Carve along the top and down the right-hand side by moving with A held
+        holdDown(pd.kButtonA)
+        for _ = 1, 7 do press(pd.kButtonRight, 1) end
+        for _ = 1, 5 do press(pd.kButtonDown, 1) end
+        release(pd.kButtonA)
+        shot("editor-carved")
+        expect(design:hasPassage(1, 1, "east") and design:hasPassage(8, 5, "south"), "moving with A held carves passages")
+        expect(EditorScene.editor.cursorX == 16 and EditorScene.editor.cursorY == 12, "and carries the cursor along")
+
+        -- Wall one back up by pushing at it with B held
+        holdDown(pd.kButtonB); press(pd.kButtonUp, 1); release(pd.kButtonB)
+        expect(not design:hasPassage(8, 5, "south"), "pushing with B held builds the wall back")
+        holdDown(pd.kButtonA); press(pd.kButtonUp, 1); press(pd.kButtonDown, 1); release(pd.kButtonA)
+        expect(design:hasPassage(8, 5, "south"), "and A carves it again")
+
+        -- The crank picks the tool
+        pickTool("exit"); shot("editor-exit-tool")
+        press(pd.kButtonA, 1)
+        expect(design.exit == nil, "the exit cannot go in the middle of the map")
+        shot("editor-exit-refused")
+        press(pd.kButtonRight, 1); press(pd.kButtonA, 1)
+        expect(design.exit and design.exit.gridX == 17 and design.exit.gridY == 12, "but goes in the outer wall beside an open block")
+        expect(EditorScene.editor:status() == "Ready to play", "and then the map is ready")
+
+        -- The dial passes the cells tool on its way round, which puts the cursor back on a cell
+        pickTool("blocks")
+        expect(EditorScene.editor.cursorX == 16 and EditorScene.editor.cursorY == 12, "the cursor is on the last cell")
+        press(pd.kButtonLeft, 1)
+        expect(EditorScene.editor.cursorX == 15 and not design:isOpen(15, 12), "one step left is the wall between two cells")
+        press(pd.kButtonA, 1)
+        expect(design:isOpen(15, 12), "the blocks tool opens a single block")
+        pickTool("circle"); press(pd.kButtonA, 1)
+        expect(design.items.circle and design.items.circle.gridX == 15, "a shape can be stood on it")
+        pickTool("triangle pedestal"); press(pd.kButtonUp, 1); press(pd.kButtonRight, 1)
+        press(pd.kButtonA, 1); shot("editor-finished")
+        expect(design.pedestals.triangle ~= nil, "and a pedestal elsewhere")
+
+        -- Play it, from the system menu's Play item
+        EditorScene.play(); frames(3)
+        expect(SceneManager.isCurrent(FirstPersonScene) and FirstPersonScene.game.isHandMade, "Play starts the map in the 3D maze")
+        expect(MapSlots.exists("A"), "having saved it on the way out of the editor")
+        local game = FirstPersonScene.game
+        expect(game.puzzle.items[1].gridX == 15 and game.puzzle.items[1].gridY == 12, "with the circle where it was put")
+        expect(game.maze:blockValue(17, 12) == Maze.BLOCKS.DOOR, "and the gate where the exit was put")
+        shot("playing-my-maze")
+        hold(pd.kButtonUp, 30); shot("playing-my-maze-walked")
+        docked = true; frames(DockTimer.DELAY_FRAMES + 10); docked = false
+        expect(not game:isAutopilotOn(), "a hand-made maze has no autopilot, even with the crank docked")
+
+        -- It is in the list now, with a picture
+        SceneManager.switch(MyMazesScene); frames(3); shot("my-mazes-with-a-map")
+        expect(MyMazesScene.selectedDesign() ~= nil, "the list shows the saved map")
+        press(pd.kButtonRight, 3)
+        expect(SceneManager.isCurrent(EditorScene), "right opens it in the editor")
+        expect(EditorScene.editor.design:hasPassage(1, 1, "east"), "as it was left")
+        expect(EditorScene.editor.design.items.circle.gridX == 15, "with everything that was placed")
+        EditorScene.randomMaze(); frames(2); shot("editor-random-maze")
+        expect(EditorScene.editor:status() == "Ready to play", "Random maze gives a finished maze to alter")
+
+        -- Throw it away: left asks, left again does it
+        SceneManager.switch(MyMazesScene); frames(3)
+        press(pd.kButtonLeft, 2); shot("my-mazes-delete-asked")
+        expect(MapSlots.exists("A"), "one press of left only asks")
+        press(pd.kButtonLeft, 2)
+        expect(not MapSlots.exists("A"), "the second deletes the map")
+        press(pd.kButtonB, 3)
+        expect(SceneManager.isCurrent(TitleScene), "B goes back to the title screen")
     end
 
     -- Let the screensaver wander, then take over

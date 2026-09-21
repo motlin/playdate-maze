@@ -15,12 +15,12 @@ local gfx <const> = playdate.graphics
 TitleScene = { selection = 1, sizeIndex = Sizes.DEFAULT, rows = {} }
 
 local PANEL_LEFT <const> = 100
-local PANEL_TOP <const> = 16
+local PANEL_TOP <const> = 8
 local PANEL_WIDTH <const> = 200
-local PANEL_HEIGHT <const> = 208
+local PANEL_HEIGHT <const> = 224
 local TITLE_SCALE <const> = 2
-local ROWS_TOP <const> = PANEL_TOP + 50
-local ROW_HEIGHT <const> = 22
+local ROWS_TOP <const> = PANEL_TOP + 46
+local ROW_HEIGHT <const> = 21
 -- An eighth of a turn of the crank moves the highlight one row
 local CRANK_DEGREES_PER_ROW <const> = 45
 
@@ -56,6 +56,7 @@ local PLAY_ROWS <const> = {
         label = function() return "Slime" end,
         confirm = function() SceneManager.switch(SlimeScene, TitleScene.sizeIndex) end,
     },
+    { name = "myMazes", label = function() return "My mazes" end, confirm = function() SceneManager.switch(MyMazesScene) end },
     { name = "screensaver", label = function() return "Screensaver" end, confirm = playFirstPerson("screensaver") },
     {
         name = "size",

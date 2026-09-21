@@ -10,6 +10,8 @@ import "scenes/FirstPerson"
 import "scenes/PlayTumble"
 import "scenes/PlaySlime"
 import "scenes/Escaped"
+import "scenes/MyMazes"
+import "scenes/MazeEditor"
 
 local pd <const> = playdate
 
@@ -17,18 +19,20 @@ function playdate.update()
     SceneManager.update()
 end
 
--- Held notes would otherwise drone on behind the system menu
+-- A run in the maze and a map in the editor are both kept on disk
 local function saveRun()
     if SceneManager.isCurrent(FirstPersonScene) then FirstPersonScene.save() end
+    if SceneManager.isCurrent(EditorScene) then EditorScene.save() end
 end
 
+-- Held notes would otherwise drone on behind the system menu
 function playdate.gameWillPause()
     saveRun()
     Sounds.stopHum()
     Music.stop()
 end
 
--- A run must survive the console sleeping or the game being closed
+-- Work must survive the console sleeping or the game being closed
 playdate.deviceWillSleep = saveRun
 playdate.deviceWillLock = saveRun
 playdate.gameWillTerminate = saveRun

@@ -2,6 +2,7 @@
 -- Explore has the puzzle and ends at the Escaped scene. The daily maze is Explore with the date
 -- as the seed, so everyone gets the same medium maze on the same day. The screensaver has no
 -- puzzle, starts on autopilot, and rolls straight into a new maze whenever it finds the way out.
+-- Custom plays a map drawn in the editor, which has no autopilot.
 
 import "Bob"
 import "DockTimer"
@@ -20,8 +21,11 @@ import "WalkingActions"
 local pd <const> = playdate
 
 FirstPersonScene = {
-    SUBMODES = { EXPLORE = "explore", DAILY = "daily", SCREENSAVER = "screensaver" },
+    SUBMODES = { EXPLORE = "explore", DAILY = "daily", SCREENSAVER = "screensaver", CUSTOM = "custom" },
     game = nil,
+    -- The map being played in the custom submode. A custom game carried on from a save has none,
+    -- as only the game is saved, so it cannot be started afresh from here.
+    design = nil,
     submode = nil,
     sizeIndex = Sizes.DEFAULT,
 }
@@ -37,6 +41,12 @@ local dockTimer = DockTimer.new()
 local headBob = Bob.new()
 
 function FirstPersonScene.newGame(isAutopilotOn)
+    if FirstPersonScene.submode == FirstPersonScene.SUBMODES.CUSTOM then
+        local game = Game.fromDesign(FirstPersonScene.design, math.random)
+        game:say("Your maze. Lost? Hold Ⓑ and crank backwards")
+        FirstPersonScene.game = game
+        return
+    end
     local size = Sizes.ALL[FirstPersonScene.sizeIndex]
     local random = math.random
     local today
@@ -59,9 +69,11 @@ function FirstPersonScene.newGame(isAutopilotOn)
     FirstPersonScene.game = game
 end
 
--- savedGame, if given, is a game from SaveGame to carry on with instead of starting a new one
-function FirstPersonScene.enter(submode, sizeIndex, savedGame)
+-- savedGame, if given, is a game from SaveGame to carry on with instead of starting a new one.
+-- design is the map to play in the custom submode.
+function FirstPersonScene.enter(submode, sizeIndex, savedGame, design)
     FirstPersonScene.submode = submode
+    FirstPersonScene.design = design
     dockTimer = DockTimer.new()
     headBob = Bob.new()
     -- The daily maze is the same size for everyone
@@ -82,9 +94,21 @@ function FirstPersonScene.save()
     if game.puzzle and not game.hasEscaped then SaveGame.write(game, FirstPersonScene.submode, FirstPersonScene.sizeIndex) end
 end
 
--- After escaping, the next maze is always a fresh random one, even after the daily maze
+-- Whether the map being played is at hand to be played again from the start
+function FirstPersonScene.hasDesign()
+    return FirstPersonScene.submode == FirstPersonScene.SUBMODES.CUSTOM and FirstPersonScene.design ~= nil
+end
+
+-- After escaping, the next maze is a fresh random one, even after the daily maze; but a
+-- hand-made map is played again, or chosen again if it was carried on from a save
 function FirstPersonScene.playAgain()
-    SceneManager.switch(FirstPersonScene, FirstPersonScene.SUBMODES.EXPLORE, FirstPersonScene.sizeIndex)
+    if FirstPersonScene.hasDesign() then
+        SceneManager.switch(FirstPersonScene, FirstPersonScene.SUBMODES.CUSTOM, FirstPersonScene.sizeIndex, nil, FirstPersonScene.design)
+    elseif FirstPersonScene.submode == FirstPersonScene.SUBMODES.CUSTOM then
+        SceneManager.switch(MyMazesScene)
+    else
+        SceneManager.switch(FirstPersonScene, FirstPersonScene.SUBMODES.EXPLORE, FirstPersonScene.sizeIndex)
+    end
 end
 
 function FirstPersonScene.exit()
@@ -95,12 +119,16 @@ end
 
 function FirstPersonScene.restart()
     if FirstPersonScene.submode ~= FirstPersonScene.SUBMODES.SCREENSAVER then SaveGame.delete() end
+    if FirstPersonScene.submode == FirstPersonScene.SUBMODES.CUSTOM and not FirstPersonScene.hasDesign() then
+        SceneManager.switch(MyMazesScene)
+        return
+    end
     FirstPersonScene.newGame(FirstPersonScene.game:isAutopilotOn())
 end
 
 function FirstPersonScene.applyDockAction(action)
     local game = FirstPersonScene.game
-    if action == DockTimer.ACTIONS.HAND_OVER and not game:isAutopilotOn() then
+    if action == DockTimer.ACTIONS.HAND_OVER and game:canAutopilot() and not game:isAutopilotOn() then
         game:setAutopilot(true)
         game:say("Crank docked: autopilot")
     elseif action == DockTimer.ACTIONS.TAKE_BACK and game:isAutopilotOn() then

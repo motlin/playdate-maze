@@ -55,7 +55,41 @@ local function forEachRevealedCell(game, action)
     end
 end
 
+-- A map drawn by hand need not be a maze of cells, so it is drawn block by block: a block shows
+-- once the cell nearest it has been revealed
+local GATE_PATTERN <const> = { 0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA }
+
+local function drawBlocks(game)
+    local maze = game.maze
+    local width, height = Minimap.size(maze)
+    local image = gfx.image.new(width, height, gfx.kColorWhite)
+    local scale = cellSize / blocksPerCell
+    gfx.pushContext(image)
+    gfx.setPattern(Shades.pattern(FOG_SHADE))
+    gfx.fillRect(MARGIN, MARGIN, width - 2 * MARGIN, height - 2 * MARGIN)
+    for gridY = 1, maze.gridHeight do
+        for gridX = 1, maze.gridWidth do
+            if game:isRevealed(maze:nearestCell(maze:blockCenter(gridX, gridY))) then
+                local left, top = MARGIN + math.floor((gridX - 1) * scale), MARGIN + math.floor((gridY - 1) * scale)
+                local right, bottom = MARGIN + math.floor(gridX * scale), MARGIN + math.floor(gridY * scale)
+                local block = maze:blockValue(gridX, gridY)
+                if block == Maze.BLOCKS.DOOR then
+                    gfx.setPattern(GATE_PATTERN)
+                else
+                    gfx.setColor(block == Maze.BLOCKS.WALL and gfx.kColorBlack or gfx.kColorWhite)
+                end
+                gfx.fillRect(left, top, right - left, bottom - top)
+            end
+        end
+    end
+    gfx.setColor(gfx.kColorBlack)
+    gfx.drawRect(0, 0, width, height)
+    gfx.popContext()
+    return image
+end
+
 local function drawWalls(game)
+    if game.isHandMade then return drawBlocks(game) end
     local maze = game.maze
     local width, height = Minimap.size(maze)
     local image = gfx.image.new(width, height, gfx.kColorWhite)
