@@ -16,13 +16,17 @@ local CELLS_FOR_TWO <const> = 40
 -- random(n) is like math.random.
 function Flippers.scatter(maze, random, taken)
     local isTaken = {}
-    for _, thing in ipairs(taken) do isTaken[thing.gridY * 256 + thing.gridX] = true end
+    for _, thing in ipairs(taken) do
+        isTaken[thing.gridY * 256 + thing.gridX] = true
+    end
     local free = {}
     for row = 1, maze.rows do
         for column = 1, maze.columns do
             local gridX, gridY = maze:cellBlock(column, row)
             local isStart = column == 1 and row == 1
-            if not isStart and not isTaken[gridY * 256 + gridX] then free[#free + 1] = { gridX = gridX, gridY = gridY } end
+            if not isStart and not isTaken[gridY * 256 + gridX] then
+                free[#free + 1] = { gridX = gridX, gridY = gridY }
+            end
         end
     end
     local count = math.min(#free, maze.columns * maze.rows >= CELLS_FOR_TWO and 2 or 1)
@@ -52,6 +56,4 @@ function Flippers:touch(x, y)
 end
 
 -- Flippers again from their saved list, which is `all`
-function Flippers.fromSave(all)
-    return setmetatable({ all = all }, Flippers)
-end
+function Flippers.fromSave(all) return setmetatable({ all = all }, Flippers) end

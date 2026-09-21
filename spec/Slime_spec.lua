@@ -21,7 +21,9 @@ end
 local function room(items)
     local maze = Maze.generate(3, 3, seededRandom(1), 3)
     for gridY = 2, 12 do
-        for gridX = 2, 12 do maze.blocks[gridY][gridX] = Maze.BLOCKS.OPEN end
+        for gridX = 2, 12 do
+            maze.blocks[gridY][gridX] = Maze.BLOCKS.OPEN
+        end
     end
     return Slime.inMaze(maze, Puzzle.new(items or { { shape = "circle", gridX = 2, gridY = 2 } }, {}))
 end
@@ -42,7 +44,9 @@ local function restAt(slime, x, floorY)
 end
 
 local function run(slime, frames, input)
-    for _ = 1, frames do slime:update(input or { aim = slime.aimAngle }) end
+    for _ = 1, frames do
+        slime:update(input or { aim = slime.aimAngle })
+    end
 end
 
 -- Holds A for a frame at the given angle, then lets go
@@ -98,7 +102,9 @@ describe("Slime", function()
 
         it("falls off the end of a ledge it crawls over", function()
             local slime = room()
-            for gridX = 5, 7 do slime.maze.blocks[9][gridX] = Maze.BLOCKS.WALL end
+            for gridX = 5, 7 do
+                slime.maze.blocks[9][gridX] = Maze.BLOCKS.WALL
+            end
             restAt(slime, 6.6, 8)
             run(slime, 30, { aim = 0, move = 1 })
             assert.is_true(slime.player.y > 8)
@@ -230,9 +236,7 @@ describe("Slime", function()
             return slime
         end
 
-        it("has two seconds of grip", function()
-            assert.are.equal(60, Slime.STICK_FRAMES)
-        end)
+        it("has two seconds of grip", function() assert.are.equal(60, Slime.STICK_FRAMES) end)
 
         it("sticks where it hits, with a full clock", function()
             local slime = onTheRightWall()
@@ -444,7 +448,9 @@ describe("Slime", function()
             local seen = {}
             for _ = 1, frames do
                 slime:update(input or { aim = slime.aimAngle })
-                for _, name in ipairs(slime.events) do seen[name] = (seen[name] or 0) + 1 end
+                for _, name in ipairs(slime.events) do
+                    seen[name] = (seen[name] or 0) + 1
+                end
             end
             return seen
         end
@@ -469,7 +475,9 @@ describe("Slime", function()
             end
             slime:update({ aim = 60, cancel = true })
             local hasLetGo = false
-            for _, name in ipairs(slime.events) do hasLetGo = hasLetGo or name == "letGo" end
+            for _, name in ipairs(slime.events) do
+                hasLetGo = hasLetGo or name == "letGo"
+            end
             assert.is_true(hasLetGo)
         end)
 

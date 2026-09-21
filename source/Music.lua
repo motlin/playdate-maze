@@ -31,9 +31,7 @@ bass:setADSR(0.3, 0.8, 0.5, 2)
 
 local distances, heard, step, framesUntilNote = nil, 0, 0, 0
 
-function Music.setVolume(volume)
-    masterVolume = volume
-end
+function Music.setVolume(volume) masterVolume = volume end
 
 -- Call every frame of play; it is silent while the player has the music turned off. fixedProximity, from 0 to 1, overrides the maze: the screensaver
 -- uses it to keep the music calm and level.
@@ -51,14 +49,20 @@ function Music.update(run, fixedProximity)
     step = step + 1
     local semitones = MusicScore.transposition(heard)
     local midiNote = MusicScore.noteAt(step)
-    voices[step % VOICES + 1]:playNote(MusicScore.frequency(midiNote, semitones), NOTE_VOLUME * masterVolume, NOTE_SECONDS)
+    voices[step % VOICES + 1]:playNote(
+        MusicScore.frequency(midiNote, semitones),
+        NOTE_VOLUME * masterVolume,
+        NOTE_SECONDS
+    )
     if step % BASS_EVERY == 0 then
         bass:playNote(MusicScore.frequency(midiNote - BASS_DROP, semitones), BASS_VOLUME * masterVolume, BASS_SECONDS)
     end
 end
 
 function Music.stop()
-    for _, synth in ipairs(voices) do synth:noteOff() end
+    for _, synth in ipairs(voices) do
+        synth:noteOff()
+    end
     bass:noteOff()
     framesUntilNote = 0
 end

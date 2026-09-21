@@ -14,7 +14,10 @@ function WalkingActions:read(suppressItemActions)
     local actions, button = self.actions, self.bButton
     local sideways = input:axis(playdate.kButtonLeft, playdate.kButtonRight)
     local reel, isBTapped = button:update(
-        input:isPressed(playdate.kButtonB), input:isDown(playdate.kButtonB), input:isReleased(playdate.kButtonB), input.crankChange
+        input:isPressed(playdate.kButtonB),
+        input:isDown(playdate.kButtonB),
+        input:isReleased(playdate.kButtonB),
+        input.crankChange
     )
     actions.forward = input:axis(playdate.kButtonDown, playdate.kButtonUp)
     actions.turn = button:isHeld() and 0 or input.crankChange

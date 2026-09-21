@@ -40,6 +40,8 @@ function EscapedScene.update()
     titleImage:drawScaled((400 - titleImage.width * 2) / 2, 50, 2)
     local time = string.format("%d:%02d", EscapedScene.seconds // 60, EscapedScene.seconds % 60)
     playdate.graphics.drawTextAligned("Time  *" .. time .. "*", 200, 120, kTextAlignment.center)
-    if EscapedScene.detail then playdate.graphics.drawTextAligned(EscapedScene.detail, 200, 146, kTextAlignment.center) end
+    if EscapedScene.detail then
+        playdate.graphics.drawTextAligned(EscapedScene.detail, 200, 146, kTextAlignment.center)
+    end
     playdate.graphics.drawTextAligned("Ⓐ New maze     Ⓑ Title screen", 200, 190, kTextAlignment.center)
 end

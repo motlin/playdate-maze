@@ -28,7 +28,10 @@ local function blobRect(slime)
         return SideView.CENTER_X - ROUND / 2, SideView.CENTER_Y - ROUND / 2, ROUND, ROUND
     end
     if surface == "floor" then
-        return SideView.CENTER_X - SQUASHED_LONG / 2, SideView.CENTER_Y + HALF_BODY - SQUASHED_SHORT, SQUASHED_LONG, SQUASHED_SHORT
+        return SideView.CENTER_X - SQUASHED_LONG / 2,
+            SideView.CENTER_Y + HALF_BODY - SQUASHED_SHORT,
+            SQUASHED_LONG,
+            SQUASHED_SHORT
     elseif surface == "ceiling" then
         return SideView.CENTER_X - SQUASHED_LONG / 2, SideView.CENTER_Y - HALF_BODY, SQUASHED_LONG, SQUASHED_SHORT
     end
@@ -52,7 +55,13 @@ local function drawClock(slime)
     if slime.state ~= Slime.STATES.CLINGING then return end
     playdate.graphics.setColor(playdate.graphics.kColorBlack)
     playdate.graphics.setLineWidth(3)
-    playdate.graphics.drawArc(SideView.CENTER_X, SideView.CENTER_Y, CLOCK_RADIUS, 0, 360 * slime.stickFrames / Slime.STICK_FRAMES)
+    playdate.graphics.drawArc(
+        SideView.CENTER_X,
+        SideView.CENTER_Y,
+        CLOCK_RADIUS,
+        0,
+        360 * slime.stickFrames / Slime.STICK_FRAMES
+    )
     playdate.graphics.setLineWidth(1)
 end
 
@@ -62,7 +71,12 @@ local function drawPointer(slime)
     local x, y = math.sin(radians), -math.cos(radians)
     playdate.graphics.setColor(playdate.graphics.kColorBlack)
     playdate.graphics.setLineWidth(2)
-    playdate.graphics.drawLine(SideView.CENTER_X + x * POINTER_FROM, SideView.CENTER_Y + y * POINTER_FROM, SideView.CENTER_X + x * POINTER_TO, SideView.CENTER_Y + y * POINTER_TO)
+    playdate.graphics.drawLine(
+        SideView.CENTER_X + x * POINTER_FROM,
+        SideView.CENTER_Y + y * POINTER_FROM,
+        SideView.CENTER_X + x * POINTER_TO,
+        SideView.CENTER_Y + y * POINTER_TO
+    )
     playdate.graphics.setLineWidth(1)
 end
 

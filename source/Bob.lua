@@ -18,9 +18,7 @@ local HOVER_SPEED <const> = 0.09
 -- Far enough apart that three shapes are never in step
 local HOVER_PHASE_APART <const> = 2.1
 
-function Bob.new()
-    return setmetatable({ phase = 0, strength = 0 }, Bob)
-end
+function Bob.new() return setmetatable({ phase = 0, strength = 0 }, Bob) end
 
 -- Call every frame with how far the player walked in it
 function Bob:walk(distance)
@@ -33,9 +31,7 @@ function Bob:walk(distance)
 end
 
 -- Pixels to shift the horizon by; positive is down
-function Bob:headOffset()
-    return math.sin(self.phase) * Bob.HEAD_PIXELS * self.strength
-end
+function Bob:headOffset() return math.sin(self.phase) * Bob.HEAD_PIXELS * self.strength end
 
 -- Blocks to shift hovering shape number `index` by on this frame; positive is down
 function Bob.hoverOffset(frame, index)

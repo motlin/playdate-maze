@@ -14,7 +14,12 @@ function import(name)
 end
 
 playdate = {
-    kButtonLeft = 1, kButtonRight = 2, kButtonUp = 4, kButtonDown = 8, kButtonB = 16, kButtonA = 32,
+    kButtonLeft = 1,
+    kButtonRight = 2,
+    kButtonUp = 4,
+    kButtonDown = 8,
+    kButtonB = 16,
+    kButtonA = 32,
     getButtonState = function() return stub.current, stub.pressed, stub.released end,
     getCrankChange = function() return stub.crankChange end,
     getCrankPosition = function() return stub.crankPosition end,
@@ -39,8 +44,6 @@ function stub.reset()
     stub.writeCounts = {}
 end
 
-function stub.advanceSeconds(seconds)
-    stub.clockMilliseconds = stub.clockMilliseconds + seconds * 1000
-end
+function stub.advanceSeconds(seconds) stub.clockMilliseconds = stub.clockMilliseconds + seconds * 1000 end
 
 return stub

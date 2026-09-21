@@ -29,17 +29,15 @@ local crankSteps = CrankSteps.new(CRANK_DEGREES_PER_ROW)
 
 function MyMazesScene.enter()
     MyMazesScene.isDeleteArmed = false
-    for index, name in ipairs(MapSlots.NAMES) do MyMazesScene.designs[index] = MapSlots.read(name) or false end
+    for index, name in ipairs(MapSlots.NAMES) do
+        MyMazesScene.designs[index] = MapSlots.read(name) or false
+    end
     crankSteps:reset()
 end
 
-function MyMazesScene.selectedSlot()
-    return MapSlots.NAMES[MyMazesScene.selection]
-end
+function MyMazesScene.selectedSlot() return MapSlots.NAMES[MyMazesScene.selection] end
 
-function MyMazesScene.selectedDesign()
-    return MyMazesScene.designs[MyMazesScene.selection] or nil
-end
+function MyMazesScene.selectedDesign() return MyMazesScene.designs[MyMazesScene.selection] or nil end
 
 -- A new map is every cell walled in, at the size chosen on the title screen
 function MyMazesScene.newDesign()
@@ -134,10 +132,25 @@ function MyMazesScene.update()
     if design then
         local blockSize = MapView.blockSizeToFit(design, THUMBNAIL_WIDTH, THUMBNAIL_HEIGHT)
         local width, height = MapView.size(design, blockSize)
-        MapView.draw(design, THUMBNAIL_LEFT + (THUMBNAIL_WIDTH - width) // 2, THUMBNAIL_TOP + (THUMBNAIL_HEIGHT - height) // 2, blockSize)
+        MapView.draw(
+            design,
+            THUMBNAIL_LEFT + (THUMBNAIL_WIDTH - width) // 2,
+            THUMBNAIL_TOP + (THUMBNAIL_HEIGHT - height) // 2,
+            blockSize
+        )
     else
-        playdate.graphics.drawTextAligned("A new map will be", THUMBNAIL_LEFT + THUMBNAIL_WIDTH / 2, THUMBNAIL_TOP + 40, kTextAlignment.center)
-        playdate.graphics.drawTextAligned("*" .. Sizes.ALL[TitleScene.sizeIndex].name .. "*", THUMBNAIL_LEFT + THUMBNAIL_WIDTH / 2, THUMBNAIL_TOP + 62, kTextAlignment.center)
+        playdate.graphics.drawTextAligned(
+            "A new map will be",
+            THUMBNAIL_LEFT + THUMBNAIL_WIDTH / 2,
+            THUMBNAIL_TOP + 40,
+            kTextAlignment.center
+        )
+        playdate.graphics.drawTextAligned(
+            "*" .. Sizes.ALL[TitleScene.sizeIndex].name .. "*",
+            THUMBNAIL_LEFT + THUMBNAIL_WIDTH / 2,
+            THUMBNAIL_TOP + 62,
+            kTextAlignment.center
+        )
     end
     playdate.graphics.drawTextAligned(footer(design), 200, 212, kTextAlignment.center)
 end

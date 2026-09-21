@@ -2,9 +2,7 @@ require("spec.support.playdate_stub")
 import "MapDesign"
 import "MapEditor"
 
-local function newEditor()
-    return MapEditor.new(MapDesign.new(3, 2))
-end
+local function newEditor() return MapEditor.new(MapDesign.new(3, 2)) end
 
 -- Turns the tool dial until the named tool is in hand
 local function pick(editor, name)
@@ -25,11 +23,20 @@ describe("MapEditor", function()
     describe("the tool dial", function()
         it("offers walls, blocks, the start, the exit, and each shape and its pedestal", function()
             local names = {}
-            for index, tool in ipairs(MapEditor.TOOLS) do names[index] = tool.name end
+            for index, tool in ipairs(MapEditor.TOOLS) do
+                names[index] = tool.name
+            end
             assert.are.same({
-                "cells", "blocks", "start", "exit",
-                "circle", "triangle", "square",
-                "circle pedestal", "triangle pedestal", "square pedestal",
+                "cells",
+                "blocks",
+                "start",
+                "exit",
+                "circle",
+                "triangle",
+                "square",
+                "circle pedestal",
+                "triangle pedestal",
+                "square pedestal",
             }, names)
         end)
 
@@ -220,14 +227,19 @@ describe("MapEditor", function()
     end)
 
     describe("status", function()
-        it("says what is still wrong with the map", function()
-            assert.are.equal("There is no exit", newEditor():status())
-        end)
+        it(
+            "says what is still wrong with the map",
+            function() assert.are.equal("There is no exit", newEditor():status()) end
+        )
 
         it("says when the map is ready", function()
             local design = MapDesign.new(6, 4)
-            for column = 1, 5 do design:setPassage(column, 1, "east", true) end
-            for row = 1, 3 do design:setPassage(6, row, "south", true) end
+            for column = 1, 5 do
+                design:setPassage(column, 1, "east", true)
+            end
+            for row = 1, 3 do
+                design:setPassage(6, row, "south", true)
+            end
             design:place("exit", nil, 13, 8)
             assert.are.equal("Ready to play", MapEditor.new(design):status())
         end)

@@ -19,9 +19,14 @@ end
 
 -- Returns random(n), which gives a whole number from 1 to n like math.random
 function SeededRandom.new(seed)
-    assert(math.type(seed) == "integer" and seed >= 1 and seed < MODULUS, "the seed must be a whole number from 1 to 2147483646")
+    assert(
+        math.type(seed) == "integer" and seed >= 1 and seed < MODULUS,
+        "the seed must be a whole number from 1 to 2147483646"
+    )
     local state = seed
-    for _ = 1, WARM_UP do state = SeededRandom.advance(state) end
+    for _ = 1, WARM_UP do
+        state = SeededRandom.advance(state)
+    end
     return function(n)
         state = SeededRandom.advance(state)
         -- The high bits are the most random ones
@@ -29,6 +34,4 @@ function SeededRandom.new(seed)
     end
 end
 
-function SeededRandom.seedForDate(year, month, day)
-    return year * 10000 + month * 100 + day
-end
+function SeededRandom.seedForDate(year, month, day) return year * 10000 + month * 100 + day end

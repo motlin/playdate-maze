@@ -55,13 +55,17 @@ describe("Player", function()
 
         it("stops a body's width short of a wall", function()
             local player = Player.new(5.5, 1.5, 0)
-            for _ = 1, 20 do player:move(corridor(), 0.1, 0) end
+            for _ = 1, 20 do
+                player:move(corridor(), 0.1, 0)
+            end
             assert.is_near(6 - Player.RADIUS, player.x, 0.0001)
         end)
 
         it("slides along a wall when walking into it at an angle", function()
             local player = Player.new(1.5, 1.5, 45)
-            for _ = 1, 20 do player:move(corridor(), 0.1, 0) end
+            for _ = 1, 20 do
+                player:move(corridor(), 0.1, 0)
+            end
             assert.is_near(2 - Player.RADIUS, player.y, 0.0001)
             assert.is_true(player.x > 2.5)
         end)
@@ -72,7 +76,9 @@ describe("Player", function()
             maze:carve(1, 1, "east")
             maze:carve(2, 1, "south")
             local player = Player.new(2.5, 1.5, 45)
-            for _ = 1, 40 do player:move(maze, 0.1, 0) end
+            for _ = 1, 40 do
+                player:move(maze, 0.1, 0)
+            end
             local gridX, gridY = maze:blockAt(player.x, player.y)
             assert.is_false(maze:isWall(gridX, gridY))
             assert.is_false(maze:isWall(maze:blockAt(player.x - Player.RADIUS, player.y + Player.RADIUS)))
@@ -82,7 +88,9 @@ describe("Player", function()
             local maze = Maze.generate(2, 1, function() return 1 end)
             maze:openExit()
             local player = Player.new(3.5, 1.5, 0)
-            for _ = 1, 10 do player:move(maze, 0.1, 0) end
+            for _ = 1, 10 do
+                player:move(maze, 0.1, 0)
+            end
             assert.is_true(maze:isExit(player.x, player.y))
         end)
     end)

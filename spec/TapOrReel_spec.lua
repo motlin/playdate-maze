@@ -3,7 +3,12 @@ import "TapOrReel"
 
 -- One frame of the button: returns degrees to reel in, and whether the button was tapped
 local function frame(button, state, crankChange)
-    return button:update(state == "pressed", state == "pressed" or state == "held", state == "released", crankChange or 0)
+    return button:update(
+        state == "pressed",
+        state == "pressed" or state == "held",
+        state == "released",
+        crankChange or 0
+    )
 end
 
 describe("TapOrReel", function()
@@ -39,7 +44,9 @@ describe("TapOrReel", function()
         local button = TapOrReel.new()
         frame(button, "pressed")
         local reeled = 0
-        for _ = 1, 30 do reeled = reeled + frame(button, "held", -1) end
+        for _ = 1, 30 do
+            reeled = reeled + frame(button, "held", -1)
+        end
         assert.are.equal(30, reeled)
         assert.are.same({ 0, false }, { frame(button, "released") })
     end)

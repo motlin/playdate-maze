@@ -14,9 +14,7 @@ function MapView.blockSizeToFit(design, width, height)
     return math.max(1, math.min(width // design.gridWidth, height // design.gridHeight))
 end
 
-function MapView.size(design, blockSize)
-    return design.gridWidth * blockSize, design.gridHeight * blockSize
-end
+function MapView.size(design, blockSize) return design.gridWidth * blockSize, design.gridHeight * blockSize end
 
 local function blockMiddle(left, top, blockSize, place)
     return left + (place.gridX - 0.5) * blockSize, top + (place.gridY - 0.5) * blockSize
@@ -55,7 +53,12 @@ function MapView.draw(design, left, top, blockSize)
             local isWall = gridX <= design.gridWidth and not design:isOpen(gridX, gridY)
             if isWall and not runStart then runStart = gridX end
             if not isWall and runStart then
-                playdate.graphics.fillRect(left + (runStart - 1) * blockSize, top + (gridY - 1) * blockSize, (gridX - runStart) * blockSize, blockSize)
+                playdate.graphics.fillRect(
+                    left + (runStart - 1) * blockSize,
+                    top + (gridY - 1) * blockSize,
+                    (gridX - runStart) * blockSize,
+                    blockSize
+                )
                 runStart = nil
             end
         end
@@ -63,7 +66,12 @@ function MapView.draw(design, left, top, blockSize)
 
     if design.exit then
         playdate.graphics.setPattern(GATE_PATTERN)
-        playdate.graphics.fillRect(left + (design.exit.gridX - 1) * blockSize, top + (design.exit.gridY - 1) * blockSize, blockSize, blockSize)
+        playdate.graphics.fillRect(
+            left + (design.exit.gridX - 1) * blockSize,
+            top + (design.exit.gridY - 1) * blockSize,
+            blockSize,
+            blockSize
+        )
     end
     drawThings(design, left, top, blockSize)
 end

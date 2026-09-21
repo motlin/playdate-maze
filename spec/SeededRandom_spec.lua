@@ -10,7 +10,9 @@ describe("SeededRandom", function()
 
         it("reaches the published check value after 10,000 steps from 1", function()
             local state = 1
-            for _ = 1, 10000 do state = SeededRandom.advance(state) end
+            for _ = 1, 10000 do
+                state = SeededRandom.advance(state)
+            end
             assert.are.equal(1043618065, state)
         end)
 
@@ -27,7 +29,9 @@ describe("SeededRandom", function()
     describe("new", function()
         it("gives the same sequence for the same seed", function()
             local first, second = SeededRandom.new(42), SeededRandom.new(42)
-            for _ = 1, 100 do assert.are.equal(first(1000), second(1000)) end
+            for _ = 1, 100 do
+                assert.are.equal(first(1000), second(1000))
+            end
         end)
 
         it("gives different sequences for different seeds, even neighbouring ones", function()
@@ -63,8 +67,6 @@ describe("SeededRandom", function()
             assert.are_not.equal(SeededRandom.seedForDate(2026, 1, 12), SeededRandom.seedForDate(2026, 11, 2))
         end)
 
-        it("is the same all day", function()
-            assert.are.equal(20260919, SeededRandom.seedForDate(2026, 9, 19))
-        end)
+        it("is the same all day", function() assert.are.equal(20260919, SeededRandom.seedForDate(2026, 9, 19)) end)
     end)
 end)

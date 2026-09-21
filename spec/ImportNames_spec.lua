@@ -5,15 +5,15 @@
 local function sourceFiles()
     local files = {}
     local listing = assert(io.popen("find source -name '*.lua'"))
-    for path in listing:lines() do files[#files + 1] = path end
+    for path in listing:lines() do
+        files[#files + 1] = path
+    end
     listing:close()
     return files
 end
 
 describe("source file names", function()
-    it("finds the source files", function()
-        assert.is_true(#sourceFiles() > 10)
-    end)
+    it("finds the source files", function() assert.is_true(#sourceFiles() > 10) end)
 
     it("are unique across folders, so an import can never resolve to the wrong file", function()
         local pathsByName, clashes = {}, {}

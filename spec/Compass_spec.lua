@@ -46,7 +46,11 @@ describe("Compass", function()
     it("marks every fifteen degrees with a tick, and only the eight winds with a letter", function()
         local ticks, letters = 0, 0
         for _, mark in ipairs(Compass.marks(0, 120, 120)) do
-            if mark.label then letters = letters + 1 else ticks = ticks + 1 end
+            if mark.label then
+                letters = letters + 1
+            else
+                ticks = ticks + 1
+            end
         end
         -- From 45 degrees left to 45 degrees right: NE, E, and SE, with a tick between and beside them
         assert.are.equal(3, letters)
@@ -55,7 +59,9 @@ describe("Compass", function()
 
     it("lists the marks from left to right", function()
         local marks = Compass.marks(200, 120, 120)
-        for index = 2, #marks do assert.is_true(marks[index].x > marks[index - 1].x) end
+        for index = 2, #marks do
+            assert.is_true(marks[index].x > marks[index - 1].x)
+        end
     end)
 
     it("scales to the width of the strip", function()

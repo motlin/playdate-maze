@@ -17,9 +17,7 @@ describe("Run", function()
         assert.is_nil(run.message)
     end)
 
-    it("has no autopilot unless a mode provides one", function()
-        assert.is_false(newRun():isAutopilotOn())
-    end)
+    it("has no autopilot unless a mode provides one", function() assert.is_false(newRun():isAutopilotOn()) end)
 
     describe("visiting", function()
         it("has visited the cell the player starts in", function()
@@ -40,9 +38,10 @@ describe("Run", function()
     end)
 
     describe("the map", function()
-        it("reveals everything when there is no puzzle to hide", function()
-            assert.is_true(newRun():isRevealed(3, 2))
-        end)
+        it(
+            "reveals everything when there is no puzzle to hide",
+            function() assert.is_true(newRun():isRevealed(3, 2)) end
+        )
 
         it("reveals only visited cells when there is a puzzle", function()
             local run = newRun()
@@ -53,9 +52,7 @@ describe("Run", function()
     end)
 
     describe("events", function()
-        it("has none to begin with", function()
-            assert.are.same({}, newRun().events)
-        end)
+        it("has none to begin with", function() assert.are.same({}, newRun().events) end)
 
         it("collects what happened during a frame, in order", function()
             local run = newRun()
@@ -80,7 +77,9 @@ describe("Run", function()
         it("keeps a message for a couple of seconds of ticks", function()
             local run = newRun()
             run:say("Hello")
-            for _ = 1, Run.MESSAGE_FRAMES - 1 do run:tick() end
+            for _ = 1, Run.MESSAGE_FRAMES - 1 do
+                run:tick()
+            end
             assert.are.equal("Hello", run.message)
             run:tick()
             assert.is_nil(run.message)
@@ -89,15 +88,21 @@ describe("Run", function()
         it("starts the wait again for a new message", function()
             local run = newRun()
             run:say("First")
-            for _ = 1, 30 do run:tick() end
+            for _ = 1, 30 do
+                run:tick()
+            end
             run:say("Second")
-            for _ = 1, 40 do run:tick() end
+            for _ = 1, 40 do
+                run:tick()
+            end
             assert.are.equal("Second", run.message)
         end)
 
         it("counts a frame for every tick", function()
             local run = newRun()
-            for _ = 1, 45 do run:tick() end
+            for _ = 1, 45 do
+                run:tick()
+            end
             assert.are.equal(45, run.frames)
         end)
     end)

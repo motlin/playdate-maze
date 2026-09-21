@@ -39,7 +39,8 @@ function TitleScene.continueSavedGame()
 end
 
 -- Each row has a name, a label, and what A does; left and right are optional
-local CONTINUE_ROW <const> = { name = "continue", label = function() return "Continue" end, confirm = TitleScene.continueSavedGame }
+local CONTINUE_ROW <const> =
+    { name = "continue", label = function() return "Continue" end, confirm = TitleScene.continueSavedGame }
 local PLAY_ROWS <const> = {
     { name = "explore", label = function() return "Explore" end, confirm = playFirstPerson("explore") },
     { name = "daily", label = function() return "Daily maze" end, confirm = playFirstPerson("daily") },
@@ -53,7 +54,11 @@ local PLAY_ROWS <const> = {
         label = function() return "Slime" end,
         confirm = function() SceneManager.switch(SlimeScene, TitleScene.sizeIndex) end,
     },
-    { name = "myMazes", label = function() return "My mazes" end, confirm = function() SceneManager.switch(MyMazesScene) end },
+    {
+        name = "myMazes",
+        label = function() return "My mazes" end,
+        confirm = function() SceneManager.switch(MyMazesScene) end,
+    },
     { name = "screensaver", label = function() return "Screensaver" end, confirm = playFirstPerson("screensaver") },
     {
         name = "size",
@@ -67,7 +72,9 @@ local PLAY_ROWS <const> = {
 local function buildRows()
     local rows = {}
     if SaveGame.exists() then rows[1] = CONTINUE_ROW end
-    for _, row in ipairs(PLAY_ROWS) do rows[#rows + 1] = row end
+    for _, row in ipairs(PLAY_ROWS) do
+        rows[#rows + 1] = row
+    end
     return rows
 end
 
@@ -107,7 +114,12 @@ function TitleScene.handleInput()
     if playdate.buttonJustPressed(playdate.kButtonUp) then move = -1 end
     if playdate.buttonJustPressed(playdate.kButtonDown) then move = 1 end
     -- A press of the D-pad is a fresh start for the crank
-    if move ~= 0 and (playdate.buttonJustPressed(playdate.kButtonUp) or playdate.buttonJustPressed(playdate.kButtonDown)) then crankSteps:reset() end
+    if
+        move ~= 0
+        and (playdate.buttonJustPressed(playdate.kButtonUp) or playdate.buttonJustPressed(playdate.kButtonDown))
+    then
+        crankSteps:reset()
+    end
     TitleScene.selection = math.max(1, math.min(#rows, TitleScene.selection + move))
     if playdate.buttonJustPressed(playdate.kButtonLeft) and row.left then row.left() end
     if playdate.buttonJustPressed(playdate.kButtonRight) and row.right then row.right() end

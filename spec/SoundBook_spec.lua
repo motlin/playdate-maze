@@ -7,7 +7,7 @@ local function emittedEvents()
     local listing = assert(io.popen("find source -name '*.lua'"))
     for path in listing:lines() do
         local file = assert(io.open(path))
-        for event in file:read("a"):gmatch('emit%("(%w+)"%)') do
+        for event in file:read("a"):gmatch("emit%(\"(%w+)\"%)") do
             if not seen[event] then
                 seen[event] = true
                 events[#events + 1] = event
@@ -20,9 +20,7 @@ local function emittedEvents()
 end
 
 describe("SoundBook", function()
-    it("finds the events the game reports", function()
-        assert.is_true(#emittedEvents() >= 15)
-    end)
+    it("finds the events the game reports", function() assert.is_true(#emittedEvents() >= 15) end)
 
     it("has a sound for every event any mode reports", function()
         for _, event in ipairs(emittedEvents()) do

@@ -38,13 +38,16 @@ describe("MusicScore", function()
             local value = 0
             value = MusicScore.glide(value, 1)
             assert.is_near(MusicScore.GLIDE_PER_FRAME, value, 0.0001)
-            for _ = 1, 1000 do value = MusicScore.glide(value, 1) end
+            for _ = 1, 1000 do
+                value = MusicScore.glide(value, 1)
+            end
             assert.are.equal(1, value)
         end)
 
-        it("glides downwards too", function()
-            assert.is_near(1 - MusicScore.GLIDE_PER_FRAME, MusicScore.glide(1, 0), 0.0001)
-        end)
+        it(
+            "glides downwards too",
+            function() assert.is_near(1 - MusicScore.GLIDE_PER_FRAME, MusicScore.glide(1, 0), 0.0001) end
+        )
 
         it("takes about a second to cross the gap between neighbouring cells of a medium maze", function()
             local frames = (1 / 20) / MusicScore.GLIDE_PER_FRAME
@@ -64,14 +67,16 @@ describe("MusicScore", function()
 
         it("wanders rather than repeating a short loop", function()
             local seen = {}
-            for step = 1, 64 do seen[MusicScore.noteAt(step)] = true end
+            for step = 1, 64 do
+                seen[MusicScore.noteAt(step)] = true
+            end
             local count = 0
-            for _ in pairs(seen) do count = count + 1 end
+            for _ in pairs(seen) do
+                count = count + 1
+            end
             assert.is_true(count >= 6)
         end)
 
-        it("is the same tune every time", function()
-            assert.are.equal(MusicScore.noteAt(17), MusicScore.noteAt(17))
-        end)
+        it("is the same tune every time", function() assert.are.equal(MusicScore.noteAt(17), MusicScore.noteAt(17)) end)
     end)
 end)

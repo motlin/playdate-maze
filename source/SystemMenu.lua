@@ -15,7 +15,9 @@ function SystemMenu.refresh(scene)
 
     if scene.menuItems then
         assert(#scene.menuItems <= 2, "the system menu has room for two items beside Title screen")
-        for _, item in ipairs(scene.menuItems) do menu:addMenuItem(item.label, item.action) end
+        for _, item in ipairs(scene.menuItems) do
+            menu:addMenuItem(item.label, item.action)
+        end
     else
         if scene.restart then menu:addMenuItem("New maze", scene.restart) end
         menu:addCheckmarkMenuItem("Music", Settings.isMusicOn(), function(isOn)
@@ -24,7 +26,5 @@ function SystemMenu.refresh(scene)
         end)
     end
 
-    if scene ~= TitleScene then
-        menu:addMenuItem("Title screen", function() SceneManager.switch(TitleScene) end)
-    end
+    if scene ~= TitleScene then menu:addMenuItem("Title screen", function() SceneManager.switch(TitleScene) end) end
 end

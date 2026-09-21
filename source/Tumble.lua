@@ -68,9 +68,7 @@ function Tumble.new(options)
 end
 
 ---@return nil
-function Tumble:hint()
-    return nil
-end
+function Tumble:hint() return nil end
 
 ---@param item PuzzleItem
 ---@return nil
@@ -124,7 +122,8 @@ function Tumble:update(input)
     if input.jump and self.isGrounded then
         self:emit("jump")
         local falling = velocityX * downX + velocityY * downY
-        velocityX, velocityY = velocityX - downX * (falling + Tumble.JUMP_SPEED), velocityY - downY * (falling + Tumble.JUMP_SPEED)
+        velocityX, velocityY =
+            velocityX - downX * (falling + Tumble.JUMP_SPEED), velocityY - downY * (falling + Tumble.JUMP_SPEED)
     end
 
     local speed = math.sqrt(velocityX * velocityX + velocityY * velocityY)

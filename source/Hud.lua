@@ -60,13 +60,25 @@ local function drawCompass(heading)
         if mark.label then
             playdate.graphics.drawTextAligned(mark.label, left + mark.x, EDGE + 2, kTextAlignment.center)
         else
-            playdate.graphics.drawLine(left + mark.x, EDGE + COMPASS_HEIGHT - COMPASS_TICK, left + mark.x, EDGE + COMPASS_HEIGHT - 1)
+            playdate.graphics.drawLine(
+                left + mark.x,
+                EDGE + COMPASS_HEIGHT - COMPASS_TICK,
+                left + mark.x,
+                EDGE + COMPASS_HEIGHT - 1
+            )
         end
     end
     playdate.graphics.clearClipRect()
     -- A notch marks dead ahead
     local middle = SCREEN_WIDTH / 2
-    playdate.graphics.fillTriangle(middle - 4, EDGE + COMPASS_HEIGHT, middle + 4, EDGE + COMPASS_HEIGHT, middle, EDGE + COMPASS_HEIGHT - 5)
+    playdate.graphics.fillTriangle(
+        middle - 4,
+        EDGE + COMPASS_HEIGHT,
+        middle + 4,
+        EDGE + COMPASS_HEIGHT,
+        middle,
+        EDGE + COMPASS_HEIGHT - 5
+    )
 end
 
 -- White text on a black pill, centred along the bottom

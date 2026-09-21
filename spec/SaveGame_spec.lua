@@ -24,7 +24,9 @@ describe("SaveGame", function()
 
     it("keeps a game with the mode and size it was being played in", function()
         local game = newGame()
-        for _ = 1, 30 do game:update({ forward = 1 }) end
+        for _ = 1, 30 do
+            game:update({ forward = 1 })
+        end
         SaveGame.write(game, "daily", 3)
         assert.is_true(SaveGame.exists())
 
@@ -37,7 +39,9 @@ describe("SaveGame", function()
 
     it("keeps only the latest game", function()
         local first, second = newGame(), newGame()
-        for _ = 1, 30 do second:update({ forward = 1 }) end
+        for _ = 1, 30 do
+            second:update({ forward = 1 })
+        end
         SaveGame.write(first, "explore", 2)
         SaveGame.write(second, "explore", 2)
         assert.are.equal(second.frames, (SaveGame.read()).frames)

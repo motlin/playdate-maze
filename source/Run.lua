@@ -59,17 +59,13 @@ end
 ---@param column integer
 ---@param row integer
 ---@return boolean
-function Run:hasVisited(column, row)
-    return self.visited[(row - 1) * self.maze.columns + column] == true
-end
+function Run:hasVisited(column, row) return self.visited[(row - 1) * self.maze.columns + column] == true end
 
 -- Whether the map shows this cell. Without a puzzle there is nothing to find, so nothing is hidden.
 ---@param column integer
 ---@param row integer
 ---@return boolean
-function Run:isRevealed(column, row)
-    return self.puzzle == nil or self:hasVisited(column, row)
-end
+function Run:isRevealed(column, row) return self.puzzle == nil or self:hasVisited(column, row) end
 
 ---@param message string
 ---@return nil
@@ -80,13 +76,13 @@ end
 
 ---@param event string
 ---@return nil
-function Run:emit(event)
-    self.events[#self.events + 1] = event
-end
+function Run:emit(event) self.events[#self.events + 1] = event end
 
 ---@return nil
 function Run:clearEvents()
-    for index = #self.events, 1, -1 do self.events[index] = nil end
+    for index = #self.events, 1, -1 do
+        self.events[index] = nil
+    end
 end
 
 -- Call once at the start of every frame that is played
@@ -101,6 +97,4 @@ function Run:tick()
 end
 
 ---@return boolean
-function Run:isAutopilotOn()
-    return false
-end
+function Run:isAutopilotOn() return false end

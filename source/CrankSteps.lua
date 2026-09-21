@@ -22,6 +22,4 @@ function CrankSteps:turn(degrees)
     return steps
 end
 
-function CrankSteps:reset()
-    self.pendingDegrees = 0
-end
+function CrankSteps:reset() self.pendingDegrees = 0 end

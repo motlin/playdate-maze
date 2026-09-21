@@ -28,17 +28,11 @@ function TumbleScene.enter(sizeIndex)
     TumbleScene.newGame()
 end
 
-function TumbleScene.exit()
-    Music.stop()
-end
+function TumbleScene.exit() Music.stop() end
 
-function TumbleScene.restart()
-    TumbleScene.newGame()
-end
+function TumbleScene.restart() TumbleScene.newGame() end
 
-local function playAgain()
-    SceneManager.switch(TumbleScene, TumbleScene.sizeIndex)
-end
+local function playAgain() SceneManager.switch(TumbleScene, TumbleScene.sizeIndex) end
 
 function TumbleScene.update()
     local tumble = TumbleScene.tumble

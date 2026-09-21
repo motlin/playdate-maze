@@ -55,7 +55,9 @@ function MapDesign.new(columns, rows)
     local design = newDesign(columns, rows)
     for gridY = 1, design.gridHeight do
         local line = {}
-        for gridX = 1, design.gridWidth do line[gridX] = gridX % 2 == 0 and gridY % 2 == 0 end
+        for gridX = 1, design.gridWidth do
+            line[gridX] = gridX % 2 == 0 and gridY % 2 == 0
+        end
         design.blocks[gridY] = line
     end
     return design
@@ -69,7 +71,9 @@ function MapDesign.fromMaze(maze)
     local design = newDesign(maze.columns, maze.rows)
     for gridY = 1, design.gridHeight do
         local line = {}
-        for gridX = 1, design.gridWidth do line[gridX] = maze:blockValue(gridX, gridY) == Maze.BLOCKS.OPEN end
+        for gridX = 1, design.gridWidth do
+            line[gridX] = maze:blockValue(gridX, gridY) == Maze.BLOCKS.OPEN
+        end
         design.blocks[gridY] = line
     end
     design.exit = { gridX = maze.exitGridX, gridY = maze.exitGridY }
@@ -91,9 +95,7 @@ function MapDesign:isOpen(gridX, gridY)
     return line ~= nil and line[gridX] == true
 end
 
-local function isAt(place, gridX, gridY)
-    return place ~= nil and place.gridX == gridX and place.gridY == gridY
-end
+local function isAt(place, gridX, gridY) return place ~= nil and place.gridX == gridX and place.gridY == gridY end
 
 -- What stands on a block: "start", "exit", or "item" or "pedestal" with its shape; or nil
 ---@param gridX integer
@@ -131,7 +133,9 @@ function MapDesign:setBlock(gridX, gridY, isOpen)
     if not self:isInside(gridX, gridY) then return false end
     if not isOpen then
         if self:thingAt(gridX, gridY) then return false end
-        if self.exit and isAt({ gridX = gridX, gridY = gridY }, self:blockInsideWall(self.exit.gridX, self.exit.gridY)) then
+        if
+            self.exit and isAt({ gridX = gridX, gridY = gridY }, self:blockInsideWall(self.exit.gridX, self.exit.gridY))
+        then
             return false
         end
     end
@@ -148,9 +152,7 @@ end
 ---@param row integer
 ---@param direction string
 ---@return boolean
-function MapDesign:hasPassage(column, row, direction)
-    return self:isOpen(passageBlock(column, row, direction))
-end
+function MapDesign:hasPassage(column, row, direction) return self:isOpen(passageBlock(column, row, direction)) end
 
 -- Knocks through, or builds back, the wall between a cell and its neighbour
 ---@param column integer
@@ -216,9 +218,7 @@ function MapDesign:remove(gridX, gridY)
     return true
 end
 
-local function key(gridX, gridY)
-    return gridY * 256 + gridX
-end
+local function key(gridX, gridY) return gridY * 256 + gridX end
 
 -- The open blocks that can be walked to from the start, as a set keyed by key(gridX, gridY)
 ---@return table<integer, boolean>
@@ -303,7 +303,10 @@ end
 ---@param save MapDesignSave
 ---@return MapDesign
 function MapDesign.fromSave(save)
-    assert(save.version == MapDesign.SAVE_VERSION, "this map is version " .. tostring(save.version) .. ", which this game cannot load")
+    assert(
+        save.version == MapDesign.SAVE_VERSION,
+        "this map is version " .. tostring(save.version) .. ", which this game cannot load"
+    )
     local design = newDesign(save.columns, save.rows)
     design.blocks, design.start, design.exit = save.blocks, save.start, save.exit
     design.items, design.pedestals = save.items, save.pedestals

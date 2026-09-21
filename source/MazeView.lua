@@ -58,7 +58,11 @@ local BLOCK_EXIT <const> = 3
 local background
 
 local function drawBackground()
-    local image = playdate.graphics.image.new(MazeView.SCREEN.width, MazeView.SCREEN.height + 2 * BOB_ROOM, playdate.graphics.kColorBlack)
+    local image = playdate.graphics.image.new(
+        MazeView.SCREEN.width,
+        MazeView.SCREEN.height + 2 * BOB_ROOM,
+        playdate.graphics.kColorBlack
+    )
     playdate.graphics.pushContext(image)
     local bandHeight <const> = 8
     local middle = HORIZON_AT_REST + BOB_ROOM
@@ -107,7 +111,16 @@ local function drawGate(run, startTop, startHeight, endTop, endHeight)
     local shown = 1 - gateLift
     local startFoot, endFoot = startTop + startHeight * shown, endTop + endHeight * shown
     playdate.graphics.setColor(playdate.graphics.kColorWhite)
-    playdate.graphics.fillPolygon(startX, startFoot, endX, endFoot, endX, endTop + endHeight, startX, startTop + startHeight)
+    playdate.graphics.fillPolygon(
+        startX,
+        startFoot,
+        endX,
+        endFoot,
+        endX,
+        endTop + endHeight,
+        startX,
+        startTop + startHeight
+    )
 
     for _, fraction in ipairs(GATE_CROSSBARS) do
         local height = fraction - gateLift
@@ -140,7 +153,13 @@ local SHORTEST_WALL_WITH_PICTURE <const> = 36
 -- 0, 0 at its top left to 1, 1 at its bottom right
 local MOTIFS <const> = {
     -- A sun
-    { { 0.5, 0.25, 0.75, 0.5, 0.5, 0.75, 0.25, 0.5, 0.5, 0.25 }, { 0.5, 0.08, 0.5, 0.18 }, { 0.5, 0.82, 0.5, 0.92 }, { 0.08, 0.5, 0.18, 0.5 }, { 0.82, 0.5, 0.92, 0.5 } },
+    {
+        { 0.5, 0.25, 0.75, 0.5, 0.5, 0.75, 0.25, 0.5, 0.5, 0.25 },
+        { 0.5, 0.08, 0.5, 0.18 },
+        { 0.5, 0.82, 0.5, 0.92 },
+        { 0.08, 0.5, 0.18, 0.5 },
+        { 0.82, 0.5, 0.92, 0.5 },
+    },
     -- A tree
     { { 0.5, 0.1, 0.85, 0.65, 0.15, 0.65, 0.5, 0.1 }, { 0.5, 0.65, 0.5, 0.9 } },
     -- Waves
@@ -148,9 +167,15 @@ local MOTIFS <const> = {
     -- A star
     { { 0.5, 0.1, 0.72, 0.88, 0.1, 0.38, 0.9, 0.38, 0.28, 0.88, 0.5, 0.1 } },
     -- An eye
-    { { 0.1, 0.5, 0.5, 0.2, 0.9, 0.5, 0.5, 0.8, 0.1, 0.5 }, { 0.42, 0.42, 0.58, 0.42, 0.58, 0.58, 0.42, 0.58, 0.42, 0.42 } },
+    {
+        { 0.1, 0.5, 0.5, 0.2, 0.9, 0.5, 0.5, 0.8, 0.1, 0.5 },
+        { 0.42, 0.42, 0.58, 0.42, 0.58, 0.58, 0.42, 0.58, 0.42, 0.42 },
+    },
     -- A house
-    { { 0.2, 0.9, 0.2, 0.45, 0.5, 0.15, 0.8, 0.45, 0.8, 0.9, 0.2, 0.9 }, { 0.45, 0.9, 0.45, 0.65, 0.6, 0.65, 0.6, 0.9 } },
+    {
+        { 0.2, 0.9, 0.2, 0.45, 0.5, 0.15, 0.8, 0.45, 0.8, 0.9, 0.2, 0.9 },
+        { 0.45, 0.9, 0.45, 0.65, 0.6, 0.65, 0.6, 0.9 },
+    },
     -- A cross
     { { 0.15, 0.15, 0.85, 0.85 }, { 0.85, 0.15, 0.15, 0.85 } },
     -- A spiral of squares
@@ -182,7 +207,9 @@ local function drawPicture(run)
     ---@cast toHeight number
     if math.max(fromHeight, toHeight) < SHORTEST_WALL_WITH_PICTURE then return end
     -- Along some faces the far end comes first on screen
-    if fromX > toX then fromX, fromHeight, toX, toHeight = toX, toHeight, fromX, fromHeight end
+    if fromX > toX then
+        fromX, fromHeight, toX, toHeight = toX, toHeight, fromX, fromHeight
+    end
 
     local function place(across, down)
         local height = fromHeight + (toHeight - fromHeight) * across
@@ -297,14 +324,20 @@ local function collectSprites(game)
         end
         sprite.thing, sprite.kind, sprite.screenX, sprite.depth, sprite.index = thing, kind, screenX, depth, index
     end
-    for index, flipper in ipairs(game.flippers.all) do add(flipper, "flipper", index) end
+    for index, flipper in ipairs(game.flippers.all) do
+        add(flipper, "flipper", index)
+    end
     if game.puzzle then
-        for index, pedestal in ipairs(game.puzzle.pedestals) do add(pedestal, "pedestal", index) end
+        for index, pedestal in ipairs(game.puzzle.pedestals) do
+            add(pedestal, "pedestal", index)
+        end
         for index, item in ipairs(game.puzzle.items) do
             if item.state == Puzzle.STATES.GROUND then add(item, "item", index) end
         end
     end
-    for index = count + 1, #sprites do sprites[index] = nil end
+    for index = count + 1, #sprites do
+        sprites[index] = nil
+    end
     table.sort(sprites, byDepthFarthestFirst)
 end
 
@@ -321,7 +354,12 @@ local function clipToVisibleColumns(depths, centerX, halfWidth, depth)
         end
     end
     if not firstVisible then return false end
-    playdate.graphics.setClipRect((firstVisible - 1) * columnWidth, 0, (lastVisible - firstVisible + 1) * columnWidth, MazeView.SCREEN.height)
+    playdate.graphics.setClipRect(
+        (firstVisible - 1) * columnWidth,
+        0,
+        (lastVisible - firstVisible + 1) * columnWidth,
+        MazeView.SCREEN.height
+    )
     return true
 end
 
@@ -338,10 +376,28 @@ local function drawSprite(sprite, depths)
         if not clipToVisibleColumns(depths, centerX, size / 2, sprite.depth) then return end
         local top, bottom = horizon - size / 2, horizon + size / 2
         playdate.graphics.setColor(playdate.graphics.kColorWhite)
-        playdate.graphics.fillPolygon(centerX, top, centerX + halfWidth, horizon, centerX, bottom, centerX - halfWidth, horizon)
+        playdate.graphics.fillPolygon(
+            centerX,
+            top,
+            centerX + halfWidth,
+            horizon,
+            centerX,
+            bottom,
+            centerX - halfWidth,
+            horizon
+        )
         playdate.graphics.setColor(playdate.graphics.kColorBlack)
         playdate.graphics.setLineWidth(2)
-        playdate.graphics.drawPolygon(centerX, top, centerX + halfWidth, horizon, centerX, bottom, centerX - halfWidth, horizon)
+        playdate.graphics.drawPolygon(
+            centerX,
+            top,
+            centerX + halfWidth,
+            horizon,
+            centerX,
+            bottom,
+            centerX - halfWidth,
+            horizon
+        )
         playdate.graphics.setLineWidth(1)
         playdate.graphics.drawLine(centerX - halfWidth, horizon, centerX + halfWidth, horizon)
         playdate.graphics.drawLine(centerX, top, centerX, bottom)
@@ -415,11 +471,17 @@ local function drawScene(game, headOffset)
     landmarks = game.landmarks
     local scan = Raycaster.scan(game.maze, player.x, player.y, player.angle, MazeView.SCREEN)
     local runs = scan.runs
-    for index = 1, #runs do drawRun(runs[index]) end
+    for index = 1, #runs do
+        drawRun(runs[index])
+    end
 
-    for _, mark in ipairs(landmarks.marks) do drawMark(mark, game.maze, scan.depths) end
+    for _, mark in ipairs(landmarks.marks) do
+        drawMark(mark, game.maze, scan.depths)
+    end
     collectSprites(game)
-    for index = 1, #sprites do drawSprite(sprites[index], scan.depths) end
+    for index = 1, #sprites do
+        drawSprite(sprites[index], scan.depths)
+    end
 end
 
 -- Where the scene is drawn while the world is upside down, before being turned over on to the screen

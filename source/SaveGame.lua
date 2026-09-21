@@ -3,16 +3,13 @@
 
 import "Game"
 
-
 ---@class SaveGame
 SaveGame = {}
 
 SaveGame.FILE = "run"
 
 ---@return boolean
-function SaveGame.exists()
-    return playdate.datastore.read(SaveGame.FILE) ~= nil
-end
+function SaveGame.exists() return playdate.datastore.read(SaveGame.FILE) ~= nil end
 
 -- Keep the on-disk "mode" key so existing saves retain their first-person submode.
 ---@param game Game
@@ -24,9 +21,7 @@ function SaveGame.write(game, submode, sizeIndex)
 end
 
 ---@return nil
-function SaveGame.delete()
-    playdate.datastore.delete(SaveGame.FILE)
-end
+function SaveGame.delete() playdate.datastore.delete(SaveGame.FILE) end
 
 -- Returns the game, its first-person submode, and its size, or nil if there is no saved game.
 -- A save from a version of the game that cannot read it is thrown away: an update to the game

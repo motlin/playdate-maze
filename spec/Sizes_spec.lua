@@ -4,7 +4,9 @@ import "Sizes"
 describe("Sizes", function()
     it("offers small, medium, and large mazes, in that order", function()
         local names = {}
-        for index, size in ipairs(Sizes.ALL) do names[index] = size.name end
+        for index, size in ipairs(Sizes.ALL) do
+            names[index] = size.name
+        end
         assert.are.same({ "Small", "Medium", "Large" }, names)
     end)
 
@@ -51,9 +53,7 @@ describe("Sizes", function()
             assert.are.equal(3, Sizes.next(2))
         end)
 
-        it("wraps from the largest back to the smallest", function()
-            assert.are.equal(1, Sizes.next(3))
-        end)
+        it("wraps from the largest back to the smallest", function() assert.are.equal(1, Sizes.next(3)) end)
     end)
 
     describe("previous", function()
@@ -64,9 +64,7 @@ describe("Sizes", function()
     end)
 
     describe("mapCellSize", function()
-        it("draws the default size with roomy cells", function()
-            assert.are.equal(7, Sizes.mapCellSize(8))
-        end)
+        it("draws the default size with roomy cells", function() assert.are.equal(7, Sizes.mapCellSize(8)) end)
 
         it("shrinks the cells of a wide maze so the map stays in its corner", function()
             local cell = Sizes.mapCellSize(12)

@@ -13,9 +13,7 @@ function Settings.load()
     isMusicOn = saved == nil or saved.isMusicOn
 end
 
-function Settings.isMusicOn()
-    return isMusicOn
-end
+function Settings.isMusicOn() return isMusicOn end
 
 function Settings.setMusicOn(isOn)
     if isOn == isMusicOn then return end

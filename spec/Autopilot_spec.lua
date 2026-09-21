@@ -14,7 +14,9 @@ end
 -- A plus-shaped junction: the middle cell (2, 2) of a 3x3 maze opens in every direction
 local function junction()
     local maze = Maze.new(3, 3)
-    for _, direction in ipairs(Maze.DIRECTIONS) do maze:carve(2, 2, direction) end
+    for _, direction in ipairs(Maze.DIRECTIONS) do
+        maze:carve(2, 2, direction)
+    end
     return maze
 end
 
@@ -103,7 +105,9 @@ describe("Autopilot", function()
             maze:carve(2, 1, "east")
             local player = Player.new(2.7, 1.3, 37)
             local autopilot = Autopilot.new(maze, player)
-            for _ = 1, 15 do autopilot:update() end
+            for _ = 1, 15 do
+                autopilot:update()
+            end
             assert.is_near(3.5, player.x, 0.0001)
             assert.is_near(1.5, player.y, 0.0001)
         end)

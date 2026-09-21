@@ -7,7 +7,9 @@ local TAKE_BACK <const> = DockTimer.ACTIONS.TAKE_BACK
 -- Runs the same frame a number of times and returns every action that came out
 local function run(timer, frames, isDocked, isAnyInput)
     local actions = {}
-    for _ = 1, frames do actions[#actions + 1] = timer:update(isDocked, isAnyInput) end
+    for _ = 1, frames do
+        actions[#actions + 1] = timer:update(isDocked, isAnyInput)
+    end
     return actions
 end
 

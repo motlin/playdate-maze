@@ -13,9 +13,7 @@ import "scenes/Escaped"
 import "scenes/MyMazes"
 import "scenes/MazeEditor"
 
-function playdate.update()
-    SceneManager.update()
-end
+function playdate.update() SceneManager.update() end
 
 function playdate.gameWillPause()
     SceneManager.save()

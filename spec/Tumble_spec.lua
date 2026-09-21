@@ -15,7 +15,9 @@ end
 local function room(items)
     local maze = Maze.generate(3, 3, seededRandom(1))
     for gridY = 2, 6 do
-        for gridX = 2, 6 do maze.blocks[gridY][gridX] = Maze.BLOCKS.OPEN end
+        for gridX = 2, 6 do
+            maze.blocks[gridY][gridX] = Maze.BLOCKS.OPEN
+        end
     end
     return Tumble.inMaze(maze, Puzzle.new(items or { { shape = "circle", gridX = 6, gridY = 2 } }, {}))
 end
@@ -27,7 +29,9 @@ local function standOnFloor(tumble, x)
 end
 
 local function run(tumble, frames, input)
-    for _ = 1, frames do tumble:update(input or {}) end
+    for _ = 1, frames do
+        tumble:update(input or {})
+    end
 end
 
 describe("Tumble", function()
@@ -261,7 +265,9 @@ describe("Tumble", function()
             local seen = {}
             for _ = 1, 200 do
                 tumble:update({ move = 1 })
-                for _, name in ipairs(tumble.events) do seen[name] = (seen[name] or 0) + 1 end
+                for _, name in ipairs(tumble.events) do
+                    seen[name] = (seen[name] or 0) + 1
+                end
             end
             assert.are.equal(1, seen.collect)
             assert.are.equal(1, seen.exitOpen)
@@ -270,9 +276,7 @@ describe("Tumble", function()
     end)
 
     describe("hint", function()
-        it("has nothing to suggest", function()
-            assert.is_nil(room():hint())
-        end)
+        it("has nothing to suggest", function() assert.is_nil(room():hint()) end)
     end)
 
     describe("the map", function()

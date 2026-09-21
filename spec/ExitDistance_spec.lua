@@ -43,7 +43,10 @@ describe("ExitDistance", function()
                     local nextColumn, nextRow = column + offset[1], row + offset[2]
                     local isInside = nextColumn >= 1 and nextColumn <= 8 and nextRow >= 1 and nextRow <= 6
                     if isInside and maze:hasPassage(column, row, direction) then
-                        assert.are.equal(1, math.abs(distances:cells(column, row) - distances:cells(nextColumn, nextRow)))
+                        assert.are.equal(
+                            1,
+                            math.abs(distances:cells(column, row) - distances:cells(nextColumn, nextRow))
+                        )
                     end
                 end
             end

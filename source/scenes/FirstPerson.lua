@@ -89,7 +89,9 @@ end
 -- quits, or is left for the title screen.
 function FirstPersonScene.save()
     local game = FirstPersonScene.game
-    if game.puzzle and not game.hasEscaped then SaveGame.write(game, FirstPersonScene.submode, FirstPersonScene.sizeIndex) end
+    if game.puzzle and not game.hasEscaped then
+        SaveGame.write(game, FirstPersonScene.submode, FirstPersonScene.sizeIndex)
+    end
 end
 
 -- Whether the map being played is at hand to be played again from the start
@@ -101,7 +103,13 @@ end
 -- hand-made map is played again, or chosen again if it was carried on from a save
 function FirstPersonScene.playAgain()
     if FirstPersonScene.hasDesign() then
-        SceneManager.switch(FirstPersonScene, FirstPersonScene.SUBMODES.CUSTOM, FirstPersonScene.sizeIndex, nil, FirstPersonScene.design)
+        SceneManager.switch(
+            FirstPersonScene,
+            FirstPersonScene.SUBMODES.CUSTOM,
+            FirstPersonScene.sizeIndex,
+            nil,
+            FirstPersonScene.design
+        )
     elseif FirstPersonScene.submode == FirstPersonScene.SUBMODES.CUSTOM then
         SceneManager.switch(MyMazesScene)
     else

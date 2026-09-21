@@ -2,9 +2,7 @@ require("spec.support.playdate_stub")
 import "SceneManager"
 
 describe("SceneManager", function()
-    before_each(function()
-        dofile("source/SceneManager.lua")
-    end)
+    before_each(function() dofile("source/SceneManager.lua") end)
 
     local function recordingScene(name, log)
         return {
@@ -71,9 +69,7 @@ describe("SceneManager", function()
         assert.are.same({}, log)
     end)
 
-    it("does nothing before the first scene is selected", function()
-        assert.has_no.errors(SceneManager.save)
-    end)
+    it("does nothing before the first scene is selected", function() assert.has_no.errors(SceneManager.save) end)
 
     it("reports which scene is current", function()
         local menu, quiz = recordingScene("menu", {}), recordingScene("quiz", {})

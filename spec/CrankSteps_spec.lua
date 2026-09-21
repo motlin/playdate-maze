@@ -22,7 +22,9 @@ describe("CrankSteps", function()
     it("works for the slowest steady cranking, a degree a frame", function()
         local steps = CrankSteps.new(45)
         local total = 0
-        for _ = 1, 90 do total = total + steps:turn(1) end
+        for _ = 1, 90 do
+            total = total + steps:turn(1)
+        end
         assert.are.equal(2, total)
     end)
 
@@ -51,8 +53,12 @@ describe("CrankSteps", function()
     it("comes back to where it started after a full turn, without drifting", function()
         local steps = CrankSteps.new(45)
         local total = 0
-        for _ = 1, 360 do total = total + steps:turn(1) end
-        for _ = 1, 360 do total = total + steps:turn(-1) end
+        for _ = 1, 360 do
+            total = total + steps:turn(1)
+        end
+        for _ = 1, 360 do
+            total = total + steps:turn(-1)
+        end
         assert.are.equal(0, total)
     end)
 end)

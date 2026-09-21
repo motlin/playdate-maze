@@ -166,9 +166,10 @@ describe("MapDesign", function()
     end)
 
     describe("problems", function()
-        it("finds none in a finished map", function()
-            assert.are.same({}, MapDesign.fromMaze(Maze.generate(6, 4, seededRandom(3))):problems())
-        end)
+        it(
+            "finds none in a finished map",
+            function() assert.are.same({}, MapDesign.fromMaze(Maze.generate(6, 4, seededRandom(3))):problems()) end
+        )
 
         it("finds none in a small map once everything has been placed by hand", function()
             local design = corridorDesign()

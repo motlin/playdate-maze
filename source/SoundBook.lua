@@ -51,6 +51,4 @@ local BOOK <const> = {
     letGo = run("sine", { 330, 240 }, 0.3, 0.05),
 }
 
-function SoundBook.notes(event)
-    return BOOK[event] or error("no sound for the event '" .. tostring(event) .. "'")
-end
+function SoundBook.notes(event) return BOOK[event] or error("no sound for the event '" .. tostring(event) .. "'") end

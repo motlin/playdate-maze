@@ -19,19 +19,28 @@ local function walkingFrame(mapper, current, pressed, released, crankChange, doc
 end
 
 describe("input and actions", function()
-    before_each(function() device.reset(); controls = PlayInput.new() end)
+    before_each(function()
+        device.reset()
+        controls = PlayInput.new()
+    end)
 
     it("keeps one hardware snapshot until the next read", function()
         local input = frame(pd.kButtonLeft | pd.kButtonA, pd.kButtonA, pd.kButtonB, 10, false)
         device.current, device.pressed, device.released, device.crankChange = 0, 0, 0, 0
         assert.are.same({ true, true, true, -1, 10 }, {
-            input:isDown(pd.kButtonLeft), input:isPressed(pd.kButtonA), input:isReleased(pd.kButtonB),
-            input:axis(pd.kButtonLeft, pd.kButtonRight), input.crankChange,
+            input:isDown(pd.kButtonLeft),
+            input:isPressed(pd.kButtonA),
+            input:isReleased(pd.kButtonB),
+            input:axis(pd.kButtonLeft, pd.kButtonRight),
+            input.crankChange,
         })
         input:read()
         assert.are.same({ false, false, false, 0, 0 }, {
-            input:isDown(pd.kButtonLeft), input:isPressed(pd.kButtonA), input:isReleased(pd.kButtonB),
-            input:axis(pd.kButtonLeft, pd.kButtonRight), input.crankChange,
+            input:isDown(pd.kButtonLeft),
+            input:isPressed(pd.kButtonA),
+            input:isReleased(pd.kButtonB),
+            input:axis(pd.kButtonLeft, pd.kButtonRight),
+            input.crankChange,
         })
     end)
 
@@ -49,29 +58,61 @@ describe("input and actions", function()
         })
     end)
 
-    it("turns with docked buttons without turning the gate crank", function()
-        assert.are.same({ forward = 0, turn = -5, crank = 0, reel = 0, strafe = 0, pickUp = false, drop = false }, walkingFrame(WalkingActions.new(controls), pd.kButtonLeft, 0, 0, 0, true, false))
-    end)
+    it(
+        "turns with docked buttons without turning the gate crank",
+        function()
+            assert.are.same(
+                { forward = 0, turn = -5, crank = 0, reel = 0, strafe = 0, pickUp = false, drop = false },
+                walkingFrame(WalkingActions.new(controls), pd.kButtonLeft, 0, 0, 0, true, false)
+            )
+        end
+    )
 
     it("cancels opposing directions and clears actions on the next frame", function()
         local walking = WalkingActions.new(controls)
         walkingFrame(walking, pd.kButtonUp, pd.kButtonA, 0, 10, false, false)
-        assert.are.same({ forward = 0, turn = 0, crank = 0, reel = 0, strafe = 0, pickUp = false, drop = false }, walkingFrame(walking, pd.kButtonLeft | pd.kButtonRight | pd.kButtonUp | pd.kButtonDown, 0, 0, 0, false, false))
+        assert.are.same(
+            { forward = 0, turn = 0, crank = 0, reel = 0, strafe = 0, pickUp = false, drop = false },
+            walkingFrame(
+                walking,
+                pd.kButtonLeft | pd.kButtonRight | pd.kButtonUp | pd.kButtonDown,
+                0,
+                0,
+                0,
+                false,
+                false
+            )
+        )
     end)
 
     it("suppresses takeover items through release but allows the next tap", function()
         local walking = WalkingActions.new(controls)
-        assert.are.same({ forward = 0, turn = 0, crank = 0, reel = 0, strafe = 0, pickUp = false, drop = false }, walkingFrame(walking, pd.kButtonB, pd.kButtonA | pd.kButtonB, 0, -10, false, true))
-        assert.are.same({ forward = 0, turn = 0, crank = 0, reel = 0, strafe = 0, pickUp = false, drop = false }, walkingFrame(walking, pd.kButtonB, 0, 0, -10, false, false))
-        assert.are.same({ forward = 0, turn = 0, crank = 0, reel = 0, strafe = 0, pickUp = false, drop = false }, walkingFrame(walking, 0, 0, pd.kButtonB, 0, false, false))
+        assert.are.same(
+            { forward = 0, turn = 0, crank = 0, reel = 0, strafe = 0, pickUp = false, drop = false },
+            walkingFrame(walking, pd.kButtonB, pd.kButtonA | pd.kButtonB, 0, -10, false, true)
+        )
+        assert.are.same(
+            { forward = 0, turn = 0, crank = 0, reel = 0, strafe = 0, pickUp = false, drop = false },
+            walkingFrame(walking, pd.kButtonB, 0, 0, -10, false, false)
+        )
+        assert.are.same(
+            { forward = 0, turn = 0, crank = 0, reel = 0, strafe = 0, pickUp = false, drop = false },
+            walkingFrame(walking, 0, 0, pd.kButtonB, 0, false, false)
+        )
         walkingFrame(walking, pd.kButtonB, pd.kButtonB, 0, 0, false, false)
-        assert.are.same({ forward = 0, turn = 0, crank = 0, reel = 0, strafe = 0, pickUp = false, drop = true }, walkingFrame(walking, 0, 0, pd.kButtonB, 0, false, false))
+        assert.are.same(
+            { forward = 0, turn = 0, crank = 0, reel = 0, strafe = 0, pickUp = false, drop = true },
+            walkingFrame(walking, 0, 0, pd.kButtonB, 0, false, false)
+        )
     end)
 
     it("keeps button history separate for different walking readers", function()
         local first, second = WalkingActions.new(controls), WalkingActions.new(controls)
         walkingFrame(first, pd.kButtonB, pd.kButtonB, 0, 0, false, true)
         walkingFrame(second, pd.kButtonB, pd.kButtonB, 0, 0, false, false)
-        assert.are.same({ forward = 0, turn = 0, crank = 0, reel = 0, strafe = 0, pickUp = false, drop = true }, walkingFrame(second, 0, 0, pd.kButtonB, 0, false, false))
+        assert.are.same(
+            { forward = 0, turn = 0, crank = 0, reel = 0, strafe = 0, pickUp = false, drop = true },
+            walkingFrame(second, 0, 0, pd.kButtonB, 0, false, false)
+        )
     end)
 end)

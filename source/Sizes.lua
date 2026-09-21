@@ -14,15 +14,9 @@ Sizes.DEFAULT = 2
 Sizes.WIDEST_MAP = 84
 local ROOMIEST_MAP_CELL <const> = 7
 
-function Sizes.next(index)
-    return index % #Sizes.ALL + 1
-end
+function Sizes.next(index) return index % #Sizes.ALL + 1 end
 
-function Sizes.previous(index)
-    return (index - 2) % #Sizes.ALL + 1
-end
+function Sizes.previous(index) return (index - 2) % #Sizes.ALL + 1 end
 
 -- How many pixels wide to draw each cell of a maze this many columns across
-function Sizes.mapCellSize(columns)
-    return math.min(ROOMIEST_MAP_CELL, Sizes.WIDEST_MAP // columns)
-end
+function Sizes.mapCellSize(columns) return math.min(ROOMIEST_MAP_CELL, Sizes.WIDEST_MAP // columns) end

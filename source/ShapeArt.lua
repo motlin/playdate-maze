@@ -12,18 +12,20 @@ end
 local fill <const> = {
     circle = function(centerX, centerY, size) playdate.graphics.fillCircleAtPoint(centerX, centerY, size / 2) end,
     triangle = function(centerX, centerY, size) playdate.graphics.fillPolygon(trianglePoints(centerX, centerY, size)) end,
-    square = function(centerX, centerY, size) playdate.graphics.fillRect(centerX - size / 2, centerY - size / 2, size, size) end,
+    square = function(centerX, centerY, size)
+        playdate.graphics.fillRect(centerX - size / 2, centerY - size / 2, size, size)
+    end,
 }
 
 local outline <const> = {
     circle = function(centerX, centerY, size) playdate.graphics.drawCircleAtPoint(centerX, centerY, size / 2) end,
     triangle = function(centerX, centerY, size) playdate.graphics.drawPolygon(trianglePoints(centerX, centerY, size)) end,
-    square = function(centerX, centerY, size) playdate.graphics.drawRect(centerX - size / 2, centerY - size / 2, size, size) end,
+    square = function(centerX, centerY, size)
+        playdate.graphics.drawRect(centerX - size / 2, centerY - size / 2, size, size)
+    end,
 }
 
-local function lineWidthFor(size)
-    return math.max(1, math.min(3, size // 12))
-end
+local function lineWidthFor(size) return math.max(1, math.min(3, size // 12)) end
 
 function ShapeArt.drawSolid(shape, centerX, centerY, size)
     playdate.graphics.setColor(playdate.graphics.kColorWhite)

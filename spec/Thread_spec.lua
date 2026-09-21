@@ -52,7 +52,9 @@ describe("Thread", function()
 
         it("forgets the oldest part rather than growing for ever", function()
             local thread = Thread.new(openMaze, 0, 0)
-            for step = 1, Thread.MOST_POINTS * 2 do thread:record(step * Thread.SPACING, 0) end
+            for step = 1, Thread.MOST_POINTS * 2 do
+                thread:record(step * Thread.SPACING, 0)
+            end
             assert.are.equal(Thread.MOST_POINTS, #thread.points)
             assert.are.equal(Thread.MOST_POINTS * 2 * Thread.SPACING, thread.points[#thread.points].x)
         end)

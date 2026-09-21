@@ -24,7 +24,11 @@ MapEditor.__index = MapEditor
 -- In the order the dial turns. `kind` and `shape` are what MapDesign:place is given.
 local PLACING_HINT <const> = "Ⓐ place here\nⒷ take away"
 MapEditor.TOOLS = {
-    { name = "cells", label = "Walls between cells", hint = "Hold Ⓐ and move to carve\nHold Ⓑ and push to wall up" },
+    {
+        name = "cells",
+        label = "Walls between cells",
+        hint = "Hold Ⓐ and move to carve\nHold Ⓑ and push to wall up",
+    },
     { name = "blocks", label = "Single blocks", hint = "Ⓐ open  Ⓑ fill\nHold either to paint" },
     { name = "start", label = "Start", kind = "start", hint = "Ⓐ start here" },
     { name = "exit", label = "Exit", kind = "exit", hint = "Ⓐ in the outer wall\nⒷ take away" },
@@ -32,7 +36,13 @@ MapEditor.TOOLS = {
     { name = "triangle", label = "Triangle", kind = "item", shape = "triangle", hint = PLACING_HINT },
     { name = "square", label = "Square", kind = "item", shape = "square", hint = PLACING_HINT },
     { name = "circle pedestal", label = "Circle's pedestal", kind = "pedestal", shape = "circle", hint = PLACING_HINT },
-    { name = "triangle pedestal", label = "Triangle's pedestal", kind = "pedestal", shape = "triangle", hint = PLACING_HINT },
+    {
+        name = "triangle pedestal",
+        label = "Triangle's pedestal",
+        kind = "pedestal",
+        shape = "triangle",
+        hint = PLACING_HINT,
+    },
     { name = "square pedestal", label = "Square's pedestal", kind = "pedestal", shape = "square", hint = PLACING_HINT },
 }
 
@@ -52,9 +62,7 @@ function MapEditor.new(design)
 end
 
 ---@return EditorTool
-function MapEditor:tool()
-    return MapEditor.TOOLS[self.toolIndex]
-end
+function MapEditor:tool() return MapEditor.TOOLS[self.toolIndex] end
 
 -- The nearest cell's block along one axis: cells are the even blocks inside the outer wall
 local function nearestCellBlock(value, gridSize)
@@ -73,9 +81,7 @@ function MapEditor:turnTool(steps)
 end
 
 ---@return nil
-function MapEditor:markSaved()
-    self.hasUnsavedChanges = false
-end
+function MapEditor:markSaved() self.hasUnsavedChanges = false end
 
 -- Records the outcome of trying to change the design
 local function changed(self, didChange, message)
@@ -172,6 +178,4 @@ end
 
 -- One line on whether the map can be played yet
 ---@return string
-function MapEditor:status()
-    return self.design:problems()[1] or "Ready to play"
-end
+function MapEditor:status() return self.design:problems()[1] or "Ready to play" end

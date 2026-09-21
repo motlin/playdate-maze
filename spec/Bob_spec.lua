@@ -3,9 +3,7 @@ import "Bob"
 
 describe("Bob", function()
     describe("the head", function()
-        it("is level to begin with", function()
-            assert.are.equal(0, Bob.new():headOffset())
-        end)
+        it("is level to begin with", function() assert.are.equal(0, Bob.new():headOffset()) end)
 
         it("bobs up and down as the player walks, by no more than a few pixels", function()
             local bob = Bob.new()
@@ -20,15 +18,23 @@ describe("Bob", function()
 
         it("follows the distance walked, not the time taken: one bob for each stride", function()
             local slow, fast = Bob.new(), Bob.new()
-            for _ = 1, 40 do slow:walk(0.04) end
-            for _ = 1, 20 do fast:walk(0.08) end
+            for _ = 1, 40 do
+                slow:walk(0.04)
+            end
+            for _ = 1, 20 do
+                fast:walk(0.08)
+            end
             assert.is_near(slow.phase, fast.phase, 0.0001)
         end)
 
         it("settles back to level once the player stands still", function()
             local bob = Bob.new()
-            for _ = 1, 30 do bob:walk(0.08) end
-            for _ = 1, 40 do bob:walk(0) end
+            for _ = 1, 30 do
+                bob:walk(0.08)
+            end
+            for _ = 1, 40 do
+                bob:walk(0)
+            end
             assert.is_near(0, bob:headOffset(), 0.01)
         end)
 
@@ -55,8 +61,9 @@ describe("Bob", function()
             assert.are_not.equal(Bob.hoverOffset(50, 2), Bob.hoverOffset(50, 3))
         end)
 
-        it("are where they were for the same frame, so screenshots can be compared", function()
-            assert.are.equal(Bob.hoverOffset(123, 2), Bob.hoverOffset(123, 2))
-        end)
+        it(
+            "are where they were for the same frame, so screenshots can be compared",
+            function() assert.are.equal(Bob.hoverOffset(123, 2), Bob.hoverOffset(123, 2)) end
+        )
     end)
 end)

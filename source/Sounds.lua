@@ -26,9 +26,7 @@ for wave, waveform in pairs(WAVES) do
     end
 end
 
-function Sounds.setVolume(volume)
-    masterVolume = volume
-end
+function Sounds.setVolume(volume) masterVolume = volume end
 
 -- events is a list of event names, such as a Run's events for the frame
 function Sounds.play(events)
@@ -75,5 +73,7 @@ function Sounds.hum(game)
 end
 
 function Sounds.stopHum()
-    for _, synth in pairs(hums) do synth:noteOff() end
+    for _, synth in pairs(hums) do
+        synth:noteOff()
+    end
 end

@@ -80,9 +80,7 @@ local runs = {}
 local depths = {}
 local result = { runs = runs, depths = depths }
 
-local function faceKey(side, gridX, gridY)
-    return (gridY * 256 + gridX) * 2 + side
-end
+local function faceKey(side, gridX, gridY) return (gridY * 256 + gridX) * 2 + side end
 
 -- screen = { width, columnWidth, fieldOfView (degrees), refinements }
 -- Each run has startX, endX, startDistance, endDistance, side, gridX, gridY, block.
@@ -156,8 +154,12 @@ function Raycaster.scan(maze, x, y, angle, screen)
         previousX = sampleX
     end
 
-    for index = runCount + 1, #runs do runs[index] = nil end
-    for index = columnCount + 1, #depths do depths[index] = nil end
+    for index = runCount + 1, #runs do
+        runs[index] = nil
+    end
+    for index = columnCount + 1, #depths do
+        depths[index] = nil
+    end
     return result
 end
 

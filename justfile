@@ -55,8 +55,16 @@ smoke: screenshots
 typecheck:
     python3 tools/typecheck/check.py
 
+# stylua source spec tools
+format:
+    stylua source spec tools
+
+# stylua --check source spec tools
+format-check:
+    stylua --check source spec tools
+
 # ✅ Pre-commit checks
-precommit: lint typecheck test build
+precommit: format-check lint typecheck test build
 
 # git test add --test default 'just precommit' --forget
 setup-git-test:

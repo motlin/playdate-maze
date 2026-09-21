@@ -6,7 +6,14 @@ Compass = {}
 
 local STEP <const> = 15
 local LABELS <const> = {
-    [0] = "E", [45] = "SE", [90] = "S", [135] = "SW", [180] = "W", [225] = "NW", [270] = "N", [315] = "NE",
+    [0] = "E",
+    [45] = "SE",
+    [90] = "S",
+    [135] = "SW",
+    [180] = "W",
+    [225] = "NW",
+    [270] = "N",
+    [315] = "NE",
 }
 
 -- Reused between frames, as this is called every frame
@@ -31,6 +38,8 @@ function Compass.marks(angle, width, span)
             mark.label = LABELS[markAngle % 360]
         end
     end
-    for index = count + 1, #marks do marks[index] = nil end
+    for index = count + 1, #marks do
+        marks[index] = nil
+    end
     return marks
 end

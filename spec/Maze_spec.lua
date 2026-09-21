@@ -169,7 +169,9 @@ describe("Maze", function()
             assert.are.equal(13, maze.gridWidth)
             assert.are.equal(9, maze.gridHeight)
             for gridY = 2, 4 do
-                for gridX = 2, 4 do assert.is_false(maze:isWall(gridX, gridY)) end
+                for gridX = 2, 4 do
+                    assert.is_false(maze:isWall(gridX, gridY))
+                end
             end
             assert.is_true(maze:isWall(5, 3))
             assert.is_true(maze:isWall(3, 5))
@@ -179,7 +181,9 @@ describe("Maze", function()
         it("carves a passage as wide as the corridor", function()
             local maze = Maze.new(3, 2, 3)
             maze:carve(1, 1, "east")
-            for gridY = 2, 4 do assert.is_false(maze:isWall(5, gridY)) end
+            for gridY = 2, 4 do
+                assert.is_false(maze:isWall(5, gridY))
+            end
             assert.is_true(maze:isWall(5, 1))
             assert.is_true(maze:isWall(5, 5))
             assert.is_true(maze:hasPassage(1, 1, "east"))
@@ -187,7 +191,9 @@ describe("Maze", function()
             assert.is_false(maze:hasPassage(1, 1, "south"))
 
             maze:carve(1, 1, "south")
-            for gridX = 2, 4 do assert.is_false(maze:isWall(gridX, 5)) end
+            for gridX = 2, 4 do
+                assert.is_false(maze:isWall(gridX, 5))
+            end
             assert.is_true(maze:hasPassage(1, 2, "north"))
         end)
 

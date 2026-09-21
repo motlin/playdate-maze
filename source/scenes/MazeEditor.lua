@@ -51,13 +51,9 @@ function EditorScene.save()
     EditorScene.editor:markSaved()
 end
 
-function EditorScene.exit()
-    EditorScene.save()
-end
+function EditorScene.exit() EditorScene.save() end
 
-function EditorScene.say(message)
-    EditorScene.editor.message = message
-end
+function EditorScene.say(message) EditorScene.editor.message = message end
 
 function EditorScene.play()
     local editor = EditorScene.editor
@@ -95,7 +91,8 @@ local function stepFrom(input)
     for _, direction in ipairs(DIRECTIONS) do
         if input:isDown(direction.button) then
             heldFrames = heldFrames + 1
-            local isRepeating = heldFrames >= REPEAT_AFTER_FRAMES and (heldFrames - REPEAT_AFTER_FRAMES) % REPEAT_EVERY_FRAMES == 0
+            local isRepeating = heldFrames >= REPEAT_AFTER_FRAMES
+                and (heldFrames - REPEAT_AFTER_FRAMES) % REPEAT_EVERY_FRAMES == 0
             return isRepeating and direction or nil
         end
     end

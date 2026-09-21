@@ -105,9 +105,7 @@ end
 
 -- Only from something it is stuck to: there is no throwing in mid-air
 ---@return boolean
-function Slime:canThrow()
-    return self.state ~= Slime.STATES.FLYING
-end
+function Slime:canThrow() return self.state ~= Slime.STATES.FLYING end
 
 local function throwVelocity(angle)
     local radians = math.rad(angle)
@@ -156,7 +154,9 @@ function Slime:arc()
             point.x, point.y = scout.x, scout.y
         end
     end
-    for index = count + 1, #points do points[index] = nil end
+    for index = count + 1, #points do
+        points[index] = nil
+    end
     self.arcResult.landingX, self.arcResult.landingY = scout.x, scout.y
     return self.arcResult
 end
@@ -230,7 +230,11 @@ function Slime:move(input)
         self.stickFrames = self.stickFrames - 1
         if self.stickFrames == 0 then
             self:emit("slip")
-            if self.surface == "ceiling" then self:fall() else self.state = Slime.STATES.SLIDING end
+            if self.surface == "ceiling" then
+                self:fall()
+            else
+                self.state = Slime.STATES.SLIDING
+            end
         end
     else
         local _, hasReachedFloor = player:moveBy(maze, 0, Slime.SLIDE_SPEED)

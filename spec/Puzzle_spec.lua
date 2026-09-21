@@ -13,16 +13,13 @@ end
 -- A 5x1 corridor: open blocks x = 2..10 on grid row 2. The circle lies in cell 2 and its
 -- pedestal stands in cell 4; the square lies in cell 3 and its pedestal stands in cell 5.
 local function corridorPuzzle()
-    return Puzzle.new(
-        {
-            { shape = "circle", gridX = 4, gridY = 2 },
-            { shape = "square", gridX = 6, gridY = 2 },
-        },
-        {
-            { shape = "circle", gridX = 8, gridY = 2 },
-            { shape = "square", gridX = 10, gridY = 2 },
-        }
-    )
+    return Puzzle.new({
+        { shape = "circle", gridX = 4, gridY = 2 },
+        { shape = "square", gridX = 6, gridY = 2 },
+    }, {
+        { shape = "circle", gridX = 8, gridY = 2 },
+        { shape = "square", gridX = 10, gridY = 2 },
+    })
 end
 
 describe("Puzzle", function()
@@ -76,9 +73,7 @@ describe("Puzzle", function()
     end)
 
     describe("drop", function()
-        it("does nothing with empty hands", function()
-            assert.is_nil(corridorPuzzle():drop(1.5, 1.5))
-        end)
+        it("does nothing with empty hands", function() assert.is_nil(corridorPuzzle():drop(1.5, 1.5)) end)
 
         it("puts the shape down in the middle of the block the player stands in", function()
             local puzzle = corridorPuzzle()
@@ -165,9 +160,7 @@ describe("Puzzle", function()
             assert.are.equal("circle", puzzle:itemTouching(3.3, 1.6).shape)
         end)
 
-        it("finds nothing from merely nearby", function()
-            assert.is_nil(corridorPuzzle():itemTouching(2.8, 1.5))
-        end)
+        it("finds nothing from merely nearby", function() assert.is_nil(corridorPuzzle():itemTouching(2.8, 1.5)) end)
     end)
 
     describe("scatterItems", function()

@@ -32,9 +32,7 @@ end
 
 -- How many cells must be walked through to get from this cell to the exit's cell. In a map drawn
 -- by hand some cells may have no way to the exit at all: they count as one further than the farthest.
-function ExitDistance:cells(column, row)
-    return self.byCell[(row - 1) * self.maze.columns + column] or self.farthest + 1
-end
+function ExitDistance:cells(column, row) return self.byCell[(row - 1) * self.maze.columns + column] or self.farthest + 1 end
 
 -- From 0, as far from the exit as the maze allows, to 1, in the exit's own cell
 function ExitDistance:proximity(x, y)

@@ -32,7 +32,10 @@ describe("Flippers", function()
 
         it("is the same for the same random numbers", function()
             local maze = Maze.generate(8, 6, seededRandom(1))
-            assert.are.same(Flippers.scatter(maze, seededRandom(2), {}).all, Flippers.scatter(maze, seededRandom(2), {}).all)
+            assert.are.same(
+                Flippers.scatter(maze, seededRandom(2), {}).all,
+                Flippers.scatter(maze, seededRandom(2), {}).all
+            )
         end)
     end)
 
@@ -56,7 +59,9 @@ describe("Flippers", function()
         it("is touched only once however long the player stands in it", function()
             local flippers, x, y = oneFlipper()
             flippers:touch(x, y)
-            for _ = 1, 50 do assert.is_false(flippers:touch(x + 0.1, y)) end
+            for _ = 1, 50 do
+                assert.is_false(flippers:touch(x + 0.1, y))
+            end
         end)
 
         it("can be touched again after the player has walked well away", function()

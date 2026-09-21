@@ -13,14 +13,10 @@ function TapOrReel.new()
     return setmetatable({ isDown = false, hasReeled = false, isIgnored = false, pending = 0 }, TapOrReel)
 end
 
-function TapOrReel:isHeld()
-    return self.isDown
-end
+function TapOrReel:isHeld() return self.isDown end
 
 -- For a press that has already done something else, such as taking over from the autopilot
-function TapOrReel:ignoreThisPress()
-    self.isIgnored = true
-end
+function TapOrReel:ignoreThisPress() self.isIgnored = true end
 
 -- Call every frame. Returns the degrees to reel in this frame, and whether the button was tapped.
 function TapOrReel:update(isJustPressed, isPressed, isJustReleased, crankChange)

@@ -2,7 +2,6 @@
 -- Angles are in degrees, 0 facing east and growing clockwise. The body is a square of
 -- RADIUS either side, moved one axis at a time so it slides along walls instead of sticking.
 
-
 ---@class Player
 ---@field x number
 ---@field y number
@@ -18,15 +17,11 @@ local FACINGS <const> = { "east", "south", "west", "north" }
 ---@param y number
 ---@param angle number
 ---@return Player
-function Player.new(x, y, angle)
-    return setmetatable({ x = x, y = y, angle = angle }, Player)
-end
+function Player.new(x, y, angle) return setmetatable({ x = x, y = y, angle = angle }, Player) end
 
 ---@param degrees number
 ---@return nil
-function Player:turn(degrees)
-    self.angle = (self.angle + degrees) % 360
-end
+function Player:turn(degrees) self.angle = (self.angle + degrees) % 360 end
 
 local function isBlocked(maze, x, y)
     return maze:isWall(maze:blockAt(x - Player.RADIUS, y - Player.RADIUS))
@@ -71,9 +66,7 @@ end
 ---@param offsetX number
 ---@param offsetY number
 ---@return boolean
-function Player:wouldHit(maze, offsetX, offsetY)
-    return isBlocked(maze, self.x + offsetX, self.y + offsetY)
-end
+function Player:wouldHit(maze, offsetX, offsetY) return isBlocked(maze, self.x + offsetX, self.y + offsetY) end
 
 -- Moves relative to the way the player faces
 ---@param maze Maze
@@ -87,9 +80,7 @@ function Player:move(maze, forward, strafe)
 end
 
 ---@return string
-function Player:facing()
-    return FACINGS[math.floor((self.angle + 45) / 90) % 4 + 1]
-end
+function Player:facing() return FACINGS[math.floor((self.angle + 45) / 90) % 4 + 1] end
 
 local function crossesBox(fromX, fromY, toX, toY, left, top, right, bottom)
     local enter, leave = 0, 1
@@ -121,8 +112,19 @@ function Player.isPathClear(maze, fromX, fromY, toX, toY)
     local right, bottom = maze:blockAt(math.max(fromX, toX) + Player.RADIUS, math.max(fromY, toY) + Player.RADIUS)
     for gridY = top, bottom do
         for gridX = left, right do
-            if maze:isWall(gridX, gridY) and crossesBox(fromX, fromY, toX, toY,
-                gridX - 1 - Player.RADIUS, gridY - 1 - Player.RADIUS, gridX + Player.RADIUS, gridY + Player.RADIUS) then
+            if
+                maze:isWall(gridX, gridY)
+                and crossesBox(
+                    fromX,
+                    fromY,
+                    toX,
+                    toY,
+                    gridX - 1 - Player.RADIUS,
+                    gridY - 1 - Player.RADIUS,
+                    gridX + Player.RADIUS,
+                    gridY + Player.RADIUS
+                )
+            then
                 return false
             end
         end

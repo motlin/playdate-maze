@@ -22,9 +22,7 @@ local FACE_SEEN_FROM <const> = {
     south = Landmarks.FACES.NORTH,
 }
 
-local function faceKey(gridX, gridY, face)
-    return (gridY * 256 + gridX) * 4 + face
-end
+local function faceKey(gridX, gridY, face) return (gridY * 256 + gridX) * 4 + face end
 
 -- The solid walls around a cell, as directions; the exit gate does not count
 local function solidWalls(maze, column, row)
@@ -88,9 +86,7 @@ function Landmarks.scatter(maze, random)
 end
 
 -- The motif of the picture on a face of a wall block, or nil
-function Landmarks:pictureOn(gridX, gridY, face)
-    return self.pictures[faceKey(gridX, gridY, face)]
-end
+function Landmarks:pictureOn(gridX, gridY, face) return self.pictures[faceKey(gridX, gridY, face)] end
 
 -- Landmarks again from their saved list, which is `all`
 function Landmarks.fromSave(all)

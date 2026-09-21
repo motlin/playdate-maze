@@ -13,14 +13,10 @@ function SceneManager.switch(scene, ...)
     if SceneManager.onSwitch then SceneManager.onSwitch(scene) end
 end
 
-function SceneManager.update()
-    currentScene.update()
-end
+function SceneManager.update() currentScene.update() end
 
 function SceneManager.save()
     if currentScene and currentScene.save then currentScene.save() end
 end
 
-function SceneManager.isCurrent(scene)
-    return currentScene == scene
-end
+function SceneManager.isCurrent(scene) return currentScene == scene end

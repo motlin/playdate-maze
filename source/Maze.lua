@@ -142,7 +142,9 @@ function Maze:carve(column, row, direction)
     )
     local fromX, toX, fromY, toY = wallBetween(self, column, row, direction)
     for gridY = fromY, toY do
-        for gridX = fromX, toX do self.blocks[gridY][gridX] = Maze.BLOCKS.OPEN end
+        for gridX = fromX, toX do
+            self.blocks[gridY][gridX] = Maze.BLOCKS.OPEN
+        end
     end
 end
 
@@ -174,16 +176,12 @@ function Maze:hasPassage(column, row, direction)
 end
 
 ---@return nil
-function Maze:openExit()
-    self.blocks[self.exitGridY][self.exitGridX] = Maze.BLOCKS.EXIT
-end
+function Maze:openExit() self.blocks[self.exitGridY][self.exitGridX] = Maze.BLOCKS.EXIT end
 
 ---@param x number
 ---@param y number
 ---@return boolean
-function Maze:isExit(x, y)
-    return self:blockValue(self:blockAt(x, y)) == Maze.BLOCKS.EXIT
-end
+function Maze:isExit(x, y) return self:blockValue(self:blockAt(x, y)) == Maze.BLOCKS.EXIT end
 
 ---@param column integer
 ---@param row integer
@@ -207,16 +205,12 @@ end
 ---@param gridX integer
 ---@param gridY integer
 ---@return number, number
-function Maze:blockCenter(gridX, gridY)
-    return gridX - 0.5, gridY - 0.5
-end
+function Maze:blockCenter(gridX, gridY) return gridX - 0.5, gridY - 0.5 end
 
 ---@param x number
 ---@param y number
 ---@return integer, integer
-function Maze:blockAt(x, y)
-    return math.floor(x) + 1, math.floor(y) + 1
-end
+function Maze:blockAt(x, y) return math.floor(x) + 1, math.floor(y) + 1 end
 
 -- A wall or passage belongs with the cell before it up to its middle, and the next cell after
 ---@param x number

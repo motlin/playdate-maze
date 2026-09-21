@@ -34,7 +34,9 @@ describe("Landmarks", function()
 
     it("is a mix of pictures on walls and marks on floors and ceilings", function()
         local kinds = {}
-        for _, landmark in ipairs(scatter().all) do kinds[landmark.kind] = (kinds[landmark.kind] or 0) + 1 end
+        for _, landmark in ipairs(scatter().all) do
+            kinds[landmark.kind] = (kinds[landmark.kind] or 0) + 1
+        end
         assert.is_true((kinds.picture or 0) >= 2)
         assert.is_true((kinds.floor or 0) + (kinds.ceiling or 0) >= 2)
     end)
@@ -80,9 +82,10 @@ describe("Landmarks", function()
         end
     end)
 
-    it("is the same for the same random numbers, so a daily maze has the same landmarks for everyone", function()
-        assert.are.same(scatter().all, scatter().all)
-    end)
+    it(
+        "is the same for the same random numbers, so a daily maze has the same landmarks for everyone",
+        function() assert.are.same(scatter().all, scatter().all) end
+    )
 
     it("lists the marks on floors and ceilings with the block they are in", function()
         local landmarks, maze = scatter()

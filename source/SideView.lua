@@ -31,12 +31,14 @@ function SideView.look(viewedRun, angle, pixelsPerBlock)
     run, scale = viewedRun, pixelsPerBlock
     playerX, playerY, sine, cosine = run.player.x, run.player.y, math.sin(radians), math.cos(radians)
     -- Further than this from the player, in blocks, nothing can reach the screen's corners
-    visibleDistance = math.sqrt(SideView.CENTER_X * SideView.CENTER_X + SideView.CENTER_Y * SideView.CENTER_Y) / scale + 1
+    visibleDistance = math.sqrt(SideView.CENTER_X * SideView.CENTER_X + SideView.CENTER_Y * SideView.CENTER_Y) / scale
+        + 1
 end
 
 function SideView.toScreen(worldX, worldY)
     local offsetX, offsetY = worldX - playerX, worldY - playerY
-    return SideView.CENTER_X + (offsetX * cosine - offsetY * sine) * scale, SideView.CENTER_Y + (offsetX * sine + offsetY * cosine) * scale
+    return SideView.CENTER_X + (offsetX * cosine - offsetY * sine) * scale,
+        SideView.CENTER_Y + (offsetX * sine + offsetY * cosine) * scale
 end
 
 local function fillWorldRect(left, top, right, bottom)

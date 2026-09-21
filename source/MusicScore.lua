@@ -19,15 +19,13 @@ local WALK <const> = { 2, 1, -2, 3, -1, -2, 2, -3, 1, 2, -1, -2, 1 }
 local SWAY <const> = { 0, 1, 0, -1, 1, 0, -1 }
 
 local WALK_PREFIX <const> = { [0] = 0 }
-for index, offset in ipairs(WALK) do WALK_PREFIX[index] = WALK_PREFIX[index - 1] + offset end
-
-function MusicScore.transposition(proximity)
-    return OCTAVE * proximity
+for index, offset in ipairs(WALK) do
+    WALK_PREFIX[index] = WALK_PREFIX[index - 1] + offset
 end
 
-function MusicScore.frequency(midiNote, semitones)
-    return 440 * 2 ^ ((midiNote - 69 + semitones) / 12)
-end
+function MusicScore.transposition(proximity) return OCTAVE * proximity end
+
+function MusicScore.frequency(midiNote, semitones) return 440 * 2 ^ ((midiNote - 69 + semitones) / 12) end
 
 function MusicScore.framesBetweenNotes(proximity)
     local frames = MusicScore.SLOWEST_FRAMES + (MusicScore.FASTEST_FRAMES - MusicScore.SLOWEST_FRAMES) * proximity

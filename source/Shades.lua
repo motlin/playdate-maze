@@ -26,6 +26,4 @@ for level = 0, Shades.WHITE do
     patterns[level] = pattern
 end
 
-function Shades.pattern(level)
-    return patterns[level] or error("no such shade: " .. tostring(level))
-end
+function Shades.pattern(level) return patterns[level] or error("no such shade: " .. tostring(level)) end

@@ -152,8 +152,9 @@ describe("Raycaster", function()
             assert.is_near(2, depth, 0.0001)
         end)
 
-        it("sees nothing behind the viewer", function()
-            assert.is_nil(Raycaster.project(1.5, 1.5, 0, SCREEN, 0.5, 1.5))
-        end)
+        it(
+            "sees nothing behind the viewer",
+            function() assert.is_nil(Raycaster.project(1.5, 1.5, 0, SCREEN, 0.5, 1.5)) end
+        )
     end)
 end)

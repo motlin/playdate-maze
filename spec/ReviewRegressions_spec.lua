@@ -38,7 +38,10 @@ describe("review regressions", function()
         slime:update({ aim = 0, isAimHeld = true })
         local aimingAfterFall = slime.isAiming
         slime:update({ aim = 0 })
-        assert.are.same({ state = "flying", aimingAfterFall = false, throws = 0, events = {} }, { state = slime.state, aimingAfterFall = aimingAfterFall, throws = slime.throws, events = slime.events })
+        assert.are.same(
+            { state = "flying", aimingAfterFall = false, throws = 0, events = {} },
+            { state = slime.state, aimingAfterFall = aimingAfterFall, throws = slime.throws, events = slime.events }
+        )
     end)
 
     it("does not throw when releasing A after crawling off a ledge", function()
@@ -49,14 +52,20 @@ describe("review regressions", function()
         slime:update({ aim = 0, isAimHeld = true, move = 1 })
         local aimingAfterFall = slime.isAiming
         slime:update({ aim = 0 })
-        assert.are.same({ state = "flying", aimingAfterFall = false, throws = 0, events = {} }, { state = slime.state, aimingAfterFall = aimingAfterFall, throws = slime.throws, events = slime.events })
+        assert.are.same(
+            { state = "flying", aimingAfterFall = false, throws = 0, events = {} },
+            { state = slime.state, aimingAfterFall = aimingAfterFall, throws = slime.throws, events = slime.events }
+        )
     end)
 
     it("rejects an airborne release even if the aim flag was stale", function()
         local slime = supportedSlime()
         slime.isAiming = true
         slime:update({ aim = 0 })
-        assert.are.same({ state = "flying", isAiming = false, throws = 0, events = {} }, { state = slime.state, isAiming = slime.isAiming, throws = slime.throws, events = slime.events })
+        assert.are.same(
+            { state = "flying", isAiming = false, throws = 0, events = {} },
+            { state = slime.state, isAiming = slime.isAiming, throws = slime.throws, events = slime.events }
+        )
     end)
 
     it("keeps body clearance on every rewind step around an inside corner", function()
@@ -86,7 +95,10 @@ describe("review regressions", function()
         local points = { { x = 2.7, y = 1.79 }, { x = 3.21, y = 2.4 } }
         local thread = Thread.fromSave(maze, points, 3.21, 2.4)
         local x, y, heading, blocked = thread:rewindFrom(3.21, 2.4, 100)
-        assert.are.same({ blocked = true, points = { { x = 2.7, y = 1.79 } } }, { x = x, y = y, heading = heading, blocked = blocked, points = thread.points })
+        assert.are.same(
+            { blocked = true, points = { { x = 2.7, y = 1.79 } } },
+            { x = x, y = y, heading = heading, blocked = blocked, points = thread.points }
+        )
     end)
 
     it("checks the swept body even when both endpoints are clear", function()
@@ -101,12 +113,17 @@ describe("review regressions", function()
 
     it("preserves the original melody across walk and sway cycles", function()
         local checksum = 0
-        for step = 1, 5000 do checksum = (checksum * 31 + MusicScore.noteAt(step)) % 1000000007 end
+        for step = 1, 5000 do
+            checksum = (checksum * 31 + MusicScore.noteAt(step)) % 1000000007
+        end
         local notes = {}
         for _, step in ipairs({ 1, 12, 13, 14, 25, 26, 27, 100000, 100001 }) do
             notes[#notes + 1] = MusicScore.noteAt(step)
         end
-        assert.are.same({ checksum = 220732617, notes = { 62, 60, 60, 62, 57, 64, 67, 60, 60 } }, { checksum = checksum, notes = notes })
+        assert.are.same(
+            { checksum = 220732617, notes = { 62, 60, 60, 62, 57, 64, 67, 60, 60 } },
+            { checksum = checksum, notes = notes }
+        )
     end)
 
     it("bounds note calculation work even after a very long session", function()

@@ -1,9 +1,7 @@
 SlimeActions = {}
 SlimeActions.__index = SlimeActions
 
-function SlimeActions.new(controls)
-    return setmetatable({ controls = controls, actions = {} }, SlimeActions)
-end
+function SlimeActions.new(controls) return setmetatable({ controls = controls, actions = {} }, SlimeActions) end
 
 function SlimeActions:read()
     local input = self.controls

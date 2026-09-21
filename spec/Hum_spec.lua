@@ -36,9 +36,7 @@ describe("Hum", function()
             assert.is_true(previous > 0)
         end)
 
-        it("is never loud enough to be tiresome", function()
-            assert.is_true(Hum.LOUDEST <= 0.3)
-        end)
+        it("is never loud enough to be tiresome", function() assert.is_true(Hum.LOUDEST <= 0.3) end)
     end)
 
     describe("direction", function()

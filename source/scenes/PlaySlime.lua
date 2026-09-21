@@ -28,17 +28,11 @@ function SlimeScene.enter(sizeIndex)
     SlimeScene.newGame()
 end
 
-function SlimeScene.exit()
-    Music.stop()
-end
+function SlimeScene.exit() Music.stop() end
 
-function SlimeScene.restart()
-    SlimeScene.newGame()
-end
+function SlimeScene.restart() SlimeScene.newGame() end
 
-local function playAgain()
-    SceneManager.switch(SlimeScene, SlimeScene.sizeIndex)
-end
+local function playAgain() SceneManager.switch(SlimeScene, SlimeScene.sizeIndex) end
 
 function SlimeScene.update()
     local slime = SlimeScene.slime

@@ -4,7 +4,6 @@
 
 import "Player"
 
-
 ---@class Thread
 ---@field maze Maze
 ---@field lastX number
@@ -50,7 +49,8 @@ function Thread:record(x, y)
     -- Nearer the point before last than the last point is: the player has turned back
     while #points >= 2 do
         local last, previous = points[#points], points[#points - 1]
-        local isRetracing = distanceBetween(x, y, previous.x, previous.y) < distanceBetween(last.x, last.y, previous.x, previous.y)
+        local isRetracing = distanceBetween(x, y, previous.x, previous.y)
+            < distanceBetween(last.x, last.y, previous.x, previous.y)
         if not isRetracing or not Player.isPathClear(self.maze, previous.x, previous.y, x, y) then break end
         points[#points] = nil
     end
@@ -59,10 +59,10 @@ function Thread:record(x, y)
         points[#points + 1] = { x = self.lastX, y = self.lastY }
         last = points[#points]
     end
-    if distanceBetween(x, y, last.x, last.y) >= Thread.SPACING then
-        points[#points + 1] = { x = x, y = y }
+    if distanceBetween(x, y, last.x, last.y) >= Thread.SPACING then points[#points + 1] = { x = x, y = y } end
+    while #points > Thread.MOST_POINTS do
+        table.remove(points, 1)
     end
-    while #points > Thread.MOST_POINTS do table.remove(points, 1) end
     self.lastX, self.lastY = x, y
 end
 

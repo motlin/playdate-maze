@@ -2,7 +2,6 @@
 
 import "MapDesign"
 
-
 ---@class MapSlots
 MapSlots = {}
 
@@ -33,19 +32,13 @@ end
 
 ---@param name string
 ---@return boolean
-function MapSlots.exists(name)
-    return MapSlots.read(name) ~= nil
-end
+function MapSlots.exists(name) return MapSlots.read(name) ~= nil end
 
 ---@param name string
 ---@param design MapDesign
 ---@return nil
-function MapSlots.write(name, design)
-    playdate.datastore.write(design:toSave(), MapSlots.fileFor(name))
-end
+function MapSlots.write(name, design) playdate.datastore.write(design:toSave(), MapSlots.fileFor(name)) end
 
 ---@param name string
 ---@return nil
-function MapSlots.delete(name)
-    playdate.datastore.delete(MapSlots.fileFor(name))
-end
+function MapSlots.delete(name) playdate.datastore.delete(MapSlots.fileFor(name)) end

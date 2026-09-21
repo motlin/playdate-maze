@@ -107,7 +107,9 @@ describe("Game", function()
             it("is nothing when a wall stops the player, however hard they push", function()
                 local game = newGame()
                 game.player.angle = (game.player.angle + 180) % 360
-                for _ = 1, 20 do game:update({ forward = 1 }) end
+                for _ = 1, 20 do
+                    game:update({ forward = 1 })
+                end
                 assert.are.equal(0, game.distanceWalked)
             end)
 
@@ -124,7 +126,9 @@ describe("Game", function()
 
             it("does not count being reeled along the thread, which is not walking", function()
                 local game = newGame()
-                for _ = 1, 25 do game:update({ forward = 1 }) end
+                for _ = 1, 25 do
+                    game:update({ forward = 1 })
+                end
                 game:update({ reel = 90 })
                 assert.are.equal(0, game.distanceWalked)
             end)
@@ -132,7 +136,9 @@ describe("Game", function()
 
         it("counts the frames played", function()
             local game = newGame()
-            for _ = 1, 45 do game:update({}) end
+            for _ = 1, 45 do
+                game:update({})
+            end
             assert.are.equal(45, game.frames)
         end)
     end)
@@ -149,14 +155,18 @@ describe("Game", function()
         it("marks a cell as visited when the player walks into it", function()
             local game = newGame()
             local offset = Maze.OFFSETS[game.player:facing()]
-            for _ = 1, 30 do game:update({ forward = 1 }) end
+            for _ = 1, 30 do
+                game:update({ forward = 1 })
+            end
             assert.is_true(game:hasVisited(1 + offset[1], 1 + offset[2]))
             assert.are.equal(2, game.visitedCount)
         end)
 
         it("counts a cell once however long the player stays in it", function()
             local game = newGame()
-            for _ = 1, 50 do game:update({ turn = 5 }) end
+            for _ = 1, 50 do
+                game:update({ turn = 5 })
+            end
             assert.are.equal(1, game.visitedCount)
         end)
 
@@ -174,7 +184,9 @@ describe("Game", function()
         it("marks the cells the autopilot walks through", function()
             local game = newGame()
             game:setAutopilot(true)
-            for _ = 1, 600 do game:update({}) end
+            for _ = 1, 600 do
+                game:update({})
+            end
             assert.is_true(game.visitedCount > 3)
         end)
     end)
@@ -204,9 +216,10 @@ describe("Game", function()
             assert.are.equal(strides, count(game, 25, { forward = 1 }, "step"))
         end)
 
-        it("reports no footsteps while standing still", function()
-            assert.are.equal(0, count(newGame(), 100, {}, "step"))
-        end)
+        it(
+            "reports no footsteps while standing still",
+            function() assert.are.equal(0, count(newGame(), 100, {}, "step")) end
+        )
 
         it("reports a bump when a wall stops the player, but not on every frame they keep pushing", function()
             local game = newGame()
@@ -262,7 +275,9 @@ describe("Game", function()
 
         it("reports the thread ticking in as it is reeled", function()
             local game = newGame()
-            for _ = 1, 25 do game:update({ forward = 1 }) end
+            for _ = 1, 25 do
+                game:update({ forward = 1 })
+            end
             assert.is_true(count(game, 10, { reel = 45 }, "reel") >= 3)
         end)
     end)
@@ -277,9 +292,15 @@ describe("Game", function()
             assert.are.equal(1, #game.flippers.all)
             local flipper = game.flippers.all[1]
             local others = {}
-            for _, item in ipairs(game.puzzle.items) do others[#others + 1] = item end
-            for _, pedestal in ipairs(game.puzzle.pedestals) do others[#others + 1] = pedestal end
-            for _, mark in ipairs(game.landmarks.marks) do others[#others + 1] = mark end
+            for _, item in ipairs(game.puzzle.items) do
+                others[#others + 1] = item
+            end
+            for _, pedestal in ipairs(game.puzzle.pedestals) do
+                others[#others + 1] = pedestal
+            end
+            for _, mark in ipairs(game.landmarks.marks) do
+                others[#others + 1] = mark
+            end
             for _, other in ipairs(others) do
                 assert.is_false(other.gridX == flipper.gridX and other.gridY == flipper.gridY)
             end
@@ -298,7 +319,9 @@ describe("Game", function()
             local game = newGame()
             local flipper = game.flippers.all[1]
             standIn(game, flipper)
-            for _ = 1, 30 do game:update({}) end
+            for _ = 1, 30 do
+                game:update({})
+            end
             assert.is_true(game.isFlipped)
             game.player.x, game.player.y = 1.5, 1.5
             game:update({})
@@ -307,33 +330,38 @@ describe("Game", function()
             assert.is_false(game.isFlipped)
         end)
 
-        it("are in the screensaver's mazes too", function()
-            assert.is_true(#newGame({ hasPuzzle = false }).flippers.all >= 1)
-        end)
+        it(
+            "are in the screensaver's mazes too",
+            function() assert.is_true(#newGame({ hasPuzzle = false }).flippers.all >= 1) end
+        )
     end)
 
     describe("the thread", function()
-        local function distanceFromStart(game)
-            return math.sqrt((game.player.x - 1.5) ^ 2 + (game.player.y - 1.5) ^ 2)
-        end
+        local function distanceFromStart(game) return math.sqrt((game.player.x - 1.5) ^ 2 + (game.player.y - 1.5) ^ 2) end
 
         it("is laid as the player walks", function()
             local game = newGame()
             assert.are.equal(0, game.thread:length())
-            for _ = 1, 25 do game:update({ forward = 1 }) end
+            for _ = 1, 25 do
+                game:update({ forward = 1 })
+            end
             assert.is_near(2, game.thread:length(), 0.3)
         end)
 
         it("is laid by the autopilot too", function()
             local game = newGame()
             game:setAutopilot(true)
-            for _ = 1, 100 do game:update({}) end
+            for _ = 1, 100 do
+                game:update({})
+            end
             assert.is_true(game.thread:length() > 1)
         end)
 
         it("reels the player back along it, a block for every half turn of the crank", function()
             local game = newGame()
-            for _ = 1, 25 do game:update({ forward = 1 }) end
+            for _ = 1, 25 do
+                game:update({ forward = 1 })
+            end
             local before = distanceFromStart(game)
             game:update({ reel = 90 })
             game:update({ reel = 90 })
@@ -342,7 +370,9 @@ describe("Game", function()
 
         it("ignores the D-pad and the crank's turning while reeling", function()
             local game = newGame()
-            for _ = 1, 25 do game:update({ forward = 1 }) end
+            for _ = 1, 25 do
+                game:update({ forward = 1 })
+            end
             local before = distanceFromStart(game)
             game:update({ reel = 90, forward = 1, turn = 45 })
             assert.is_true(distanceFromStart(game) < before)
@@ -351,14 +381,20 @@ describe("Game", function()
         it("keeps the player looking the way they originally walked, like a film run backwards", function()
             local game = newGame()
             local angle = game.player.angle
-            for _ = 1, 25 do game:update({ forward = 1 }) end
-            for _ = 1, 10 do game:update({ reel = 20 }) end
+            for _ = 1, 25 do
+                game:update({ forward = 1 })
+            end
+            for _ = 1, 10 do
+                game:update({ reel = 20 })
+            end
             assert.is_near(angle, game.player.angle, 0.001)
         end)
 
         it("turns the view gradually when the thread goes round a corner", function()
             local game = newGame()
-            for _ = 1, 25 do game:update({ forward = 1 }) end
+            for _ = 1, 25 do
+                game:update({ forward = 1 })
+            end
             game.player.angle = (game.player.angle + 90) % 360
             local angle = game.player.angle
             game:update({ reel = 10 })
@@ -368,8 +404,12 @@ describe("Game", function()
 
         it("stops at the start and says so", function()
             local game = newGame()
-            for _ = 1, 25 do game:update({ forward = 1 }) end
-            for _ = 1, 10 do game:update({ reel = 180 }) end
+            for _ = 1, 25 do
+                game:update({ forward = 1 })
+            end
+            for _ = 1, 10 do
+                game:update({ reel = 180 })
+            end
             assert.is_near(0, distanceFromStart(game), 0.0001)
             assert.are.equal("The thread begins here", game.message)
         end)
@@ -429,15 +469,15 @@ describe("Game", function()
         it("clears a message after a couple of seconds", function()
             local game = newGame()
             game:update({ pickUp = true })
-            for _ = 1, Game.MESSAGE_FRAMES do game:update({}) end
+            for _ = 1, Game.MESSAGE_FRAMES do
+                game:update({})
+            end
             assert.is_nil(game.message)
         end)
     end)
 
     describe("hint", function()
-        it("has nothing to suggest in an empty corridor", function()
-            assert.is_nil(newGame():hint())
-        end)
+        it("has nothing to suggest in an empty corridor", function() assert.is_nil(newGame():hint()) end)
 
         it("offers to pick up a shape within reach", function()
             local game = newGame()
@@ -460,9 +500,10 @@ describe("Game", function()
             assert.are.equal("Autopilot: press any button to take over", game:hint())
         end)
 
-        it("has nothing to suggest when there is no puzzle", function()
-            assert.is_nil(newGame({ hasPuzzle = false }):hint())
-        end)
+        it(
+            "has nothing to suggest when there is no puzzle",
+            function() assert.is_nil(newGame({ hasPuzzle = false }):hint()) end
+        )
     end)
 
     describe("the gate", function()
@@ -475,13 +516,13 @@ describe("Game", function()
             return game
         end
 
-        it("starts fully down", function()
-            assert.are.equal(0, newGame().gateLift)
-        end)
+        it("starts fully down", function() assert.are.equal(0, newGame().gateLift) end)
 
         it("rises as the crank is turned forwards, taking two full turns to open", function()
             local game = atTheGate()
-            for _ = 1, 12 do game:update({ crank = 30, turn = 30 }) end
+            for _ = 1, 12 do
+                game:update({ crank = 30, turn = 30 })
+            end
             assert.is_near(0.5, game.gateLift, 0.01)
             assert.is_false(game.maze:hasPassage(6, 5, "east"))
         end)
@@ -494,20 +535,30 @@ describe("Game", function()
 
         it("opens the exit for good once it is all the way up", function()
             local game = atTheGate()
-            for _ = 1, 24 do game:update({ crank = 30, turn = 30 }) end
+            for _ = 1, 24 do
+                game:update({ crank = 30, turn = 30 })
+            end
             assert.is_true(game.maze:hasPassage(6, 5, "east"))
             assert.are.equal("The exit is open!", game.message)
             assert.are.equal(1, game.gateLift)
-            for _ = 1, 200 do game:update({}) end
+            for _ = 1, 200 do
+                game:update({})
+            end
             assert.are.equal(1, game.gateLift)
         end)
 
         it("sags back down when the cranking stops", function()
             local game = atTheGate()
-            for _ = 1, 12 do game:update({ crank = 30, turn = 30 }) end
-            for _ = 1, 30 do game:update({}) end
+            for _ = 1, 12 do
+                game:update({ crank = 30, turn = 30 })
+            end
+            for _ = 1, 30 do
+                game:update({})
+            end
             assert.is_true(game.gateLift < 0.45 and game.gateLift > 0)
-            for _ = 1, 600 do game:update({}) end
+            for _ = 1, 600 do
+                game:update({})
+            end
             assert.are.equal(0, game.gateLift)
         end)
 
@@ -553,17 +604,19 @@ describe("Game", function()
     end)
 
     describe("escaping", function()
-        it("has not escaped while inside the maze", function()
-            assert.is_false(newGame().hasEscaped)
-        end)
+        it("has not escaped while inside the maze", function() assert.is_false(newGame().hasEscaped) end)
 
         it("escapes by walking out once the gate has been cranked open", function()
             local game = newGame()
             solve(game)
             game.player.x, game.player.y = game.maze:cellCenter(6, 5)
             game.player.angle = 0
-            for _ = 1, 24 do game:update({ crank = 30, turn = 30 }) end
-            for _ = 1, 30 do game:update({ forward = 1 }) end
+            for _ = 1, 24 do
+                game:update({ crank = 30, turn = 30 })
+            end
+            for _ = 1, 30 do
+                game:update({ forward = 1 })
+            end
             assert.is_true(game.hasEscaped)
         end)
 
@@ -571,20 +624,22 @@ describe("Game", function()
             local game = newGame({ hasPuzzle = false })
             game.player.x, game.player.y = game.maze:cellCenter(6, 5)
             game.player.angle = 0
-            for _ = 1, 100 do game:update({ forward = 1 }) end
+            for _ = 1, 100 do
+                game:update({ forward = 1 })
+            end
             assert.is_true(game.frames < 30)
         end)
     end)
 
     describe("autopilot", function()
-        it("is off to begin with", function()
-            assert.is_false(newGame():isAutopilotOn())
-        end)
+        it("is off to begin with", function() assert.is_false(newGame():isAutopilotOn()) end)
 
         it("walks the maze by itself and ignores the D-pad", function()
             local game = newGame()
             game:setAutopilot(true)
-            for _ = 1, 200 do game:update({ forward = -1 }) end
+            for _ = 1, 200 do
+                game:update({ forward = -1 })
+            end
             local column, row = game.maze:nearestCell(game.player.x, game.player.y)
             assert.is_true(column > 1 or row > 1)
         end)
@@ -592,7 +647,9 @@ describe("Game", function()
         it("hands control back when asked", function()
             local game = newGame()
             game:setAutopilot(true)
-            for _ = 1, 50 do game:update({}) end
+            for _ = 1, 50 do
+                game:update({})
+            end
             game:setAutopilot(false)
             local x, y = game.player.x, game.player.y
             game:update({})

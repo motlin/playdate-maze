@@ -26,9 +26,7 @@ function Minimap.size(maze)
     return maze.columns * cell + 1 + 2 * MARGIN, maze.rows * cell + 1 + 2 * MARGIN
 end
 
-local function cellCorner(column, row)
-    return MARGIN + (column - 1) * cellSize, MARGIN + (row - 1) * cellSize
-end
+local function cellCorner(column, row) return MARGIN + (column - 1) * cellSize, MARGIN + (row - 1) * cellSize end
 
 local function clearFog(column, row)
     local left, top = cellCorner(column, row)
@@ -41,8 +39,12 @@ local function drawCellWalls(maze, column, row)
     playdate.graphics.setColor(playdate.graphics.kColorBlack)
     if not maze:hasPassage(column, row, "north") then playdate.graphics.drawLine(left, top, left + cellSize, top) end
     if not maze:hasPassage(column, row, "west") then playdate.graphics.drawLine(left, top, left, top + cellSize) end
-    if not maze:hasPassage(column, row, "south") then playdate.graphics.drawLine(left, top + cellSize, left + cellSize, top + cellSize) end
-    if not maze:hasPassage(column, row, "east") then playdate.graphics.drawLine(left + cellSize, top, left + cellSize, top + cellSize) end
+    if not maze:hasPassage(column, row, "south") then
+        playdate.graphics.drawLine(left, top + cellSize, left + cellSize, top + cellSize)
+    end
+    if not maze:hasPassage(column, row, "east") then
+        playdate.graphics.drawLine(left + cellSize, top, left + cellSize, top + cellSize)
+    end
 end
 
 local function forEachRevealedCell(game, action)
@@ -74,7 +76,9 @@ local function drawBlocks(game)
                 if block == Maze.BLOCKS.DOOR then
                     playdate.graphics.setPattern(GATE_PATTERN)
                 else
-                    playdate.graphics.setColor(block == Maze.BLOCKS.WALL and playdate.graphics.kColorBlack or playdate.graphics.kColorWhite)
+                    playdate.graphics.setColor(
+                        block == Maze.BLOCKS.WALL and playdate.graphics.kColorBlack or playdate.graphics.kColorWhite
+                    )
                 end
                 playdate.graphics.fillRect(left, top, right - left, bottom - top)
             end

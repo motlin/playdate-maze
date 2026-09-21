@@ -9,18 +9,21 @@ local function seededRandom(seed)
     end
 end
 
-local function newGame()
-    return Game.new({ columns = 6, rows = 5, hasPuzzle = true, random = seededRandom(21) })
-end
+local function newGame() return Game.new({ columns = 6, rows = 5, hasPuzzle = true, random = seededRandom(21) }) end
 
 -- What JSON does to a table: only lists and string-keyed tables survive, so anything else is an error
 local function throughJson(value, path)
     if type(value) ~= "table" then
-        assert(type(value) == "number" or type(value) == "string" or type(value) == "boolean", path .. " cannot be saved")
+        assert(
+            type(value) == "number" or type(value) == "string" or type(value) == "boolean",
+            path .. " cannot be saved"
+        )
         return value
     end
     local copy, count = {}, 0
-    for _ in pairs(value) do count = count + 1 end
+    for _ in pairs(value) do
+        count = count + 1
+    end
     local isList = count == #value
     for key, item in pairs(value) do
         assert(isList or type(key) == "string", path .. " mixes list and named entries, or has number keys")
@@ -32,7 +35,9 @@ end
 -- A game part-way through: walked about, one shape home, another in hand, the world turned over
 local function gameInProgress()
     local game = newGame()
-    for _ = 1, 40 do game:update({ forward = 1, turn = 2 }) end
+    for _ = 1, 40 do
+        game:update({ forward = 1, turn = 2 })
+    end
     local puzzle = game.puzzle
     game.player.x, game.player.y = game.maze:blockCenter(puzzle.items[1].gridX, puzzle.items[1].gridY)
     game:update({ pickUp = true })
@@ -47,25 +52,25 @@ local function gameInProgress()
 end
 
 describe("saving a game", function()
-    it("writes only what JSON can hold", function()
-        throughJson(gameInProgress():toSave(), "save")
-    end)
+    it("writes only what JSON can hold", function() throughJson(gameInProgress():toSave(), "save") end)
 
-    it("says which version of the save it is", function()
-        assert.are.equal(Game.SAVE_VERSION, gameInProgress():toSave().version)
-    end)
+    it(
+        "says which version of the save it is",
+        function() assert.are.equal(Game.SAVE_VERSION, gameInProgress():toSave().version) end
+    )
 
     describe("and loading it again", function()
-        local function restored(game)
-            return Game.fromSave(throughJson(game:toSave(), "save"))
-        end
+        local function restored(game) return Game.fromSave(throughJson(game:toSave(), "save")) end
 
         it("brings back the same maze, player, and clock", function()
             local game = gameInProgress()
             local loaded = restored(game)
             assert.are.same(game.maze.blocks, loaded.maze.blocks)
             assert.are.same({ game.maze.columns, game.maze.rows }, { loaded.maze.columns, loaded.maze.rows })
-            assert.are.same({ game.player.x, game.player.y, game.player.angle }, { loaded.player.x, loaded.player.y, loaded.player.angle })
+            assert.are.same(
+                { game.player.x, game.player.y, game.player.angle },
+                { loaded.player.x, loaded.player.y, loaded.player.angle }
+            )
             assert.are.equal(game.frames, loaded.frames)
         end)
 
@@ -83,7 +88,9 @@ describe("saving a game", function()
             local loaded = restored(game)
             assert.are.equal(game.visitedCount, loaded.visitedCount)
             for row = 1, 5 do
-                for column = 1, 6 do assert.are.equal(game:hasVisited(column, row), loaded:hasVisited(column, row)) end
+                for column = 1, 6 do
+                    assert.are.equal(game:hasVisited(column, row), loaded:hasVisited(column, row))
+                end
             end
             assert.is_near(game.thread:length(), loaded.thread:length(), 0.0001)
             assert.is_true(loaded.isFlipped)
@@ -106,7 +113,9 @@ describe("saving a game", function()
             end
             game.player.x, game.player.y = game.maze:cellCenter(6, 5)
             game.player.angle = 0
-            for _ = 1, 10 do game:update({ crank = 30, turn = 30 }) end
+            for _ = 1, 10 do
+                game:update({ crank = 30, turn = 30 })
+            end
             local loaded = restored(game)
             assert.is_true(loaded.isGateUnlocked)
             assert.are.equal(game.gateDegrees, loaded.gateDegrees)
@@ -122,7 +131,10 @@ describe("saving a game", function()
                 game:update(input)
                 loaded:update(input)
             end
-            assert.are.same({ game.player.x, game.player.y, game.player.angle }, { loaded.player.x, loaded.player.y, loaded.player.angle })
+            assert.are.same(
+                { game.player.x, game.player.y, game.player.angle },
+                { loaded.player.x, loaded.player.y, loaded.player.angle }
+            )
             assert.are.equal(game.visitedCount, loaded.visitedCount)
             assert.are.equal(game.isFlipped, loaded.isFlipped)
         end)

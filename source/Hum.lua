@@ -43,6 +43,8 @@ function Hum.levels(x, y, angle, items)
             end
         end
     end
-    for index = #items + 1, #levels do levels[index] = nil end
+    for index = #items + 1, #levels do
+        levels[index] = nil
+    end
     return levels
 end

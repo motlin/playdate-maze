@@ -112,10 +112,16 @@ function Game.new(options)
 
     -- Touching a flipper turns the world upside down, or the right way up again
     local taken = {}
-    for _, mark in ipairs(game.landmarks.marks) do taken[#taken + 1] = mark end
+    for _, mark in ipairs(game.landmarks.marks) do
+        taken[#taken + 1] = mark
+    end
     if game.puzzle then
-        for _, item in ipairs(game.puzzle.items) do taken[#taken + 1] = item end
-        for _, pedestal in ipairs(game.puzzle.pedestals) do taken[#taken + 1] = pedestal end
+        for _, item in ipairs(game.puzzle.items) do
+            taken[#taken + 1] = item
+        end
+        for _, pedestal in ipairs(game.puzzle.pedestals) do
+            taken[#taken + 1] = pedestal
+        end
     end
     game.flippers = Flippers.scatter(maze, options.random, taken)
     return game
@@ -172,34 +178,32 @@ function Game.fromDesign(design, random)
 
     -- Flippers go only in the cells still free; every other cell counts as taken
     local isFree, taken = {}, {}
-    for _, block in ipairs(free) do isFree[block.gridY * 256 + block.gridX] = true end
+    for _, block in ipairs(free) do
+        isFree[block.gridY * 256 + block.gridX] = true
+    end
     for row = 1, maze.rows do
         for column = 1, maze.columns do
             local gridX, gridY = maze:cellBlock(column, row)
             if not isFree[gridY * 256 + gridX] then taken[#taken + 1] = { gridX = gridX, gridY = gridY } end
         end
     end
-    for _, mark in ipairs(game.landmarks.marks) do taken[#taken + 1] = mark end
+    for _, mark in ipairs(game.landmarks.marks) do
+        taken[#taken + 1] = mark
+    end
     game.flippers = Flippers.scatter(maze, random, taken)
     return game
 end
 
 -- The compass bearing of the view, which a mode only has if looking around means something in it
 ---@return number
-function Game:heading()
-    return self.player.angle
-end
+function Game:heading() return self.player.angle end
 
 ---@return boolean
-function Game:isAutopilotOn()
-    return self.autopilot ~= nil
-end
+function Game:isAutopilotOn() return self.autopilot ~= nil end
 
 -- Following a wall only finds the way in a true maze, so a hand-made one has no autopilot
 ---@return boolean
-function Game:canAutopilot()
-    return not self.isHandMade
-end
+function Game:canAutopilot() return not self.isHandMade end
 
 ---@param isOn boolean
 ---@return nil
@@ -382,7 +386,9 @@ Game.SAVE_VERSION = 1
 function Game:toSave()
     assert(self.puzzle, "only a maze with a puzzle is worth saving")
     local visited = {}
-    for key in pairs(self.visited) do visited[#visited + 1] = key end
+    for key in pairs(self.visited) do
+        visited[#visited + 1] = key
+    end
     table.sort(visited)
     return {
         version = Game.SAVE_VERSION,
@@ -404,7 +410,10 @@ end
 ---@param save GameSave
 ---@return Game
 function Game.fromSave(save)
-    assert(save.version == Game.SAVE_VERSION, "this save is version " .. tostring(save.version) .. ", which this game cannot load")
+    assert(
+        save.version == Game.SAVE_VERSION,
+        "this save is version " .. tostring(save.version) .. ", which this game cannot load"
+    )
     local maze = Maze.fromSave(save.maze)
     local game = setmetatable(Run.new(maze, Player.new(save.player.x, save.player.y, save.player.angle)), Game)
     ---@cast game Game
@@ -415,7 +424,9 @@ function Game.fromSave(save)
     game.thread = Thread.fromSave(maze, save.thread, save.player.x, save.player.y)
     game.frames = save.frames
     game.visited, game.visitedCount = {}, #save.visited
-    for _, key in ipairs(save.visited) do game.visited[key] = true end
+    for _, key in ipairs(save.visited) do
+        game.visited[key] = true
+    end
     game.isFlipped = save.isFlipped
     -- Saves from before there was an editor have no such entry, and were never hand-made
     game.isHandMade = save.isHandMade == true

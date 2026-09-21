@@ -34,8 +34,12 @@ Puzzle.TOUCH = 0.45
 ---@param pedestals Pedestal[]
 ---@return Puzzle
 function Puzzle.new(items, pedestals)
-    for _, item in ipairs(items) do item.state = Puzzle.STATES.GROUND end
-    for _, pedestal in ipairs(pedestals) do pedestal.isFilled = false end
+    for _, item in ipairs(items) do
+        item.state = Puzzle.STATES.GROUND
+    end
+    for _, pedestal in ipairs(pedestals) do
+        pedestal.isFilled = false
+    end
     return setmetatable({ items = items, pedestals = pedestals, carried = nil }, Puzzle)
 end
 
@@ -83,7 +87,9 @@ function Puzzle.scatterItems(maze, random)
     local cells = shuffledCells(maze, random)
     assert(#cells >= #Puzzle.SHAPES, "the maze is too small to hold every shape")
     local items = {}
-    for index, shape in ipairs(Puzzle.SHAPES) do items[index] = inCell(maze, shape, cells[index]) end
+    for index, shape in ipairs(Puzzle.SHAPES) do
+        items[index] = inCell(maze, shape, cells[index])
+    end
     return Puzzle.new(items, {})
 end
 

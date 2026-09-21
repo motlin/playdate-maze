@@ -12,9 +12,7 @@ end
 describe("MapSlots", function()
     before_each(function() stub.reset() end)
 
-    it("has four slots, lettered A to D", function()
-        assert.are.same({ "A", "B", "C", "D" }, MapSlots.NAMES)
-    end)
+    it("has four slots, lettered A to D", function() assert.are.same({ "A", "B", "C", "D" }, MapSlots.NAMES) end)
 
     it("is empty to begin with", function()
         for _, name in ipairs(MapSlots.NAMES) do
