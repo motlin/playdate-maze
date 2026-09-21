@@ -10,6 +10,7 @@
 @media(max-width:650px){:root{--header:56px}.topbar{min-height:56px;padding:8px 12px}.topbar h1{font-size:15px}.navigation button{padding:5px 7px}.navigation select{width:40vw;font-size:12px}.section{display:flex;flex-direction:column;padding:18px 16px 0;gap:0}.code-panel{order:-1;top:calc(var(--header) + 8px);height:44vh;min-height:240px;z-index:3;width:100%;margin-bottom:25px;box-shadow:0 12px 20px #101216}.file-header{padding:9px 12px}.file-path{font-size:13px}.file-meta{font-size:11px}.code-panel pre{font-size:12px;padding:12px 0}.code-footer{padding:5px 10px;min-height:32px}.follow{font-size:11px;padding:3px 7px}.explanations h2{margin:5px 0 10px}.step{min-height:65vh;padding:12px 0 80px;scroll-margin-top:calc(44vh + 130px)}.step:last-child{min-height:75vh}.step p{font-size:17px}.location{font-size:12px}h3{font-size:25px}.lab-section{display:block;padding:36px 16px}.lab-intro p{font-size:16px}.lab{padding:14px}.references{padding:25px 16px}}
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
 @media print{.topbar,.code-footer,.progress,.navigation{display:none}.section,.lab-section{display:block;break-before:page}.step{opacity:1!important;min-height:0!important;padding:12px 0}.code-panel{position:static;height:auto;min-height:0}.code-panel pre{overflow:visible;white-space:pre-wrap;font-size:8px}.line{opacity:1!important;display:inline}.line:before{display:none}.lab input{display:none}}
+.question-box{margin-top:24px;font-size:14px}.question-box summary{cursor:pointer;color:var(--cyan)}.question-box label{display:block;margin:12px 0 6px}.question-box textarea{display:block;width:100%;min-height:100px;resize:vertical;background:var(--panel);color:var(--ink);border:1px solid var(--rule);border-radius:3px;padding:10px;font:16px/1.5 system-ui}.question-box button{margin:10px 0}.question-status{font-size:13px;color:var(--muted)}
 </style>
 </head>
 <body>
@@ -18,9 +19,9 @@
 <noscript><div class="no-script"><p>Enable JavaScript for synchronized highlights and diagrams. Complete source files and explanations remain readable below.</p></div></noscript>
 <main><section class="section" id="section-1" data-title="Game structure" data-file="source/main.lua"><div class="explanations"><h2><span>01</span> Game structure</h2><article class="step" id="step-1-0" data-first="16" data-last="18">
 <p class="location">source/main.lua<br><a href="#step-1-0">Lines 16–18</a></p>
-<h3>One update per frame</h3><p>The scene reads controls, updates the game, and draws it. The maze is a 2D grid shared by the first-person, Tumble, and Slime modes.</p><p><code>SceneManager.update()</code> dispatches each frame to the current scene.</p></article><article class="step" id="step-1-1" data-first="39" data-last="39">
+<h3>One update per frame</h3><p>The scene reads controls, updates the game, and draws it. The maze is a 2D grid shared by the first-person, Tumble, and Slime modes.</p><p>Playdate calls <code>playdate.update()</code> every frame. You define the callback; the SDK runs it. <code>SceneManager.update()</code> then dispatches to the current scene.</p><p>Lua’s <code>function playdate.update() … end</code> assigns a function to the <code>update</code> field of the <code>playdate</code> table. It is equivalent to <code>playdate.update = function() … end</code>. The callback name is special to Playdate; the dot syntax is ordinary Lua.</p></article><article class="step" id="step-1-1" data-first="39" data-last="39">
 <p class="location">source/main.lua<br><a href="#step-1-1">Lines 39–39</a></p>
-<h3>Why 30 frames per second?</h3><p>30 FPS is Playdate’s default. It allows about 33 milliseconds per frame, versus 20 at 50 FPS. This is a target, not a guarantee; no hardware benchmark here establishes that 30 is optimal.</p><p>Movement and timers count updates. At 30 FPS, 0.08 blocks per update is 2.4 blocks/second and Slime’s 30-frame grip lasts one second. At 50 FPS those become 4 blocks/second and 0.6 seconds.</p></article><article class="step" id="step-1-2" data-first="41" data-last="42">
+<h3>Why 30 frames per second?</h3><p><code>setRefreshRate(rate)</code> takes a target in frames per second: a positive rate up to <strong>50</strong>, or <strong>0</strong> to run updates as fast as possible. Zero does not pause the game. The SDK does not specify a minimum positive rate.</p><p><strong>30 is the default and Panic’s recommended balance of smoothness, processing time, and battery use.</strong> This line makes that choice explicit; omitting it would also use 30. At 30 FPS each frame has about 33 milliseconds; at 50 it has 20.</p><p>This game measures movement and timers in updates, so increasing the rate also speeds up gameplay. Supporting variable rates would require using elapsed time.</p><p><a href="https://sdk.play.date/Inside%20Playdate.html#f-display.setRefreshRate">SDK reference: setRefreshRate</a></p></article><article class="step" id="step-1-2" data-first="41" data-last="42">
 <p class="location">source/main.lua<br><a href="#step-1-2">Lines 41–42</a></p>
 <h3>Start at the title screen</h3><p>Refresh the system menu when scenes change, then enter <code>TitleScene</code>.</p></article></div><div class="code-panel"><header class="file-header"><div class="file-path"><span>source/</span><strong>main.lua</strong></div><div class="file-meta"><span>Lua · Complete file · 42 lines</span><output class="range">Lines 16–18</output></div></header>
 <pre tabindex="0" aria-label="Complete source/main.lua"><code class="language-lua"><span class="line" data-line="1"><span class="nv">import</span> <span class="s2">&quot;CoreLibs/graphics&quot;</span></span>
@@ -2500,6 +2501,26 @@ for(const section of sections){
 }
 activate(steps[0],true);update();
 document.querySelectorAll('.lab canvas').forEach(canvas=>{const wrapper=document.createElement('div');wrapper.className='diagram-scroll';wrapper.tabIndex=0;wrapper.setAttribute('aria-label',canvas.getAttribute('aria-label')+'; scroll horizontally on small screens');canvas.before(wrapper);wrapper.append(canvas);});
+for(const step of steps){
+ const box=document.createElement('details');box.className='question-box';
+ const identifier=step.id+'-question';
+ box.innerHTML=`<summary>Ask about this code</summary><form><label for="${identifier}">Your question</label><textarea id="${identifier}" maxlength="4000" required></textarea><button type="submit">Send question</button><p class="question-status" role="status">I’ll revise this explanation to answer your question. Includes this file and line range; refresh later for the update.</p></form>`;
+ step.append(box);
+ const form=box.querySelector('form'),input=box.querySelector('textarea'),button=box.querySelector('button'),status=box.querySelector('[role=status]');
+ form.addEventListener('submit',async event=>{
+  event.preventDefault();if(!input.value.trim())return;
+  button.disabled=true;status.textContent='Sending…';
+  try{
+   const session=await fetch('/questions/session',{cache:'no-store'});
+   if(!session.ok)throw new Error('Sending requires the walkthrough question server. Your text has been kept.');
+   const {token}=await session.json();
+   const response=await fetch('/questions',{method:'POST',headers:{'Content-Type':'application/json','X-Question-Token':token},body:JSON.stringify({question:input.value,file:step.closest('.section').dataset.file,first:Number(step.dataset.first),last:Number(step.dataset.last)})});
+   const result=await response.json();if(!response.ok)throw new Error(result.error);
+   status.textContent=result.message;input.value='';
+  }catch(error){status.textContent=error instanceof SyntaxError?'Sending requires the walkthrough question server. Your text has been kept.':error.message;}
+  finally{button.disabled=false;}
+ });
+}
 const colors = { cyan:'#73ddd4', gold:'#ffd479', muted:'#a9b8cd', wall:'#354c63', ink:'#e4ecf5' };
 const element = id => document.getElementById(id);
 function surface(id) { const canvas=element(id); return {canvas, context:canvas.getContext('2d')}; }

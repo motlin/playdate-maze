@@ -10,6 +10,7 @@
 @media(max-width:650px){:root{--header:56px}.topbar{min-height:56px;padding:8px 12px}.topbar h1{font-size:15px}.navigation button{padding:5px 7px}.navigation select{width:40vw;font-size:12px}.section{display:flex;flex-direction:column;padding:18px 16px 0;gap:0}.code-panel{order:-1;top:calc(var(--header) + 8px);height:44vh;min-height:240px;z-index:3;width:100%;margin-bottom:25px;box-shadow:0 12px 20px #101216}.file-header{padding:9px 12px}.file-path{font-size:13px}.file-meta{font-size:11px}.code-panel pre{font-size:12px;padding:12px 0}.code-footer{padding:5px 10px;min-height:32px}.follow{font-size:11px;padding:3px 7px}.explanations h2{margin:5px 0 10px}.step{min-height:65vh;padding:12px 0 80px;scroll-margin-top:calc(44vh + 130px)}.step:last-child{min-height:75vh}.step p{font-size:17px}.location{font-size:12px}h3{font-size:25px}.lab-section{display:block;padding:36px 16px}.lab-intro p{font-size:16px}.lab{padding:14px}.references{padding:25px 16px}}
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
 @media print{.topbar,.code-footer,.progress,.navigation{display:none}.section,.lab-section{display:block;break-before:page}.step{opacity:1!important;min-height:0!important;padding:12px 0}.code-panel{position:static;height:auto;min-height:0}.code-panel pre{overflow:visible;white-space:pre-wrap;font-size:8px}.line{opacity:1!important;display:inline}.line:before{display:none}.lab input{display:none}}
+.question-box{margin-top:24px;font-size:14px}.question-box summary{cursor:pointer;color:var(--cyan)}.question-box label{display:block;margin:12px 0 6px}.question-box textarea{display:block;width:100%;min-height:100px;resize:vertical;background:var(--panel);color:var(--ink);border:1px solid var(--rule);border-radius:3px;padding:10px;font:16px/1.5 system-ui}.question-box button{margin:10px 0}.question-status{font-size:13px;color:var(--muted)}
 </style>
 </head>
 <body>
@@ -71,6 +72,26 @@ for(const section of sections){
 }
 activate(steps[0],true);update();
 document.querySelectorAll('.lab canvas').forEach(canvas=>{const wrapper=document.createElement('div');wrapper.className='diagram-scroll';wrapper.tabIndex=0;wrapper.setAttribute('aria-label',canvas.getAttribute('aria-label')+'; scroll horizontally on small screens');canvas.before(wrapper);wrapper.append(canvas);});
+for(const step of steps){
+ const box=document.createElement('details');box.className='question-box';
+ const identifier=step.id+'-question';
+ box.innerHTML=`<summary>Ask about this code</summary><form><label for="${identifier}">Your question</label><textarea id="${identifier}" maxlength="4000" required></textarea><button type="submit">Send question</button><p class="question-status" role="status">I’ll revise this explanation to answer your question. Includes this file and line range; refresh later for the update.</p></form>`;
+ step.append(box);
+ const form=box.querySelector('form'),input=box.querySelector('textarea'),button=box.querySelector('button'),status=box.querySelector('[role=status]');
+ form.addEventListener('submit',async event=>{
+  event.preventDefault();if(!input.value.trim())return;
+  button.disabled=true;status.textContent='Sending…';
+  try{
+   const session=await fetch('/questions/session',{cache:'no-store'});
+   if(!session.ok)throw new Error('Sending requires the walkthrough question server. Your text has been kept.');
+   const {token}=await session.json();
+   const response=await fetch('/questions',{method:'POST',headers:{'Content-Type':'application/json','X-Question-Token':token},body:JSON.stringify({question:input.value,file:step.closest('.section').dataset.file,first:Number(step.dataset.first),last:Number(step.dataset.last)})});
+   const result=await response.json();if(!response.ok)throw new Error(result.error);
+   status.textContent=result.message;input.value='';
+  }catch(error){status.textContent=error instanceof SyntaxError?'Sending requires the walkthrough question server. Your text has been kept.':error.message;}
+  finally{button.disabled=false;}
+ });
+}
 <!-- INTERACTIONS -->
 </script>
 </body>
