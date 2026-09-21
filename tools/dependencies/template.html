@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Global dependencies · Maze</title>
+<style>
+:root{color-scheme:dark;font-family:system-ui,sans-serif;background:#0e141d;color:#e9eff6;line-height:1.55}*{box-sizing:border-box}body{margin:0}main{max-width:1150px;margin:auto;padding:24px}h1{font-size:clamp(28px,5vw,44px);line-height:1.15;margin:18px 0}h2{font-size:24px;margin:36px 0 12px}p{max-width:78ch}a{color:#8dceff}code,pre{font-family:ui-monospace,SFMono-Regular,Consolas,monospace}code{color:#b6dfff}button,select{font:inherit;background:#19222e;color:inherit;border:1px solid #586b80;border-radius:6px;padding:8px 12px;cursor:pointer;max-width:100%}button:hover,a:hover{color:#fff}button:focus-visible,select:focus-visible,a:focus-visible{outline:3px solid #8dceff;outline-offset:3px}.muted{color:#a9b8c8}.controls{position:sticky;top:0;background:#0e141df5;z-index:2;padding:14px 0;display:flex;align-items:center;gap:12px;flex-wrap:wrap;border-bottom:1px solid #344152}.graph{overflow:auto;padding:12px 0}.graph svg{width:100%;height:auto;min-width:650px;max-height:1100px}.graph a{cursor:pointer}.cycle{color:#ffae80}.legend{font-size:14px}.path{overflow-wrap:anywhere;color:#a9b8c8;font-family:ui-monospace,monospace}.columns{display:grid;grid-template-columns:1fr 1fr;gap:30px}.edge{border-bottom:1px solid #344152;padding:12px 0}.edge button{padding:4px 9px}.edge summary{cursor:pointer;margin-top:8px}.evidence{white-space:pre-wrap;overflow-wrap:anywhere;font-size:13px;background:#141d28;padding:12px}.evidence a{display:block;margin:10px 0 4px}.source{overflow:auto;max-height:70vh;background:#141d28;padding:16px;font-size:13px;tab-size:4}.line{display:block;white-space:pre-wrap;overflow-wrap:anywhere;min-height:1.55em}.number{display:inline-block;width:4em;color:#7f92a8;user-select:none}.line.focus{background:#393b25}.source .highlight{background:transparent}details>summary{cursor:pointer}footer{margin:40px 0;color:#a9b8c8}__CSS__
+.source .n,.source .p{color:#e9eff6}.source .nv{color:#c5dbec}.source .nf{color:#8dceff}.source .k,.source .kd{color:#d3a6ff}.source .s,.source .s2{color:#abe1ad}.source .c,.source .c1{color:#96a3b4}.source .mi,.source .mf{color:#ffcb91}
+@media(max-width:650px){main{padding:18px}.columns{grid-template-columns:1fr;gap:0}.graph svg{min-width:590px}.controls{gap:8px}h2{font-size:21px}}
+</style></head><body><main>
+<a href="walkthrough.html">← Code walkthrough</a>
+<h1>Global dependencies</h1>
+<p class="muted">__COUNTS__</p>
+<p>An arrow <strong>A → B</strong> means code in A’s file refers to the global B. It may call a function, read a constant, construct an object, or pass B elsewhere. Click a node to inspect its references.</p>
+<h2>Circular references</h2>
+<p>These globals can reach one another by following named references. Orange arrows belong to a cycle. This is coupling between modules, not proof of infinite recursion.</p>
+<div class="graph" tabindex="0" aria-label="Circular dependencies; scroll horizontally on small screens">__CYCLES__</div>
+<p><strong>Example loop:</strong> <a href="#TitleScene" class="jump">TitleScene</a> → <a href="#FirstPersonScene" class="jump">FirstPersonScene</a> → <a href="#EscapedScene" class="jump">EscapedScene</a> → TitleScene.</p><p id="cycle-summary"></p>
+<p><strong>Import cycles and reference cycles differ.</strong> Scenes can name other scenes inside functions without importing them. <code>source/main.lua</code> loads those scene files before the functions run. Their references can form a cycle even when their imports do not.</p>
+<h2>Inspect a global</h2>
+<div class="controls"><label for="module">Global</label><select id="module"></select><button id="settings" type="button">Settings example</button></div>
+<h3 id="selected"></h3><p id="path" class="path"></p>
+<p id="explanation"></p>
+<p class="legend">Arrows point toward the dependency. <span class="cycle">Orange = part of a named-reference cycle.</span> Swipe wide diagrams sideways.</p>
+<div id="focus-graph" class="graph" tabindex="0" aria-label="References to and from the selected global"></div>
+<div class="columns"><section><h3>Uses →</h3><div id="outgoing"></div></section><section><h3>← Used by</h3><div id="incoming"></div></section></div>
+<details id="source-details"><summary id="source-label">Complete source</summary><pre class="source"><code id="source-code" class="language-lua"></code></pre></details>
+<h2>All project globals</h2>
+<details><summary>Open the full dependency graph (wide)</summary><div class="graph" tabindex="0" aria-label="All project named dependencies">__FULL__</div></details>
+<h2>What this chart measures</h2>
+<p>Generated from the current <code>source/**/*.lua</code> files. Comments and strings are excluded. Self-references are omitted. Local aliases still contribute a dependency at their assignment—for example, <code>local datastore = playdate.datastore</code>.</p>
+<p><strong>Solid arrows are named references, not imports.</strong> Each reference lists whether its file also directly imports the target. “No direct import” is not automatically an error: another file may load it first. Playdate is an external node; Lua built-ins and globals supplied by CoreLibs are outside this project-module chart.</p>
+<p><strong>Passed objects and callbacks are not resolved by this scan.</strong> For example, <code>SceneManager</code> receives a scene and calls <code>currentScene.update()</code>. It does not name <code>FirstPersonScene</code>, so that dispatch is absent here. Likewise, <code>main.lua</code> wires <code>SystemMenu.refresh</code> into <code>SceneManager.onSwitch</code>. This chart shows named coupling, not every possible runtime call.</p>
+<footer>Rebuild with <code>python3 tools/dependencies/build.py</code>. Source listings and line numbers are embedded; no network libraries required.</footer>
+</main><script>
+const data=__DATA__;
+const $=id=>document.getElementById(id);
+const select=$('module');
+for(const name of Object.keys(data.nodes).sort()){const o=document.createElement('option');o.value=name;o.textContent=name;select.append(o)}
+$('cycle-summary').textContent=data.cycles.length?data.cycles.map(group=>group.join(', ')).join('; ')+' form mutually reachable groups. The import graph has '+data.importCycles.length+' cyclic groups.':'No named-reference cycles found.';
+function show(name,scroll=false){
+ if(!data.nodes[name])name='Settings';
+ const node=data.nodes[name];select.value=name;$('selected').textContent=name;$('path').textContent=node.path;
+ $('explanation').textContent=name==='Settings'?'Settings.load() takes no arguments. It reads through datastore, a local alias for playdate.datastore, and updates file-local isMusicOn. The storage dependency is selected inside the module rather than passed by its caller.':name==='SceneManager'?'SceneManager holds the active scene in a local variable. Its scene and callback dependencies are passed in; they do not appear as named outgoing references.':'';
+ $('focus-graph').innerHTML=node.graph;
+ for(const [id,field] of [['outgoing','from'],['incoming','to']]){
+  const container=$(id);container.replaceChildren();
+  const edges=data.edges.filter(e=>e[field]===name);
+  if(!edges.length){container.textContent='No named references.';continue}
+  for(const edge of edges){
+   const row=document.createElement('div');row.className='edge';
+   const other=field==='from'?edge.to:edge.from;
+   const button=document.createElement('button');button.textContent=other;button.onclick=()=>navigate(other);row.append(button);
+   const note=document.createElement('span');note.className=edge.cycle?'cycle':'muted';note.textContent=' · '+(edge.cycle?'cycle · ':'')+(edge.to==='playdate'?'SDK':edge.imported?'direct import':'no direct import');row.append(note);
+   const details=document.createElement('details');const summary=document.createElement('summary');summary.textContent=edge.lines.length+(edge.lines.length===1?' source line · ':' source lines · ')+data.nodes[edge.from].path;details.append(summary);
+   const evidence=document.createElement('div');evidence.className='evidence';
+   for(const line of edge.lines){const a=document.createElement('a');a.href='#'+edge.from;a.textContent='Line '+line.number+' · open complete file';a.onclick=event=>{event.preventDefault();navigate(edge.from);$('source-details').open=true;const target=$('line-'+line.number);target.classList.add('focus');target.scrollIntoView({block:'center'})};evidence.append(a);const code=document.createElement('code');code.textContent=line.text;evidence.append(code)}
+   details.append(evidence);row.append(details);container.append(row);
+  }
+ }
+ $('source-details').open=false;$('source-details').hidden=!node.code;$('source-label').textContent=node.path+' · Complete file';$('source-code').innerHTML=node.code;
+ if(scroll)$('module').scrollIntoView({block:'start'});
+}
+function navigate(name){history.replaceState(null,'','#'+name);show(name,true)}
+select.onchange=()=>navigate(select.value);$('settings').onclick=()=>navigate('Settings');
+document.addEventListener('click',event=>{const a=event.target.closest('.graph a, a.jump');if(a){event.preventDefault();navigate((a.getAttribute('href')||a.getAttribute('xlink:href')).slice(1))}});
+show(decodeURIComponent(location.hash.slice(1))||'Settings');
+</script></body></html>
