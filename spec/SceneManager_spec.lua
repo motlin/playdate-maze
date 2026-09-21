@@ -2,6 +2,10 @@ require("spec.support.playdate_stub")
 import "SceneManager"
 
 describe("SceneManager", function()
+    before_each(function()
+        dofile("source/SceneManager.lua")
+    end)
+
     local function recordingScene(name, log)
         return {
             enter = function(...) log[#log + 1] = { name, "enter", ... } end,
@@ -45,6 +49,30 @@ describe("SceneManager", function()
         SceneManager.switch({ update = function() updates = updates + 10 end })
         SceneManager.update()
         assert.are.equal(10, updates)
+    end)
+
+    it("saves only the current scene", function()
+        local log = {}
+        SceneManager.switch({ save = function() log[#log + 1] = "first" end })
+        SceneManager.switch({ save = function() log[#log + 1] = "second" end })
+
+        SceneManager.save()
+
+        assert.are.same({ "second" }, log)
+    end)
+
+    it("does nothing when the current scene has no save method", function()
+        local log = {}
+        SceneManager.switch({ save = function() log[#log + 1] = "previous" end })
+        SceneManager.switch({})
+
+        SceneManager.save()
+
+        assert.are.same({}, log)
+    end)
+
+    it("does nothing before the first scene is selected", function()
+        assert.has_no.errors(SceneManager.save)
     end)
 
     it("reports which scene is current", function()

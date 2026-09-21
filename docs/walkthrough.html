@@ -19,13 +19,15 @@
 <noscript><div class="no-script"><p>Enable JavaScript for synchronized highlights and diagrams. Complete source files and explanations remain readable below.</p></div></noscript>
 <main><section class="section" id="section-1" data-title="Game structure" data-file="source/main.lua"><div class="explanations"><h2><span>01</span> Game structure</h2><article class="step" id="step-1-0" data-first="16" data-last="18">
 <p class="location">source/main.lua<br><a href="#step-1-0">Lines 16–18</a></p>
-<h3>One update per frame</h3><p>Playdate calls <code>playdate.update()</code> every frame.</p><p>What happens each frame depends on where we are: the title screen, the first-person maze, Tumble, or Slime. We call each of these a <em>scene</em>. We created <code>SceneManager</code> to keep track of the current scene and call its update function.</p><p>So we define <code>playdate.update()</code> to simply forward the call to <code>SceneManager.update()</code>.</p><p>Lua’s <code>function playdate.update() … end</code> assigns a function to the <code>update</code> field of the <code>playdate</code> table. It is equivalent to <code>playdate.update = function() … end</code>. The callback name is special to Playdate; the dot syntax is ordinary Lua.</p></article><article class="step" id="step-1-1" data-first="41" data-last="41">
-<p class="location">source/main.lua<br><a href="#step-1-1">Lines 41–41</a></p>
-<h3>Why 30 frames per second?</h3><p><strong>Allowed values:</strong> <code>0 &lt; rate ≤ 50</code> sets a target in frames per second. <code>rate = 0</code> is special: run updates as fast as possible, not pause. The SDK does not specify a minimum positive rate.</p><p><strong>30 is the default and Panic’s recommended balance of smoothness, processing time, and battery use.</strong> This line makes that choice explicit; omitting it would also use 30. At 30 FPS each frame has about 33 milliseconds; at 50 it has 20.</p><p>This game measures movement and timers in updates, so increasing the rate also speeds up gameplay. Supporting variable rates would require using elapsed time.</p><p><a href="https://sdk.play.date/Inside%20Playdate.html#f-display.setRefreshRate">SDK reference: setRefreshRate</a></p></article><article class="step" id="step-1-2" data-first="43" data-last="44">
-<p class="location">source/main.lua<br><a href="#step-1-2">Lines 43–44</a></p>
-<h3>Start at the title screen</h3><p>The first line stores <code>SystemMenu.refresh</code> as the callback to run after each scene switch. Without parentheses, it passes the function rather than calling it.</p><p>The second line calls <code>SceneManager.switch(TitleScene)</code>: select the title scene, call its <code>enter()</code> function, then refresh the system menu through that callback.</p><p>Next, where does <code>TitleScene</code> come from?</p></article><article class="step" id="step-1-3" data-first="8" data-last="8">
-<p class="location">source/main.lua<br><a href="#step-1-3">Lines 8–8</a></p>
-<h3>Load the title-screen file</h3><p>Earlier in <code>source/main.lua</code>, this import loads the title scene before the startup calls run.</p><p>Playdate’s <code>import</code> runs <code>source/scenes/Title.lua</code> once. Later imports of the same file do nothing.</p><p>Lua lets a call omit parentheses around a single string argument: <code>import "scenes/Title"</code> is equivalent to <code>import("scenes/Title")</code>.</p><p>Standard Lua uses <code>require</code>; <code>import</code> is supplied by Playdate. This game uses it to load files that define shared globals.</p><p>Next, in <code>source/scenes/Title.lua</code>, we’ll see the assignment that creates <code>TitleScene</code>.</p><p><a href="https://sdk.play.date/Inside%20Playdate.html#_structuring_your_project">SDK reference: imports</a></p></article></div><div class="code-panel"><header class="file-header"><div class="file-path"><span>source/</span><strong>main.lua</strong></div><div class="file-meta"><span>Lua · Complete file · 44 lines</span><output class="range">Lines 16–18</output></div></header>
+<h3>One update per frame</h3><p>Playdate calls <code>playdate.update()</code> every frame.</p><p>What happens each frame depends on where we are: the title screen, the first-person maze, Tumble, or Slime. We call each of these a <em>scene</em>. We created <code>SceneManager</code> to keep track of the current scene and call its update function.</p><p>So we define <code>playdate.update()</code> to simply forward the call to <code>SceneManager.update()</code>.</p><p>Lua’s <code>function playdate.update() … end</code> assigns a function to the <code>update</code> field of the <code>playdate</code> table. It is equivalent to <code>playdate.update = function() … end</code>. The callback name is special to Playdate; the dot syntax is ordinary Lua.</p></article><article class="step" id="step-1-1" data-first="20" data-last="25">
+<p class="location">source/main.lua<br><a href="#step-1-1">Lines 20–25</a></p>
+<h3>Save before pausing</h3><p>Ask <code>SceneManager.save()</code> to save the active scene, then stop the hum and music so held notes cannot drone behind the system menu. Sleep, lock, and termination callbacks below use the same save dispatch.</p></article><article class="step" id="step-1-2" data-first="35" data-last="35">
+<p class="location">source/main.lua<br><a href="#step-1-2">Lines 35–35</a></p>
+<h3>Why 30 frames per second?</h3><p><strong>Allowed values:</strong> <code>0 &lt; rate ≤ 50</code> sets a target in frames per second. <code>rate = 0</code> is special: run updates as fast as possible, not pause. The SDK does not specify a minimum positive rate.</p><p><strong>30 is the default and Panic’s recommended balance of smoothness, processing time, and battery use.</strong> This line makes that choice explicit; omitting it would also use 30. At 30 FPS each frame has about 33 milliseconds; at 50 it has 20.</p><p>This game measures movement and timers in updates, so increasing the rate also speeds up gameplay. Supporting variable rates would require using elapsed time.</p><p><a href="https://sdk.play.date/Inside%20Playdate.html#f-display.setRefreshRate">SDK reference: setRefreshRate</a></p></article><article class="step" id="step-1-3" data-first="37" data-last="38">
+<p class="location">source/main.lua<br><a href="#step-1-3">Lines 37–38</a></p>
+<h3>Start at the title screen</h3><p>The first line stores <code>SystemMenu.refresh</code> as the callback to run after each scene switch. Without parentheses, it passes the function rather than calling it.</p><p>The second line calls <code>SceneManager.switch(TitleScene)</code>: select the title scene, call its <code>enter()</code> function, then refresh the system menu through that callback.</p><p>Next, where does <code>TitleScene</code> come from?</p></article><article class="step" id="step-1-4" data-first="8" data-last="8">
+<p class="location">source/main.lua<br><a href="#step-1-4">Lines 8–8</a></p>
+<h3>Load the title-screen file</h3><p>Earlier in <code>source/main.lua</code>, this import loads the title scene before the startup calls run.</p><p>Playdate’s <code>import</code> runs <code>source/scenes/Title.lua</code> once. Later imports of the same file do nothing.</p><p>Lua lets a call omit parentheses around a single string argument: <code>import "scenes/Title"</code> is equivalent to <code>import("scenes/Title")</code>.</p><p>Standard Lua uses <code>require</code>; <code>import</code> is supplied by Playdate. This game uses it to load files that define shared globals.</p><p>Next, in <code>source/scenes/Title.lua</code>, we’ll see the assignment that creates <code>TitleScene</code>.</p><p><a href="https://sdk.play.date/Inside%20Playdate.html#_structuring_your_project">SDK reference: imports</a></p></article></div><div class="code-panel"><header class="file-header"><div class="file-path"><span>source/</span><strong>main.lua</strong></div><div class="file-meta"><span>Lua · Complete file · 38 lines</span><output class="range">Lines 16–18</output></div></header>
 <pre tabindex="0" aria-label="Complete source/main.lua"><code class="language-lua"><span class="line" data-line="1"><span class="nv">import</span> <span class="s2">&quot;CoreLibs/graphics&quot;</span></span>
 <span class="line" data-line="2"></span>
 <span class="line" data-line="3"><span class="nv">import</span> <span class="s2">&quot;SceneManager&quot;</span></span>
@@ -45,31 +47,25 @@
 <span class="line" data-line="17">    <span class="nv">SceneManager</span>.<span class="nf">update</span>()</span>
 <span class="line" data-line="18"><span class="kr">end</span></span>
 <span class="line" data-line="19"></span>
-<span class="line" data-line="20"><span class="c1">-- A run in the maze and a map in the editor are both kept on disk</span></span>
-<span class="line" data-line="21"><span class="kd">local</span> <span class="kr">function</span> <span class="nf">saveRun</span>()</span>
-<span class="line" data-line="22">    <span class="kr">if</span> <span class="nv">SceneManager</span>.<span class="nf">isCurrent</span>(<span class="nv">FirstPersonScene</span>) <span class="kr">then</span> <span class="nv">FirstPersonScene</span>.<span class="nf">save</span>() <span class="kr">end</span></span>
-<span class="line" data-line="23">    <span class="kr">if</span> <span class="nv">SceneManager</span>.<span class="nf">isCurrent</span>(<span class="nv">EditorScene</span>) <span class="kr">then</span> <span class="nv">EditorScene</span>.<span class="nf">save</span>() <span class="kr">end</span></span>
-<span class="line" data-line="24"><span class="kr">end</span></span>
-<span class="line" data-line="25"></span>
-<span class="line" data-line="26"><span class="c1">-- Held notes would otherwise drone on behind the system menu</span></span>
-<span class="line" data-line="27"><span class="kr">function</span> <span class="nc">playdate</span>.<span class="nf">gameWillPause</span>()</span>
-<span class="line" data-line="28">    <span class="nf">saveRun</span>()</span>
-<span class="line" data-line="29">    <span class="nv">Sounds</span>.<span class="nf">stopHum</span>()</span>
-<span class="line" data-line="30">    <span class="nv">Music</span>.<span class="nf">stop</span>()</span>
-<span class="line" data-line="31"><span class="kr">end</span></span>
-<span class="line" data-line="32"></span>
-<span class="line" data-line="33"><span class="c1">-- Work must survive the console sleeping or the game being closed</span></span>
-<span class="line" data-line="34"><span class="nv">playdate</span>.<span class="py">deviceWillSleep</span> <span class="o">=</span> <span class="nv">saveRun</span></span>
-<span class="line" data-line="35"><span class="nv">playdate</span>.<span class="py">deviceWillLock</span> <span class="o">=</span> <span class="nv">saveRun</span></span>
-<span class="line" data-line="36"><span class="nv">playdate</span>.<span class="py">gameWillTerminate</span> <span class="o">=</span> <span class="nv">saveRun</span></span>
-<span class="line" data-line="37"></span>
-<span class="line" data-line="38"><span class="nb">math.randomseed</span>(<span class="nv">playdate</span>.<span class="nf">getSecondsSinceEpoch</span>())</span>
-<span class="line" data-line="39"><span class="nv">Settings</span>.<span class="nf">load</span>()</span>
-<span class="line" data-line="40"></span>
-<span class="line" data-line="41"><span class="nv">playdate</span>.<span class="py">display</span>.<span class="nf">setRefreshRate</span>(<span class="mi">30</span>)</span>
-<span class="line" data-line="42"></span>
-<span class="line" data-line="43"><span class="nv">SceneManager</span>.<span class="py">onSwitch</span> <span class="o">=</span> <span class="nv">SystemMenu</span>.<span class="py">refresh</span></span>
-<span class="line" data-line="44"><span class="nv">SceneManager</span>.<span class="nf">switch</span>(<span class="nv">TitleScene</span>)</span></code></pre>
+<span class="line" data-line="20"><span class="kr">function</span> <span class="nc">playdate</span>.<span class="nf">gameWillPause</span>()</span>
+<span class="line" data-line="21">    <span class="nv">SceneManager</span>.<span class="nf">save</span>()</span>
+<span class="line" data-line="22">    <span class="c1">-- Held notes would otherwise drone on behind the system menu</span></span>
+<span class="line" data-line="23">    <span class="nv">Sounds</span>.<span class="nf">stopHum</span>()</span>
+<span class="line" data-line="24">    <span class="nv">Music</span>.<span class="nf">stop</span>()</span>
+<span class="line" data-line="25"><span class="kr">end</span></span>
+<span class="line" data-line="26"></span>
+<span class="line" data-line="27"><span class="c1">-- Work must survive the console sleeping or the game being closed</span></span>
+<span class="line" data-line="28"><span class="nv">playdate</span>.<span class="py">deviceWillSleep</span> <span class="o">=</span> <span class="nv">SceneManager</span>.<span class="py">save</span></span>
+<span class="line" data-line="29"><span class="nv">playdate</span>.<span class="py">deviceWillLock</span> <span class="o">=</span> <span class="nv">SceneManager</span>.<span class="py">save</span></span>
+<span class="line" data-line="30"><span class="nv">playdate</span>.<span class="py">gameWillTerminate</span> <span class="o">=</span> <span class="nv">SceneManager</span>.<span class="py">save</span></span>
+<span class="line" data-line="31"></span>
+<span class="line" data-line="32"><span class="nb">math.randomseed</span>(<span class="nv">playdate</span>.<span class="nf">getSecondsSinceEpoch</span>())</span>
+<span class="line" data-line="33"><span class="nv">Settings</span>.<span class="nf">load</span>()</span>
+<span class="line" data-line="34"></span>
+<span class="line" data-line="35"><span class="nv">playdate</span>.<span class="py">display</span>.<span class="nf">setRefreshRate</span>(<span class="mi">30</span>)</span>
+<span class="line" data-line="36"></span>
+<span class="line" data-line="37"><span class="nv">SceneManager</span>.<span class="py">onSwitch</span> <span class="o">=</span> <span class="nv">SystemMenu</span>.<span class="py">refresh</span></span>
+<span class="line" data-line="38"><span class="nv">SceneManager</span>.<span class="nf">switch</span>(<span class="nv">TitleScene</span>)</span></code></pre>
 <footer class="code-footer"><span class="focus-label">Highlighted lines follow the explanation</span><button class="follow" type="button" aria-pressed="true">Follow scroll: on</button></footer></div></section><section class="section" id="section-2" data-title="The imported scene" data-file="source/scenes/Title.lua"><div class="explanations"><h2><span>02</span> The imported scene</h2><article class="step" id="step-2-0" data-first="12" data-last="12">
 <p class="location">source/scenes/Title.lua<br><a href="#step-2-0">Lines 12–12</a></p>
 <h3>Create the shared scene table</h3><p>This assignment creates the global <code>TitleScene</code> because there is no <code>local</code>. After the import runs, <code>source/main.lua</code> can pass this table to <code>SceneManager.switch</code>.</p><p>The assignment creates the name, not the filename. The table initially holds the selected row, maze-size index, and menu rows.</p></article><article class="step" id="step-2-1" data-first="106" data-last="108">
@@ -225,9 +221,11 @@
 <p class="location">source/SceneManager.lua<br><a href="#step-3-0">Lines 9–14</a></p>
 <h3>Exit, replace, enter</h3><p>Let the old scene clean up, replace <code>currentScene</code>, then initialize the new scene. The <code>...</code> passes its arguments through.</p></article><article class="step" id="step-3-1" data-first="16" data-last="18">
 <p class="location">source/SceneManager.lua<br><a href="#step-3-1">Lines 16–18</a></p>
-<h3>Call the current scene</h3><p>Only one scene receives updates. In first-person play, this calls <code>FirstPersonScene.update()</code> in <code>source/scenes/FirstPerson.lua</code>.</p></article></div><div class="code-panel"><header class="file-header"><div class="file-path"><span>source/</span><strong>SceneManager.lua</strong></div><div class="file-meta"><span>Lua · Complete file · 22 lines</span><output class="range">Lines 9–14</output></div></header>
+<h3>Call the current scene</h3><p>Only one scene receives updates. In first-person play, this calls <code>FirstPersonScene.update()</code> in <code>source/scenes/FirstPerson.lua</code>.</p></article><article class="step" id="step-3-2" data-first="20" data-last="22">
+<p class="location">source/SceneManager.lua<br><a href="#step-3-2">Lines 20–22</a></p>
+<h3>Save through the scene</h3><p>If the current scene provides <code>save()</code>, call it. Before a scene is selected, or in a scene without a save hook, do nothing.</p><p><code>FirstPersonScene.save()</code> decides whether to store a run through <code>SaveGame</code>; <code>EditorScene.save()</code> keeps editor persistence separate. SceneManager does not choose a disk format or persistence policy.</p></article></div><div class="code-panel"><header class="file-header"><div class="file-path"><span>source/</span><strong>SceneManager.lua</strong></div><div class="file-meta"><span>Lua · Complete file · 26 lines</span><output class="range">Lines 9–14</output></div></header>
 <pre tabindex="0" aria-label="Complete source/SceneManager.lua"><code class="language-lua"><span class="line" data-line="1"><span class="c1">-- Runs one scene at a time. A scene is a table with update(), which handles a frame&#39;s input and</span></span>
-<span class="line" data-line="2"><span class="c1">-- drawing, and optionally enter(...) and exit(). SceneManager.onSwitch, if set, is called with</span></span>
+<span class="line" data-line="2"><span class="c1">-- drawing, and optionally enter(...), exit(), and save(). SceneManager.onSwitch, if set, is called with</span></span>
 <span class="line" data-line="3"><span class="c1">-- the new scene after each switch.</span></span>
 <span class="line" data-line="4"></span>
 <span class="line" data-line="5"><span class="nv">SceneManager</span> <span class="o">=</span> {}</span>
@@ -245,9 +243,13 @@
 <span class="line" data-line="17">    <span class="nv">currentScene</span>.<span class="nf">update</span>()</span>
 <span class="line" data-line="18"><span class="kr">end</span></span>
 <span class="line" data-line="19"></span>
-<span class="line" data-line="20"><span class="kr">function</span> <span class="nc">SceneManager</span>.<span class="nf">isCurrent</span>(<span class="nv">scene</span>)</span>
-<span class="line" data-line="21">    <span class="kr">return</span> <span class="nv">currentScene</span> <span class="o">==</span> <span class="nv">scene</span></span>
-<span class="line" data-line="22"><span class="kr">end</span></span></code></pre>
+<span class="line" data-line="20"><span class="kr">function</span> <span class="nc">SceneManager</span>.<span class="nf">save</span>()</span>
+<span class="line" data-line="21">    <span class="kr">if</span> <span class="nv">currentScene</span> <span class="ow">and</span> <span class="nv">currentScene</span>.<span class="py">save</span> <span class="kr">then</span> <span class="nv">currentScene</span>.<span class="nf">save</span>() <span class="kr">end</span></span>
+<span class="line" data-line="22"><span class="kr">end</span></span>
+<span class="line" data-line="23"></span>
+<span class="line" data-line="24"><span class="kr">function</span> <span class="nc">SceneManager</span>.<span class="nf">isCurrent</span>(<span class="nv">scene</span>)</span>
+<span class="line" data-line="25">    <span class="kr">return</span> <span class="nv">currentScene</span> <span class="o">==</span> <span class="nv">scene</span></span>
+<span class="line" data-line="26"><span class="kr">end</span></span></code></pre>
 <footer class="code-footer"><span class="focus-label">Highlighted lines follow the explanation</span><button class="follow" type="button" aria-pressed="true">Follow scroll: on</button></footer></div></section><section class="section" id="section-4" data-title="First-person scene" data-file="source/scenes/FirstPerson.lua"><div class="explanations"><h2><span>04</span> First-person scene</h2><article class="step" id="step-4-0" data-first="22" data-last="22">
 <p class="location">source/scenes/FirstPerson.lua<br><a href="#step-4-0">Lines 22–22</a></p>
 <h3>Three first-person submodes</h3><p>Explore, Daily, and Screensaver share this scene and its 3D maze rules. Daily fixes the maze seed and size; Screensaver starts on autopilot without the puzzle. Tumble and Slime use separate scenes.</p></article><article class="step" id="step-4-1" data-first="35" data-last="36">

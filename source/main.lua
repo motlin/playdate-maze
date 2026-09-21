@@ -17,23 +17,17 @@ function playdate.update()
     SceneManager.update()
 end
 
--- A run in the maze and a map in the editor are both kept on disk
-local function saveRun()
-    if SceneManager.isCurrent(FirstPersonScene) then FirstPersonScene.save() end
-    if SceneManager.isCurrent(EditorScene) then EditorScene.save() end
-end
-
--- Held notes would otherwise drone on behind the system menu
 function playdate.gameWillPause()
-    saveRun()
+    SceneManager.save()
+    -- Held notes would otherwise drone on behind the system menu
     Sounds.stopHum()
     Music.stop()
 end
 
 -- Work must survive the console sleeping or the game being closed
-playdate.deviceWillSleep = saveRun
-playdate.deviceWillLock = saveRun
-playdate.gameWillTerminate = saveRun
+playdate.deviceWillSleep = SceneManager.save
+playdate.deviceWillLock = SceneManager.save
+playdate.gameWillTerminate = SceneManager.save
 
 math.randomseed(playdate.getSecondsSinceEpoch())
 Settings.load()
