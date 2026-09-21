@@ -137,7 +137,7 @@ end
 ---@return SlimeArc
 function Slime:arc()
     local scout, points = self.scout, self.arcPoints
-    scout.x, scout.y = self.player.x, self.player.y
+    scout:copyFrom(self.player)
     local velocityX, velocityY = throwVelocity(self.aimAngle)
     local count = 0
     for frame = 1, ARC_FRAMES do

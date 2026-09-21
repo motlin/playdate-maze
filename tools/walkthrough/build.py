@@ -105,13 +105,24 @@ section('Game.lua', 'First-person rules', [
     step('    local walkedX, walkedY', 12, 'Measure what moved', '<p>Subtract the old position and use √(dx² + dy²) for distance. Footsteps follow actual travel; a blocked push can produce a bump.</p>'),
     step('    self:visit()\n    if self.flippers', 11, 'Check interactions', '<p>Record the visited cell, handle flippers and shapes, then check whether the player entered the exit block.</p><p>The drawing code reads this state after the update.</p>'),
 ])
+section('scenes/MazeEditor.lua', 'Editor screen', [
+    step('function EditorScene.play()', 5, 'Ask the editor whether the drawing can play', '<p><code>designToPlay()</code> returns a playable drawing or records the reason play is blocked. The scene handles navigation without writing the editor’s message or save state.</p>'),
+    step('function EditorScene.randomMaze()', 1, 'Request a complete editing transition', '<p>The scene requests a new maze. MapEditor owns replacing the drawing, resetting the cursor and tool, and recording the change.</p>'),
+])
+section('MapEditor.lua', 'Editing state belongs together', [
+    step('function MapEditor:generateMaze(random)', 7, 'Replace the drawing and reset the tools', '<p>Generate a maze at the current size and convert it to a drawing. Reset the cursor to the entrance and select the cells tool. Record the message and unsaved change in the same operation.</p>'),
+    step('function MapEditor:designToPlay()', 8, 'Explain a blocked play attempt', '<p>Validation can update the action message without marking the drawing dirty. A valid drawing is returned for play; only saving clears the dirty flag.</p>'),
+])
 section('Maze.lua', 'Grid and maze generation', [
+    step('function Maze.fromDesign(design)', 12, 'Build a playable grid inside its owner', '<p>Maze copies the design’s open blocks and installs a closed exit gate. Game no longer constructs the grid through nested field writes. The copy lets play open the gate without changing the editor drawing.</p>'),
     step('function Maze:blockAt(x, y)', 3, 'World positions to grid indices', '<p>World x grows right; y grows down. Positions can be fractional. Grid indices start at 1.</p><p><code>(1.5, 1.5)</code> becomes block <code>(2, 2)</code>: floor each coordinate, then add one.</p>'),
     step('    local pitch = corridorWidth + 1', 10, 'Rooms separated by walls', '<p><code>pitch</code> is corridor width plus one wall block. The remainder operator <code>%</code> places wall rows and columns.</p><p>With width 1, a 3 × 2-cell maze occupies 7 × 5 blocks. Slime uses wider corridors.</p>'),
     step('    local visited = { [1] = true }', 13, 'Find unvisited neighbors', '<p>Start at cell (1, 1). The last entry of <code>stack</code> is the current cell; <code>#stack</code> is the list length.</p><p>The loop gathers neighboring cells that are inside the maze and have not been visited.</p>'),
     step('        if #unvisited == 0 then', 10, 'Carve or backtrack', '<p>Choose a random unvisited neighbor, carve the wall, and push that cell. If none remain, remove the stack’s last entry by assigning <code>nil</code>.</p><p>This is depth-first search. Connecting only new cells prevents loops: N cells get N − 1 internal passages.</p>'),
 ])
 section('Player.lua', 'Movement and collision', [
+    step('function Player:walkTowards', 12, 'Follow a navigation target', '<p>Player owns the speed-limited move and exact arrival at a clear cell center. Autopilot chooses the route and asks for a step; it does not assign coordinates.</p>'),
+    step('function Player:rewindAlong', 10, 'Rewind position and heading together', '<p>The thread checks its swept path. Player applies the resulting position and turns toward the backward heading at the allowed speed. If no clear movement remains, position and heading stay unchanged.</p>'),
     step('local function isBlocked', 6, 'Check the body’s four corners', '<p>The player is a square, 0.4 blocks wide. Test all four corners at the proposed position. Walls and closed doors block movement.</p>'),
     step('local function slide', 13, 'Stop at the wall edge', '<p>Try the target first. If blocked, calculate a position just short of the wall. <code>GAP</code> avoids rounding a touching body into it.</p><p>This checks destinations, not the entire path. The game must use small movement steps.</p>'),
     step('function Player:moveBy', 7, 'Slide along walls', '<p>Move x first, then y using the updated x. A wall can block one axis while allowing movement along the other.</p>'),
@@ -124,6 +135,7 @@ section('ExitDistance.lua', 'Shortest corridor distances', [
 ])
 section('Autopilot.lua', 'Wall-following navigation', [
     step('local PREFERENCE', 9, 'Try left, ahead, right, back', '<p>The numbers are quarter-turn offsets from the current heading. Choose the first open passage.</p><p>This works for the game’s tree-shaped maze, but does not choose the shortest route.</p>'),
+    step('    if player:walkTowards', 1, 'Let Player perform the move', '<p>If a target step was needed, finish this frame. Once at the target, choose the next passage and turn before advancing.</p>'),
     step('    local turn = (ANGLES', 5, 'Turn by the shorter angle', '<p>Wrap the turn into [−180°, 180°). From 350° to 10°, the result is +20°.</p><p>Limit turning to six degrees per frame before moving toward the next cell center.</p>'),
 ])
 section('Thread.lua', 'Recording and reversing a path', [
@@ -131,7 +143,7 @@ section('Thread.lua', 'Recording and reversing a path', [
     step('        local share = stretch > 0', 8, 'Check the segment before rewinding', '<p><code>share = distance / stretch</code>, capped at 1, gives the fraction to rewind. Reeling 0.1 blocks along 0.25 blocks moves 40% of the segment.</p><p>Check the entire segment for body clearance before moving. Stop at blocked segments, including unsafe paths from older saves.</p>'),
 ])
 section('Tumble.lua', 'Rotating gravity', [
-    step('    self.angle = (self.angle', 9, 'Convert screen directions to maze directions', '<p>The view rotates clockwise by <code>angle</code>. Gravity must still point down the screen.</p><p>In maze coordinates, down = (sin θ, cos θ). At 90°, gravity points east. Right = (cos θ, −sin θ).</p>'),
+    step('    self.angle = (self.angle', 9, 'Convert screen directions to maze directions', '<p>The view rotates clockwise by <code>angle</code>. Gravity must still point down the screen.</p><p>In maze coordinates, down = (sin θ, cos θ). At 90°, gravity points east. Right = (cos θ, −sin θ).</p><p>Tumble requests a turn through Player’s existing method to align its heading with gravity.</p>'),
     step('    local along = velocityX', 10, 'Change the sideways velocity', '<p>The dot product measures velocity along the screen’s right direction: multiply corresponding components and add.</p><p>Walking changes that component toward the desired speed. With no input, friction reduces it.</p>'),
     step('    if input.jump and self.isGrounded then', 10, 'Jump, then cap speed', '<p>Replace the downward velocity with an upward jump speed. Limit total speed to 0.35 blocks per frame before collision checks.</p>'),
 ])
@@ -142,7 +154,7 @@ section('SideView.lua', '2D drawing coordinates', [
 section('Slime.lua', 'Throwing and trajectory prediction', [
     step('local function throwVelocity', 4, 'Convert the crank angle to velocity', '<p>Slime uses 0° up, unlike the first-person camera’s 0° east. Its launch direction is (sin θ, −cos θ).</p><p>Multiply by <code>THROW_SPEED</code> to get blocks per frame.</p>'),
     step('local function fly', 17, 'Simulate one frame', '<p>Add gravity, cap speed, then call the shared collision method. A downward hit is a floor; other blocked directions identify walls or the ceiling.</p>'),
-    step('function Slime:arc()', 13, 'Preview with the same simulation', '<p>A spare player, <code>scout</code>, starts at the current position and repeats <code>fly</code> until collision or 240 frames.</p><p>The real flight uses this same function. The preview therefore includes the same gravity, speed cap, and collisions.</p>'),
+    step('function Slime:arc()', 13, 'Preview with the same simulation', '<p>A spare player, <code>scout</code>, resets its own pose through <code>copyFrom</code> and repeats <code>fly</code> until collision or 240 frames. The real player stays unchanged, and the spare body is reused.</p><p>The real flight uses this same function. The preview therefore includes the same gravity, speed cap, and collisions.</p>'),
 ])
 section('Puzzle.lua', 'Shape states', [
     step('function Puzzle:pickUp', 7, 'Ground → carried', '<p>Find an item within reach, change its state, and remember it in <code>self.carried</code>. Only one item can be carried.</p>'),

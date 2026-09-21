@@ -11,12 +11,12 @@
 <p class="muted">__COUNTS__</p>
 <p>Objects should control their own state. Returned values should not change behind the caller’s back.</p>
 <details id="ownership-overview" open><summary>Open the full ownership graph</summary>
-<p>Arrows point from caller to state owner. Orange labels identify outside writes; purple labels identify returned shared storage.</p>
-<div class="graph ownership" tabindex="0" aria-label="All reviewed ownership concerns">__OWNERSHIP__</div></details>
-<p><strong>Scope:</strong> these are the reviewed examples, not a completed repository-wide audit. Shared-result edges identify an output-lifetime concern, not proof that current callers retain stale results. Missing edges do not certify encapsulation.</p>
+<p>Arrows point from caller to state owner. Green labels identify owner operations replacing outside writes; purple labels identify returned shared storage.</p>
+<div class="graph ownership" tabindex="0" aria-label="All reviewed ownership relationships">__OWNERSHIP__</div></details>
+<p><strong>Scope:</strong> the game source was audited for direct assignments, nested writes, aliases, and mutation through passed or returned references. The six confirmed outside-write relationships shown here use owner operations. Shared-result edges identify an output-lifetime concern, not proof that current callers retain stale results. This is a source audit, not a static proof against every possible future caller.</p>
 <p>Constructors such as <code>DockTimer.new()</code> and <code>Bob.new()</code>, constant reads, ordinary function calls, and independently owned SDK objects are excluded. The earlier scene-reference cycles are not counted as ownership violations.</p>
 <h2>Inspect the evidence</h2>
-<div class="controls"><label for="module">Module</label><select id="module"></select><label for="view">Show</label><select id="view"><option value="ownership">Ownership concerns</option><option value="references">Named references (background)</option></select></div>
+<div class="controls"><label for="module">Module</label><select id="module"></select><label for="view">Show</label><select id="view"><option value="ownership">Ownership relationships</option><option value="references">Named references (background)</option></select></div>
 <h3 id="selected"></h3><p id="path" class="path"></p>
 <p id="explanation"></p>
 <p id="legend" class="legend"></p>
@@ -26,7 +26,7 @@
 <h2>Background: named references</h2>
 <details><summary>All named references (not an ownership assessment)</summary><p>This includes constructors, constant reads, calls, and scene navigation. It does not classify violations or count problematic cycles.</p><div class="graph" tabindex="0" aria-label="Background named references">__FULL__</div></details>
 <h2>How this is built</h2>
-<p>Ownership findings are manually traced and backed by source anchors checked during generation. The lexical reference scanner alone cannot establish ownership, resolve object aliases, or detect escaped scratch buffers. The broader audits are recorded in the task list.</p>
+<p>Ownership findings are manually traced and backed by source anchors checked during generation. The lexical reference scanner alone cannot establish ownership, resolve object aliases, or detect escaped scratch buffers. Construction within an owner (including Run subclasses) and owner-managed records are legitimate writes. Puzzle constructors take ownership of fresh lists; save loaders take ownership of newly decoded datastore tables. SaveGame and MapSlots pass save tables directly to synchronous serialization. Rendering, audio, and input consumers read borrowed results without mutating them; MazeView sorts its own sprite records, and Game shuffles a newly returned free-cell list. SDK callbacks are explicit configuration, and SDK resources keep their own mutable APIs.</p>
 <p>The background graph scans <code>source/**/*.lua</code>, excluding comments, strings, and self-references. Local aliases contribute references at their assignments. Passed instances and callbacks are not resolved. SDK and Lua built-ins are not individually audited here.</p>
 <footer>Rebuild with <code>python3 tools/dependencies/build.py</code>. Source listings and line numbers are embedded; no network libraries required.</footer>
 </main><script>
@@ -37,11 +37,11 @@ for(const name of Object.keys(data.nodes).sort()){const o=document.createElement
 function show(name,scroll=false){
  if(!data.nodes[name])name='EditorScene';
  const node=data.nodes[name];select.value=name;$('selected').textContent=name;$('path').textContent=node.path;
- $('explanation').textContent=name==='Settings'?'Settings.load() takes no arguments. It reads through datastore, a local alias for playdate.datastore, and updates file-local isMusicOn. The storage dependency is selected inside the module rather than passed by its caller.':name==='SceneManager'?'SceneManager holds the active scene in a local variable. Its scene and callback dependencies are passed in; they do not appear as named outgoing references.':'';
+ $('explanation').textContent=name==='Settings'?'Settings.load() takes no arguments. It reads through playdate.datastore and updates file-local isMusicOn. The storage dependency is selected inside the module rather than passed by its caller.':name==='SceneManager'?'SceneManager holds the active scene in a local variable. Its scene and callback dependencies are passed in; they do not appear as named outgoing references.':'';
  const ownership=$('view').value==='ownership';
  $('focus-graph').classList.toggle('ownership',ownership);
- $('legend').textContent=ownership?'Only reviewed ownership concerns. Arrows point toward the state owner.':'Background name references; these arrows are not violation findings.';
- $('focus-graph').innerHTML=ownership?(node.ownershipGraph||'<p>No reviewed finding recorded for this module. This is not a clean-audit result.</p>'):node.graph;
+ $('legend').textContent=ownership?'Reviewed owner operations and shared results. Arrows point toward the state owner.':'Background name references; these arrows are not violation findings.';
+ $('focus-graph').innerHTML=ownership?(node.ownershipGraph||'<p>No confirmed outside-write relationship or shared-result concern recorded for this module.</p>'):node.graph;
  for(const [id,field] of [['outgoing','from'],['incoming','to']]){
   const container=$(id);container.replaceChildren();
   const edges=(ownership?data.findings:data.edges).filter(e=>e[field]===name);

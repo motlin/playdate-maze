@@ -104,7 +104,7 @@ function Tumble:update(input)
     local sine, cosine = math.sin(radians), math.cos(radians)
     local downX, downY = sine, cosine
     local rightX, rightY = cosine, -sine
-    self.player.angle = (90 - self.angle) % 360
+    self.player:turn(90 - self.angle - self.player.angle)
 
     local velocityX, velocityY = self.velocityX + downX * Tumble.GRAVITY, self.velocityY + downY * Tumble.GRAVITY
 

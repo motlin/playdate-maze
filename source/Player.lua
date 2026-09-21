@@ -23,6 +23,47 @@ function Player.new(x, y, angle) return setmetatable({ x = x, y = y, angle = ang
 ---@return nil
 function Player:turn(degrees) self.angle = (self.angle + degrees) % 360 end
 
+-- Reset a reusable simulation body without sharing the live player's state.
+---@param player Player
+---@return nil
+function Player:copyFrom(player)
+    self.x, self.y, self.angle = player.x, player.y, player.angle
+end
+
+-- Follow a navigation target without overshooting it. The route supplies clear cell centers.
+---@param targetX number
+---@param targetY number
+---@param speed number
+---@return boolean
+function Player:walkTowards(targetX, targetY, speed)
+    local offsetX, offsetY = targetX - self.x, targetY - self.y
+    local distance = math.sqrt(offsetX * offsetX + offsetY * offsetY)
+    if distance == 0 then return false end
+    if distance <= speed then
+        self.x, self.y = targetX, targetY
+    else
+        self.x = self.x + offsetX / distance * speed
+        self.y = self.y + offsetY / distance * speed
+    end
+    return true
+end
+
+-- The thread checks the swept path; follow its position and ease toward its backward heading.
+---@param thread Thread
+---@param distance number
+---@param turnSpeed number
+---@return boolean, boolean?
+function Player:rewindAlong(thread, distance, turnSpeed)
+    local x, y, heading, blocked = thread:rewindFrom(self.x, self.y, distance)
+    if not x then return false, blocked end
+    ---@cast y number
+    ---@cast heading number
+    self.x, self.y = x, y
+    local turn = (heading - self.angle + 180) % 360 - 180
+    self:turn(math.max(-turnSpeed, math.min(turnSpeed, turn)))
+    return true, blocked
+end
+
 local function isBlocked(maze, x, y)
     return maze:isWall(maze:blockAt(x - Player.RADIUS, y - Player.RADIUS))
         or maze:isWall(maze:blockAt(x + Player.RADIUS, y - Player.RADIUS))

@@ -137,14 +137,7 @@ function Game.fromDesign(design, random)
     local problems = design:problems()
     assert(#problems == 0, "this map cannot be played: " .. tostring(problems[1]))
 
-    local maze = Maze.new(design.columns, design.rows)
-    for gridY = 1, maze.gridHeight do
-        for gridX = 1, maze.gridWidth do
-            maze.blocks[gridY][gridX] = design:isOpen(gridX, gridY) and Maze.BLOCKS.OPEN or Maze.BLOCKS.WALL
-        end
-    end
-    maze.exitGridX, maze.exitGridY = design.exit.gridX, design.exit.gridY
-    maze.blocks[maze.exitGridY][maze.exitGridX] = Maze.BLOCKS.DOOR
+    local maze = Maze.fromDesign(design)
 
     local startX, startY = maze:blockCenter(design.start.gridX, design.start.gridY)
     local startAngle = ANGLES.east
@@ -282,8 +275,8 @@ end
 ---@return nil
 function Game:reelIn(degrees)
     local player = self.player
-    local x, y, heading, blocked = self.thread:rewindFrom(player.x, player.y, degrees / Game.REEL_DEGREES_PER_BLOCK)
-    if not x then
+    local moved, blocked = player:rewindAlong(self.thread, degrees / Game.REEL_DEGREES_PER_BLOCK, Game.REEL_TURN_SPEED)
+    if not moved then
         self:say(blocked and "The thread is blocked here" or "The thread begins here")
         return
     end
@@ -292,12 +285,6 @@ function Game:reelIn(degrees)
         self.blocksSinceReelTick = self.blocksSinceReelTick - Game.REEL_TICK_BLOCKS
         self:emit("reel")
     end
-    -- rewindFrom returns the coordinates and heading together.
-    ---@cast y number
-    ---@cast heading number
-    player.x, player.y = x, y
-    local turn = (heading - player.angle + 180) % 360 - 180
-    player:turn(math.max(-Game.REEL_TURN_SPEED, math.min(Game.REEL_TURN_SPEED, turn)))
 end
 
 -- Raises the gate by a forward crank, or lets it sag. Returns whether the crank was used on it.

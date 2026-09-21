@@ -3,6 +3,7 @@
 -- the editor's screen is a thin shell over it. `message` is what the last action has to say.
 
 import "MapDesign"
+import "Maze"
 
 ---@class EditorTool
 ---@field name string
@@ -59,6 +60,28 @@ function MapEditor.new(design)
         message = nil,
         hasUnsavedChanges = false,
     }, MapEditor)
+end
+
+-- Replacing a drawing starts at its entrance with the cells tool, and needs saving.
+---@param random Random
+---@return nil
+function MapEditor:generateMaze(random)
+    self.design = MapDesign.fromMaze(Maze.generate(self.design.columns, self.design.rows, random))
+    self.cursorX, self.cursorY = self.design.start.gridX, self.design.start.gridY
+    self.toolIndex = 1
+    self.message = "A new maze to alter"
+    self.hasUnsavedChanges = true
+end
+
+-- A failed play attempt explains the problem without changing the drawing's save state.
+---@return MapDesign?
+function MapEditor:designToPlay()
+    local problem = self.design:problems()[1]
+    if problem then
+        self.message = problem
+        return nil
+    end
+    return self.design
 end
 
 ---@return EditorTool

@@ -77,6 +77,22 @@ function Maze.new(columns, rows, corridorWidth)
     return maze
 end
 
+-- Copy an editor drawing into a playable grid with a closed exit gate.
+---@param design MapDesign
+---@return Maze
+function Maze.fromDesign(design)
+    assert(design.exit, "a playable maze needs an exit")
+    local maze = Maze.new(design.columns, design.rows)
+    for gridY = 1, maze.gridHeight do
+        for gridX = 1, maze.gridWidth do
+            maze.blocks[gridY][gridX] = design:isOpen(gridX, gridY) and Maze.BLOCKS.OPEN or Maze.BLOCKS.WALL
+        end
+    end
+    maze.exitGridX, maze.exitGridY = design.exit.gridX, design.exit.gridY
+    maze.blocks[maze.exitGridY][maze.exitGridX] = Maze.BLOCKS.DOOR
+    return maze
+end
+
 -- random(n) returns an integer from 1 to n, like math.random
 ---@param columns integer
 ---@param rows integer

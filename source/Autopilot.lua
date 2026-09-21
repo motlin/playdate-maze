@@ -31,17 +31,7 @@ end
 
 function Autopilot:update()
     local player = self.player
-    local offsetX, offsetY = self.targetX - player.x, self.targetY - player.y
-    local distance = math.sqrt(offsetX * offsetX + offsetY * offsetY)
-    if distance > 0 then
-        if distance <= Autopilot.WALK_SPEED then
-            player.x, player.y = self.targetX, self.targetY
-        else
-            player.x = player.x + offsetX / distance * Autopilot.WALK_SPEED
-            player.y = player.y + offsetY / distance * Autopilot.WALK_SPEED
-        end
-        return
-    end
+    if player:walkTowards(self.targetX, self.targetY, Autopilot.WALK_SPEED) then return end
 
     if not self.direction then
         self.direction = Autopilot.chooseDirection(self.maze, self.column, self.row, player:facing())

@@ -10,7 +10,6 @@ import "Hud"
 import "MapEditor"
 import "MapSlots"
 import "MapView"
-import "Maze"
 import "PlayInput"
 import "SceneManager"
 
@@ -53,26 +52,14 @@ end
 
 function EditorScene.exit() EditorScene.save() end
 
-function EditorScene.say(message) EditorScene.editor.message = message end
-
 function EditorScene.play()
-    local editor = EditorScene.editor
-    local problem = editor.design:problems()[1]
-    if problem then
-        EditorScene.say(problem)
-        return
-    end
-    SceneManager.switch(FirstPersonScene, FirstPersonScene.SUBMODES.CUSTOM, TitleScene.sizeIndex, nil, editor.design)
+    local design = EditorScene.editor:designToPlay()
+    if not design then return end
+    SceneManager.switch(FirstPersonScene, FirstPersonScene.SUBMODES.CUSTOM, TitleScene.sizeIndex, nil, design)
 end
 
 -- Throws the drawing away for a freshly generated maze of the same size, to alter
-function EditorScene.randomMaze()
-    local design = EditorScene.editor.design
-    local maze = Maze.generate(design.columns, design.rows, math.random)
-    EditorScene.editor = MapEditor.new(MapDesign.fromMaze(maze))
-    EditorScene.editor.hasUnsavedChanges = true
-    EditorScene.say("A new maze to alter")
-end
+function EditorScene.randomMaze() EditorScene.editor:generateMaze(math.random) end
 
 -- For the system menu, which has room for two items beside Title screen
 EditorScene.menuItems = {
