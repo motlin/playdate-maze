@@ -103,15 +103,60 @@ describe("menu input snapshots", function()
         assert.are.same({ 3, 1, 3 }, sizes)
     end)
 
-    it("confirms the original row during navigation and stops after switching", function()
+    for _, navigation in ipairs({
+        { name = "crank", crank = 45, pressed = 0 },
+        { name = "directional", crank = -45, pressed = 8 },
+    }) do
+        it(
+            "confirms the highlighted row after " .. navigation.name .. " navigation and stops after switching",
+            function()
+                local environment, state = loadMenus()
+                local entries = {}
+                environment.FirstPersonScene.enter = function(submode, sizeIndex)
+                    entries[#entries + 1] = { submode, sizeIndex }
+                end
+                state.crank, state.pressed = navigation.crank, navigation.pressed | 32
+                environment.TitleScene.update()
+                assert.are.same({ { { "daily", 2 } }, true, 2, 1, 1 }, {
+                    entries,
+                    environment.SceneManager.isCurrent(environment.FirstPersonScene),
+                    environment.TitleScene.selection,
+                    state.reads,
+                    state.crankReads,
+                })
+            end
+        )
+    end
+
+    for _, action in ipairs({
+        { name = "left", pressed = 1, size = 1 },
+        { name = "right", pressed = 2, size = 3 },
+        { name = "confirm", pressed = 32, size = 3 },
+    }) do
+        it("applies " .. action.name .. " after navigating onto the size row", function()
+            local environment, state = loadMenus()
+            local scene = environment.TitleScene
+            scene.selection = #scene.rows - 1
+            state.crank, state.pressed = 45, action.pressed
+            scene.handleInput()
+            assert.are.same({ 7, action.size, true }, {
+                scene.selection,
+                scene.sizeIndex,
+                environment.SceneManager.isCurrent(scene),
+            })
+        end)
+    end
+
+    it("does not change size after navigating away from the size row", function()
         local environment, state = loadMenus()
-        state.pressed = 8 | 32
-        environment.TitleScene.update()
-        assert.are.same({ true, 2, 1, 1 }, {
-            environment.SceneManager.isCurrent(environment.FirstPersonScene),
-            environment.TitleScene.selection,
-            state.reads,
-            state.crankReads,
+        local scene = environment.TitleScene
+        scene.selection = #scene.rows
+        state.pressed = 4 | 2
+        scene.handleInput()
+        assert.are.same({ 6, 2, true }, {
+            scene.selection,
+            scene.sizeIndex,
+            environment.SceneManager.isCurrent(scene),
         })
     end)
 

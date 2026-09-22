@@ -112,7 +112,6 @@ end
 function TitleScene.handleInput()
     local input = controls:read()
     local rows = TitleScene.rows
-    local row = rows[TitleScene.selection]
     local move = crankSteps:turn(input.crankChange)
     if input:isPressed(playdate.kButtonUp) then move = -1 end
     if input:isPressed(playdate.kButtonDown) then move = 1 end
@@ -121,6 +120,7 @@ function TitleScene.handleInput()
         crankSteps:reset()
     end
     TitleScene.selection = math.max(1, math.min(#rows, TitleScene.selection + move))
+    local row = rows[TitleScene.selection]
     if input:isPressed(playdate.kButtonLeft) and row.left then row.left() end
     if input:isPressed(playdate.kButtonRight) and row.right then row.right() end
     if input:isPressed(playdate.kButtonA) then row.confirm() end
