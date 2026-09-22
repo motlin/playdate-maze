@@ -22,6 +22,7 @@
 ---@class RayScan
 ---@field runs RayRun[]
 ---@field depths number[]
+---@field runPool? RayRun[]
 
 ---@class Raycaster
 Raycaster = {}
@@ -90,7 +91,8 @@ local function faceKey(side, gridX, gridY) return (gridY * 256 + gridX) * 2 + si
 ---@return RayScan
 function Raycaster.scan(maze, x, y, angle, screen, result)
     result = result or { runs = {}, depths = {} }
-    local runs, depths = result.runs, result.depths
+    result.runPool = result.runPool or {}
+    local runs, depths, runPool = result.runs, result.depths, result.runPool
     local width, columnWidth = screen.width, screen.columnWidth
     local radians = math.rad(angle)
     local forwardX, forwardY = math.cos(radians), math.sin(radians)
@@ -107,11 +109,12 @@ function Raycaster.scan(maze, x, y, angle, screen, result)
     local run
     local function startRun(outputRuns, startX, distance, side, gridX, gridY, block)
         runCount = runCount + 1
-        run = outputRuns[runCount]
+        run = runPool[runCount]
         if not run then
-            run = {}
-            outputRuns[runCount] = run
+            run = outputRuns[runCount] or {}
+            runPool[runCount] = run
         end
+        outputRuns[runCount] = run
         run.startX, run.startDistance = startX, distance
         run.endX, run.endDistance = startX, distance
         run.side, run.gridX, run.gridY, run.block = side, gridX, gridY, block

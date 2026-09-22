@@ -59,6 +59,30 @@ describe("Raycaster", function()
     describe("scan", function()
         local SCREEN <const> = { width = 400, columnWidth = 4, fieldOfView = 60, refinements = 2 }
 
+        it("reuses every run after a complex view shrinks to one face and grows again", function()
+            local maze = corridor()
+            local expected = Raycaster.scan(maze, 1.5, 1.5, 0, SCREEN)
+            local buffer = { runs = {}, depths = {} }
+            Raycaster.scan(maze, 1.5, 1.5, 0, SCREEN, buffer)
+            local originalRuns = { table.unpack(buffer.runs) }
+            assert.are.equal(9, #originalRuns)
+
+            for _ = 1, 3 do
+                local simple = Raycaster.scan(maze, 1.5, 1.5, 90, SCREEN)
+                assert.are.equal(buffer, Raycaster.scan(maze, 1.5, 1.5, 90, SCREEN, buffer))
+                assert.are.equal(1, #buffer.runs)
+                assert.are.same({ simple.runs, simple.depths }, { buffer.runs, buffer.depths })
+                assert.are.equal(originalRuns[1], buffer.runs[1])
+
+                Raycaster.scan(maze, 1.5, 1.5, 0, SCREEN, buffer)
+                assert.are.same({ expected.runs, expected.depths }, { buffer.runs, buffer.depths })
+                for index, original in ipairs(originalRuns) do
+                    assert.are.equal(original, buffer.runs[index])
+                    assert.are_not.equal(expected.runs[index], buffer.runs[index])
+                end
+            end
+        end)
+
         it("covers the whole screen with runs that touch", function()
             local scan = Raycaster.scan(corridor(), 1.5, 1.5, 0, SCREEN)
             assert.are.equal(0, scan.runs[1].startX)
