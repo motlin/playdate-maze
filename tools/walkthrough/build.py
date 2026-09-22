@@ -133,9 +133,10 @@ section('Player.lua', 'Movement and collision', [
     step('function Player:move(maze', 5, 'Rotate forward and sideways motion', '<p><code>cos(angle)</code> gives the horizontal part of forward; <code>sin(angle)</code> gives its vertical part. Lua takes radians, so convert degrees first.</p><p>Forward = (cos θ, sin θ). Right = (−sin θ, cos θ). At 90°, forward is down and right is left on the map.</p>'),
 ])
 section('ExitDistance.lua', 'Shortest corridor distances', [
-    step('    local queue, head', 6, 'Start a queue at the exit', '<p>The exit cell has distance zero. Process the oldest queued cell first by advancing <code>head</code>.</p><p>This is breadth-first search: visit distance 0, then 1, then 2, and so on.</p>'),
+    step('    local queue, head = { { exitColumn, exitRow } }, 1', 6, 'Start a queue at the exit', '<p>The exit cell has distance zero. Process the oldest queued cell first by advancing <code>head</code>.</p><p>This is breadth-first search: visit distance 0, then 1, then 2, and so on.</p>'),
     step('            if isInside and not distances.byCell', 5, 'Visit each reachable neighbor once', '<p>Follow passages, assign the neighbor’s distance, and enqueue it. Every passage costs one step, so the first assigned distance is shortest.</p><p>Zero is true in Lua. The exit’s zero distance therefore still marks it as visited.</p>'),
-    step('function ExitDistance:proximity', 4, 'Convert distance to proximity', '<p>Proximity is 1 at the exit’s cell and 0 at the farthest cell. Music follows this corridor distance rather than straight-line distance through walls.</p>'),
+    step('local function blockDistances', 5, 'Follow custom maps block by block', '<p>Hand-made maps can connect between cell centers. Their breadth-first search starts at the gate, even while closed, and follows every open block. Walls and disconnected blocks have zero proximity.</p>'),
+    step('function ExitDistance:proximity', 9, 'Convert distance to proximity', '<p>Generated mazes measure cells; custom maps measure blocks, with proximity 1 at the gate. Proximity is 0 at the farthest reachable position. Music follows this corridor distance rather than straight-line distance through walls.</p>'),
 ])
 section('Autopilot.lua', 'Wall-following navigation', [
     step('local PREFERENCE', 9, 'Try left, ahead, right, back', '<p>The numbers are quarter-turn offsets from the current heading. Choose the first open passage.</p><p>This works for the game’s tree-shaped maze, but does not choose the shortest route.</p>'),

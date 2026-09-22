@@ -69,3 +69,55 @@ describe("ExitDistance", function()
         end)
     end)
 end)
+
+describe("custom-map block distances", function()
+    local function corridor()
+        import "MapDesign"
+        local design = MapDesign.new(4, 2)
+        for gridX = 2, 8 do
+            design:setBlock(gridX, 3, true)
+        end
+        design:place("start", nil, 3, 3)
+        design:place("exit", nil, 9, 3)
+        assert.are.same({}, design:problems())
+        return Maze.fromDesign(design)
+    end
+
+    it("reaches off-center starts and progresses along row three to the closed gate", function()
+        local maze = corridor()
+        local distances = ExitDistance.new(maze, true)
+        local proximity = {}
+        for gridX = 2, 9 do
+            proximity[#proximity + 1] = distances:proximity(maze:blockCenter(gridX, 3))
+        end
+        assert.are.same({ 1 / 8, 2 / 8, 3 / 8, 4 / 8, 5 / 8, 6 / 8, 7 / 8, 1 }, proximity)
+        assert.are.equal(0, distances:proximity(0.5, 0.5))
+        maze:openExit()
+        assert.are.equal(1, ExitDistance.new(maze, true):proximity(maze:blockCenter(9, 3)))
+    end)
+
+    it("feeds custom block proximity through Music into the played pitch", function()
+        import "MusicScore"
+        import "Settings"
+        local originalSound = playdate.sound
+        local notes = {}
+        playdate.sound = {
+            synth = {
+                new = function()
+                    return {
+                        setADSR = function() end,
+                        noteOff = function() end,
+                        playNote = function(_, frequency) notes[#notes + 1] = frequency end,
+                    }
+                end,
+            },
+        }
+        local environment = setmetatable({}, { __index = _G })
+        assert(loadfile("source/Music.lua", "t", environment))()
+        Settings.setMusicOn(true)
+        local maze = corridor()
+        environment.Music.update({ maze = maze, isHandMade = true, player = { x = 2.5, y = 2.5 } })
+        assert.are.same({ MusicScore.frequency(MusicScore.noteAt(1), 3) }, notes)
+        playdate.sound = originalSound
+    end)
+end)

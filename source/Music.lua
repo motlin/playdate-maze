@@ -38,7 +38,7 @@ function Music.setVolume(volume) masterVolume = volume end
 function Music.update(run, fixedProximity)
     if not Settings.isMusicOn() then return end
     if not distances or distances.maze ~= run.maze then
-        distances = ExitDistance.new(run.maze)
+        distances = ExitDistance.new(run.maze, run.isHandMade)
         heard = fixedProximity or distances:proximity(run.player.x, run.player.y)
     end
     heard = MusicScore.glide(heard, fixedProximity or distances:proximity(run.player.x, run.player.y))
