@@ -1,5 +1,5 @@
 -- Plays the game's sounds on the Playdate's synths, from the notes SoundBook writes for each
--- event. Each wave has a few synths, used in turn, so notes that overlap do not cut each other off.
+-- event. Each pending or playing note reserves a synth until its release finishes.
 
 import "Hum"
 import "SoundBook"
@@ -7,7 +7,7 @@ import "SoundBook"
 Sounds = {}
 local humLevels = {}
 
-local VOICES_PER_WAVE <const> = 4
+local RELEASE_SECONDS <const> = 0.04
 local WAVES <const> = {
     sine = playdate.sound.kWaveSine,
     square = playdate.sound.kWaveSquare,
@@ -17,27 +17,32 @@ local WAVES <const> = {
 
 -- 1 is full volume. The screenshot harness plays at 0, which still exercises all of this.
 local masterVolume = 1
-local voices, nextVoice = {}, {}
-for wave, waveform in pairs(WAVES) do
-    voices[wave], nextVoice[wave] = {}, 1
-    for index = 1, VOICES_PER_WAVE do
-        local synth = playdate.sound.synth.new(waveform)
-        synth:setADSR(0.003, 0.03, 0.6, 0.04)
-        voices[wave][index] = synth
+local voices = { sine = {}, square = {}, triangle = {}, noise = {} }
+
+local function reserveVoice(wave, now, finishesAt)
+    for _, voice in ipairs(voices[wave]) do
+        if voice.finishesAt <= now and not voice.synth:isPlaying() then
+            voice.finishesAt = finishesAt
+            return voice.synth
+        end
     end
+    local synth = playdate.sound.synth.new(WAVES[wave])
+    synth:setADSR(0.003, 0.03, 0.6, RELEASE_SECONDS)
+    table.insert(voices[wave], { synth = synth, finishesAt = finishesAt })
+    return synth
 end
 
 function Sounds.setVolume(volume) masterVolume = volume end
 
+-- Finite effects finish on the sound clock, including across scene switches or paused updates.
 -- events is a list of event names, such as a Run's events for the frame
 function Sounds.play(events)
     if #events == 0 then return end
     local now = playdate.sound.getCurrentTime()
     for _, event in ipairs(events) do
         for _, note in ipairs(SoundBook.notes(event)) do
-            local wave = note.wave
-            local synth = voices[wave][nextVoice[wave]]
-            nextVoice[wave] = nextVoice[wave] % VOICES_PER_WAVE + 1
+            local finishesAt = now + note.delay + note.seconds + RELEASE_SECONDS
+            local synth = reserveVoice(note.wave, now, finishesAt)
             synth:playNote(note.frequency, note.volume * masterVolume, note.seconds, now + note.delay)
         end
     end

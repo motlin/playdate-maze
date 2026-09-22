@@ -203,7 +203,7 @@ section('Compass.lua', 'Owning compass marks', [
     step('function Compass.marks', 8, 'Reuse only the caller’s marks', '<p>Each ordinary call returns independent marks. Hud supplies its own reusable list. Only writing into that same buffer changes its nested marks, so separate callers cannot invalidate each other.</p>'),
 ])
 section('SoundBook.lua', 'Borrowing immutable notes', [
-    step('function SoundBook.notes', 1, 'Read shared sheet music', '<p>The note book is immutable by contract. Sounds reads it without modifying it, and later calls never rewrite it. Copying these constants would add allocation without fixing an observed ownership violation.</p>'),
+    step('function SoundBook.notes', 1, 'Read shared sheet music', '<p>The note book is immutable by contract. Sounds reads it without modifying it, and later calls never rewrite it. Each scheduled note reserves a synth until its release finishes, so long and overlapping effects keep every note. Finite effects continue on the sound clock across scene switches and paused game updates; stopping held hums does not cancel them. Copying these constants would add allocation without fixing an observed ownership violation.</p>'),
 ])
 
 options = ''.join(f'<option value="section-{index}">{index:02d} {html.escape(title)} — source/{name}</option>' for index, (name, title, _) in enumerate(sections, 1))
