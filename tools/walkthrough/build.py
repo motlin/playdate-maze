@@ -74,7 +74,7 @@ section('scenes/TitleScene.lua', 'The imported scene', [
 ])
 section('SceneManager.lua', 'Scene changes', [
     step('function SceneManager.switch(scene, ...)', 6, 'Exit, replace, enter', '<p>Let the old scene clean up, replace <code>currentScene</code>, then initialize the new scene. The <code>...</code> passes its arguments through.</p>'),
-    step('function SceneManager.update()', 3, 'Call the current scene', '<p>Only one scene receives updates. In first-person play, this calls <code>FirstPersonScene.update()</code> in <code>source/scenes/FirstPersonScene.lua</code>.</p>'),
+    step('function SceneManager.update()', 1, 'Call the current scene', '<p>Only one scene receives updates. In first-person play, this calls <code>FirstPersonScene.update()</code> in <code>source/scenes/FirstPersonScene.lua</code>.</p>'),
     step('function SceneManager.save()', 3, 'Save through the scene', '<p>If the current scene provides <code>save()</code>, call it. Before a scene is selected, or in a scene without a save hook, do nothing.</p><p><code>FirstPersonScene.save()</code> decides whether to store a run through <code>SaveGame</code>; <code>EditorScene.save()</code> keeps editor persistence separate. SceneManager does not choose a disk format or persistence policy.</p>'),
     step('function SceneManager.pause()', 4, 'Save, then pause the active scene', '<p>Reuse the save dispatch first, then call the current scene’s optional <code>pause()</code> hook. No scene, or no hook, is safe. The current scene remains selected; SceneManager knows nothing about audio.</p>'),
 ])
@@ -87,7 +87,7 @@ section('scenes/FirstPersonScene.lua', 'First-person scene', [
 ])
 section('PlayInput.lua', 'Shared hardware input', [
     step('function PlayInput:read()', 7, 'Capture one frame', '<p>The three play modes use this reader. It records held, pressed, and released buttons, crank movement, crank angle, and whether the crank is docked.</p><p>These are hardware readings; their meaning depends on the game mode.</p>'),
-    step('function PlayInput:isDown(button)', 3, 'Test a button bit', '<p>Each button has its own bit in the mask. <code>&amp;</code> keeps the bits shared by the mask and the requested button. A nonzero result means that button is down.</p>'),
+    step('function PlayInput:isDown(button)', 1, 'Test a button bit', '<p>Each button has its own bit in the mask. <code>&amp;</code> keeps the bits shared by the mask and the requested button. A nonzero result means that button is down.</p>'),
     step('function PlayInput:axis(', 3, 'Combine opposite directions', '<p>Subtract the negative button from the positive button. Left alone gives −1, right alone gives +1, and both or neither gives 0.</p>'),
 ])
 section('WalkingActions.lua', 'Walking actions', [
