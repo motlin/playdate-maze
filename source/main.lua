@@ -11,7 +11,7 @@ import "scenes/Escaped"
 import "scenes/MyMazes"
 import "scenes/MazeEditor"
 
-function playdate.update() SceneManager.update() end
+playdate.update = SceneManager.update
 
 playdate.gameWillPause = SceneManager.pause
 
