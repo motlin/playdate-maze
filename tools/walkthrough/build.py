@@ -70,7 +70,8 @@ section('main.lua', 'Game structure', [
 ])
 section('scenes/TitleScene.lua', 'The imported scene', [
     step('TitleScene = { selection = 1', 1, 'Create the shared scene table', '<p>This assignment creates the global <code>TitleScene</code> because there is no <code>local</code>. After the import runs, <code>source/main.lua</code> can pass this table to <code>SceneManager.switch</code>.</p><p>The assignment creates the name, not the filename. The table initially holds the selected row, maze-size index, and menu rows.</p>'),
-    step('    local move = crankSteps:turn(playdate.getCrankChange())', 3, 'Read the Playdate API directly', '<p><code>playdate.getCrankChange()</code> reads crank movement, and <code>playdate.buttonJustPressed</code> checks the direction buttons. The full API names make their source visible at each call.</p>'),
+    step('local controls = PlayInput.new()', 1, 'Keep a private input reader', '<p>Each scene owns a local <code>PlayInput</code> reader. Hardware polling stays in that shared module; the reader is private to this scene.</p>'),
+    step('    local input = controls:read()', 7, 'Read once, interpret the menu', '<p><code>controls:read()</code> captures one hardware snapshot for this frame. <code>input.crankChange</code> feeds <code>CrankSteps</code>, while <code>input:isPressed</code> checks button edges from the same snapshot.</p><p>The scene still interprets menu actions: D-pad presses override crank movement and reset partial turns. Navigation and confirmation keep their existing order.</p>'),
 ])
 section('SceneManager.lua', 'Scene changes', [
     step('function SceneManager.switch(scene, ...)', 6, 'Exit, replace, enter', '<p>Let the old scene clean up, replace <code>currentScene</code>, then initialize the new scene. The <code>...</code> passes its arguments through.</p>'),

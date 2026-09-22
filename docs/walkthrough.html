@@ -52,137 +52,139 @@
 <span class="line" data-line="24"></span>
 <span class="line" data-line="25"><span class="nv">SceneManager</span>.<span class="py">onSwitch</span> <span class="o">=</span> <span class="nv">SystemMenu</span>.<span class="py">refresh</span></span>
 <span class="line" data-line="26"><span class="nv">SceneManager</span>.<span class="nf">switch</span>(<span class="nv">TitleScene</span>)</span></code></pre>
-<footer class="code-footer"><span class="focus-label">Highlighted lines follow the explanation</span><button class="follow" type="button" aria-pressed="true">Follow scroll: on</button></footer></div></section><section class="section" id="section-2" data-title="The imported scene" data-file="source/scenes/TitleScene.lua"><div class="explanations"><h2><span>02</span> The imported scene</h2><article class="step" id="step-2-0" data-first="12" data-last="12">
-<p class="location">source/scenes/TitleScene.lua<br><a href="#step-2-0">Lines 12–12</a></p>
-<h3>Create the shared scene table</h3><p>This assignment creates the global <code>TitleScene</code> because there is no <code>local</code>. After the import runs, <code>source/main.lua</code> can pass this table to <code>SceneManager.switch</code>.</p><p>The assignment creates the name, not the filename. The table initially holds the selected row, maze-size index, and menu rows.</p></article><article class="step" id="step-2-1" data-first="113" data-last="115">
-<p class="location">source/scenes/TitleScene.lua<br><a href="#step-2-1">Lines 113–115</a></p>
-<h3>Read the Playdate API directly</h3><p><code>playdate.getCrankChange()</code> reads crank movement, and <code>playdate.buttonJustPressed</code> checks the direction buttons. The full API names make their source visible at each call.</p></article></div><div class="code-panel"><header class="file-header"><div class="file-path"><span>source/scenes/</span><strong>TitleScene.lua</strong></div><div class="file-meta"><span>Lua · Complete file · 158 lines</span><output class="range">Lines 12–12</output></div></header>
+<footer class="code-footer"><span class="focus-label">Highlighted lines follow the explanation</span><button class="follow" type="button" aria-pressed="true">Follow scroll: on</button></footer></div></section><section class="section" id="section-2" data-title="The imported scene" data-file="source/scenes/TitleScene.lua"><div class="explanations"><h2><span>02</span> The imported scene</h2><article class="step" id="step-2-0" data-first="13" data-last="13">
+<p class="location">source/scenes/TitleScene.lua<br><a href="#step-2-0">Lines 13–13</a></p>
+<h3>Create the shared scene table</h3><p>This assignment creates the global <code>TitleScene</code> because there is no <code>local</code>. After the import runs, <code>source/main.lua</code> can pass this table to <code>SceneManager.switch</code>.</p><p>The assignment creates the name, not the filename. The table initially holds the selected row, maze-size index, and menu rows.</p></article><article class="step" id="step-2-1" data-first="85" data-last="85">
+<p class="location">source/scenes/TitleScene.lua<br><a href="#step-2-1">Lines 85–85</a></p>
+<h3>Keep a private input reader</h3><p>Each scene owns a local <code>PlayInput</code> reader. Hardware polling stays in that shared module; the reader is private to this scene.</p></article><article class="step" id="step-2-2" data-first="113" data-last="119">
+<p class="location">source/scenes/TitleScene.lua<br><a href="#step-2-2">Lines 113–119</a></p>
+<h3>Read once, interpret the menu</h3><p><code>controls:read()</code> captures one hardware snapshot for this frame. <code>input.crankChange</code> feeds <code>CrankSteps</code>, while <code>input:isPressed</code> checks button edges from the same snapshot.</p><p>The scene still interprets menu actions: D-pad presses override crank movement and reset partial turns. Navigation and confirmation keep their existing order.</p></article></div><div class="code-panel"><header class="file-header"><div class="file-path"><span>source/scenes/</span><strong>TitleScene.lua</strong></div><div class="file-meta"><span>Lua · Complete file · 158 lines</span><output class="range">Lines 13–13</output></div></header>
 <pre tabindex="0" aria-label="Complete source/scenes/TitleScene.lua"><code class="language-lua"><span class="line" data-line="1"><span class="c1">-- The title screen: a menu over a maze that wanders by itself in the background.</span></span>
 <span class="line" data-line="2"></span>
 <span class="line" data-line="3"><span class="nv">import</span> <span class="s2">&quot;Bob&quot;</span></span>
 <span class="line" data-line="4"><span class="nv">import</span> <span class="s2">&quot;CrankSteps&quot;</span></span>
 <span class="line" data-line="5"><span class="nv">import</span> <span class="s2">&quot;Game&quot;</span></span>
 <span class="line" data-line="6"><span class="nv">import</span> <span class="s2">&quot;MazeView&quot;</span></span>
-<span class="line" data-line="7"><span class="nv">import</span> <span class="s2">&quot;SaveGame&quot;</span></span>
-<span class="line" data-line="8"><span class="nv">import</span> <span class="s2">&quot;SceneManager&quot;</span></span>
-<span class="line" data-line="9"><span class="nv">import</span> <span class="s2">&quot;Sizes&quot;</span></span>
-<span class="line" data-line="10"></span>
-<span class="line" data-line="11"><span class="c1">-- rows is the menu as it stands: it starts with Continue only when there is a game to continue</span></span>
-<span class="line" data-line="12"><span class="nv">TitleScene</span> <span class="o">=</span> { <span class="nv">selection</span> <span class="o">=</span> <span class="mi">1</span>, <span class="nv">sizeIndex</span> <span class="o">=</span> <span class="nv">Sizes</span>.<span class="py">DEFAULT</span>, <span class="nv">rows</span> <span class="o">=</span> {} }</span>
-<span class="line" data-line="13"></span>
-<span class="line" data-line="14"><span class="kd">local</span> <span class="nv">PANEL_LEFT</span> <span class="o">&lt;</span><span class="nv">const</span><span class="o">&gt;</span> <span class="o">=</span> <span class="mi">100</span></span>
-<span class="line" data-line="15"><span class="kd">local</span> <span class="nv">PANEL_TOP</span> <span class="o">&lt;</span><span class="nv">const</span><span class="o">&gt;</span> <span class="o">=</span> <span class="mi">8</span></span>
-<span class="line" data-line="16"><span class="kd">local</span> <span class="nv">PANEL_WIDTH</span> <span class="o">&lt;</span><span class="nv">const</span><span class="o">&gt;</span> <span class="o">=</span> <span class="mi">200</span></span>
-<span class="line" data-line="17"><span class="kd">local</span> <span class="nv">PANEL_HEIGHT</span> <span class="o">&lt;</span><span class="nv">const</span><span class="o">&gt;</span> <span class="o">=</span> <span class="mi">224</span></span>
-<span class="line" data-line="18"><span class="kd">local</span> <span class="nv">TITLE_SCALE</span> <span class="o">&lt;</span><span class="nv">const</span><span class="o">&gt;</span> <span class="o">=</span> <span class="mi">2</span></span>
-<span class="line" data-line="19"><span class="kd">local</span> <span class="nv">ROWS_TOP</span> <span class="o">&lt;</span><span class="nv">const</span><span class="o">&gt;</span> <span class="o">=</span> <span class="nv">PANEL_TOP</span> <span class="o">+</span> <span class="mi">46</span></span>
-<span class="line" data-line="20"><span class="kd">local</span> <span class="nv">ROW_HEIGHT</span> <span class="o">&lt;</span><span class="nv">const</span><span class="o">&gt;</span> <span class="o">=</span> <span class="mi">21</span></span>
-<span class="line" data-line="21"><span class="c1">-- An eighth of a turn of the crank moves the highlight one row</span></span>
-<span class="line" data-line="22"><span class="kd">local</span> <span class="nv">CRANK_DEGREES_PER_ROW</span> <span class="o">&lt;</span><span class="nv">const</span><span class="o">&gt;</span> <span class="o">=</span> <span class="mi">45</span></span>
-<span class="line" data-line="23"></span>
-<span class="line" data-line="24"><span class="kd">local</span> <span class="kr">function</span> <span class="nf">playFirstPerson</span>(<span class="nv">submode</span>)</span>
-<span class="line" data-line="25">    <span class="kr">return</span> <span class="kr">function</span>() <span class="nv">SceneManager</span>.<span class="nf">switch</span>(<span class="nv">FirstPersonScene</span>, <span class="nv">submode</span>, <span class="nv">TitleScene</span>.<span class="py">sizeIndex</span>) <span class="kr">end</span></span>
-<span class="line" data-line="26"><span class="kr">end</span></span>
-<span class="line" data-line="27"></span>
-<span class="line" data-line="28"><span class="kr">function</span> <span class="nc">TitleScene</span>.<span class="nf">nextSize</span>() <span class="nv">TitleScene</span>.<span class="py">sizeIndex</span> <span class="o">=</span> <span class="nv">Sizes</span>.<span class="nf">next</span>(<span class="nv">TitleScene</span>.<span class="py">sizeIndex</span>) <span class="kr">end</span></span>
-<span class="line" data-line="29"><span class="kr">function</span> <span class="nc">TitleScene</span>.<span class="nf">previousSize</span>() <span class="nv">TitleScene</span>.<span class="py">sizeIndex</span> <span class="o">=</span> <span class="nv">Sizes</span>.<span class="nf">previous</span>(<span class="nv">TitleScene</span>.<span class="py">sizeIndex</span>) <span class="kr">end</span></span>
-<span class="line" data-line="30"></span>
-<span class="line" data-line="31"><span class="kr">function</span> <span class="nc">TitleScene</span>.<span class="nf">continueSavedGame</span>()</span>
-<span class="line" data-line="32">    <span class="kd">local</span> <span class="nv">game</span>, <span class="nv">submode</span>, <span class="nv">sizeIndex</span> <span class="o">=</span> <span class="nv">SaveGame</span>.<span class="nf">read</span>()</span>
-<span class="line" data-line="33">    <span class="c1">-- A save this version cannot read has just been thrown away: show the menu without it</span></span>
-<span class="line" data-line="34">    <span class="kr">if</span> <span class="ow">not</span> <span class="nv">game</span> <span class="kr">then</span></span>
-<span class="line" data-line="35">        <span class="nv">TitleScene</span>.<span class="nf">enter</span>()</span>
-<span class="line" data-line="36">        <span class="kr">return</span></span>
-<span class="line" data-line="37">    <span class="kr">end</span></span>
-<span class="line" data-line="38">    <span class="nv">SceneManager</span>.<span class="nf">switch</span>(<span class="nv">FirstPersonScene</span>, <span class="nv">submode</span>, <span class="nv">sizeIndex</span>, <span class="nv">game</span>)</span>
-<span class="line" data-line="39"><span class="kr">end</span></span>
-<span class="line" data-line="40"></span>
-<span class="line" data-line="41"><span class="c1">-- Each row has a name, a label, and what A does; left and right are optional</span></span>
-<span class="line" data-line="42"><span class="kd">local</span> <span class="nv">CONTINUE_ROW</span> <span class="o">&lt;</span><span class="nv">const</span><span class="o">&gt;</span> <span class="o">=</span></span>
-<span class="line" data-line="43">    { <span class="nv">name</span> <span class="o">=</span> <span class="s2">&quot;continue&quot;</span>, <span class="nv">label</span> <span class="o">=</span> <span class="kr">function</span>() <span class="kr">return</span> <span class="s2">&quot;Continue&quot;</span> <span class="kr">end</span>, <span class="nv">confirm</span> <span class="o">=</span> <span class="nv">TitleScene</span>.<span class="py">continueSavedGame</span> }</span>
-<span class="line" data-line="44"><span class="kd">local</span> <span class="nv">PLAY_ROWS</span> <span class="o">&lt;</span><span class="nv">const</span><span class="o">&gt;</span> <span class="o">=</span> {</span>
-<span class="line" data-line="45">    { <span class="nv">name</span> <span class="o">=</span> <span class="s2">&quot;explore&quot;</span>, <span class="nv">label</span> <span class="o">=</span> <span class="kr">function</span>() <span class="kr">return</span> <span class="s2">&quot;Explore&quot;</span> <span class="kr">end</span>, <span class="nv">confirm</span> <span class="o">=</span> <span class="nf">playFirstPerson</span>(<span class="s2">&quot;explore&quot;</span>) },</span>
-<span class="line" data-line="46">    { <span class="nv">name</span> <span class="o">=</span> <span class="s2">&quot;daily&quot;</span>, <span class="nv">label</span> <span class="o">=</span> <span class="kr">function</span>() <span class="kr">return</span> <span class="s2">&quot;Daily maze&quot;</span> <span class="kr">end</span>, <span class="nv">confirm</span> <span class="o">=</span> <span class="nf">playFirstPerson</span>(<span class="s2">&quot;daily&quot;</span>) },</span>
-<span class="line" data-line="47">    {</span>
-<span class="line" data-line="48">        <span class="nv">name</span> <span class="o">=</span> <span class="s2">&quot;tumble&quot;</span>,</span>
-<span class="line" data-line="49">        <span class="nv">label</span> <span class="o">=</span> <span class="kr">function</span>() <span class="kr">return</span> <span class="s2">&quot;Tumble&quot;</span> <span class="kr">end</span>,</span>
-<span class="line" data-line="50">        <span class="nv">confirm</span> <span class="o">=</span> <span class="kr">function</span>() <span class="nv">SceneManager</span>.<span class="nf">switch</span>(<span class="nv">TumbleScene</span>, <span class="nv">TitleScene</span>.<span class="py">sizeIndex</span>) <span class="kr">end</span>,</span>
-<span class="line" data-line="51">    },</span>
-<span class="line" data-line="52">    {</span>
-<span class="line" data-line="53">        <span class="nv">name</span> <span class="o">=</span> <span class="s2">&quot;slime&quot;</span>,</span>
-<span class="line" data-line="54">        <span class="nv">label</span> <span class="o">=</span> <span class="kr">function</span>() <span class="kr">return</span> <span class="s2">&quot;Slime&quot;</span> <span class="kr">end</span>,</span>
-<span class="line" data-line="55">        <span class="nv">confirm</span> <span class="o">=</span> <span class="kr">function</span>() <span class="nv">SceneManager</span>.<span class="nf">switch</span>(<span class="nv">SlimeScene</span>, <span class="nv">TitleScene</span>.<span class="py">sizeIndex</span>) <span class="kr">end</span>,</span>
-<span class="line" data-line="56">    },</span>
-<span class="line" data-line="57">    {</span>
-<span class="line" data-line="58">        <span class="nv">name</span> <span class="o">=</span> <span class="s2">&quot;myMazes&quot;</span>,</span>
-<span class="line" data-line="59">        <span class="nv">label</span> <span class="o">=</span> <span class="kr">function</span>() <span class="kr">return</span> <span class="s2">&quot;My mazes&quot;</span> <span class="kr">end</span>,</span>
-<span class="line" data-line="60">        <span class="nv">confirm</span> <span class="o">=</span> <span class="kr">function</span>() <span class="nv">SceneManager</span>.<span class="nf">switch</span>(<span class="nv">MyMazesScene</span>) <span class="kr">end</span>,</span>
-<span class="line" data-line="61">    },</span>
-<span class="line" data-line="62">    { <span class="nv">name</span> <span class="o">=</span> <span class="s2">&quot;screensaver&quot;</span>, <span class="nv">label</span> <span class="o">=</span> <span class="kr">function</span>() <span class="kr">return</span> <span class="s2">&quot;Screensaver&quot;</span> <span class="kr">end</span>, <span class="nv">confirm</span> <span class="o">=</span> <span class="nf">playFirstPerson</span>(<span class="s2">&quot;screensaver&quot;</span>) },</span>
-<span class="line" data-line="63">    {</span>
-<span class="line" data-line="64">        <span class="nv">name</span> <span class="o">=</span> <span class="s2">&quot;size&quot;</span>,</span>
-<span class="line" data-line="65">        <span class="nv">label</span> <span class="o">=</span> <span class="kr">function</span>() <span class="kr">return</span> <span class="s2">&quot;Size: &quot;</span> <span class="o">..</span> <span class="nv">Sizes</span>.<span class="py">ALL</span>[<span class="nv">TitleScene</span>.<span class="py">sizeIndex</span>].<span class="nv">name</span> <span class="kr">end</span>,</span>
-<span class="line" data-line="66">        <span class="nv">confirm</span> <span class="o">=</span> <span class="nv">TitleScene</span>.<span class="py">nextSize</span>,</span>
-<span class="line" data-line="67">        <span class="nv">left</span> <span class="o">=</span> <span class="nv">TitleScene</span>.<span class="py">previousSize</span>,</span>
-<span class="line" data-line="68">        <span class="nv">right</span> <span class="o">=</span> <span class="nv">TitleScene</span>.<span class="py">nextSize</span>,</span>
-<span class="line" data-line="69">    },</span>
-<span class="line" data-line="70">}</span>
-<span class="line" data-line="71"></span>
-<span class="line" data-line="72"><span class="kd">local</span> <span class="kr">function</span> <span class="nf">buildRows</span>()</span>
-<span class="line" data-line="73">    <span class="kd">local</span> <span class="nv">rows</span> <span class="o">=</span> {}</span>
-<span class="line" data-line="74">    <span class="kr">if</span> <span class="nv">SaveGame</span>.<span class="nf">exists</span>() <span class="kr">then</span> <span class="nv">rows</span>[<span class="mi">1</span>] <span class="o">=</span> <span class="nv">CONTINUE_ROW</span> <span class="kr">end</span></span>
-<span class="line" data-line="75">    <span class="kr">for</span> <span class="nv">_</span>, <span class="nv">row</span> <span class="kr">in</span> <span class="nb">ipairs</span>(<span class="nv">PLAY_ROWS</span>) <span class="kr">do</span></span>
-<span class="line" data-line="76">        <span class="nv">rows</span>[<span class="o">#</span><span class="nv">rows</span> <span class="o">+</span> <span class="mi">1</span>] <span class="o">=</span> <span class="nv">row</span></span>
-<span class="line" data-line="77">    <span class="kr">end</span></span>
-<span class="line" data-line="78">    <span class="kr">return</span> <span class="nv">rows</span></span>
-<span class="line" data-line="79"><span class="kr">end</span></span>
-<span class="line" data-line="80"></span>
-<span class="line" data-line="81"><span class="kd">local</span> <span class="nv">backdrop</span></span>
-<span class="line" data-line="82"><span class="kd">local</span> <span class="nv">headBob</span> <span class="o">=</span> <span class="nv">Bob</span>.<span class="nf">new</span>()</span>
-<span class="line" data-line="83"><span class="kd">local</span> <span class="nv">crankSteps</span> <span class="o">=</span> <span class="nv">CrankSteps</span>.<span class="nf">new</span>(<span class="nv">CRANK_DEGREES_PER_ROW</span>)</span>
-<span class="line" data-line="84"><span class="kd">local</span> <span class="nv">titleImage</span></span>
-<span class="line" data-line="85"></span>
-<span class="line" data-line="86"><span class="kd">local</span> <span class="kr">function</span> <span class="nf">newBackdrop</span>()</span>
-<span class="line" data-line="87">    <span class="kd">local</span> <span class="nv">size</span> <span class="o">=</span> <span class="nv">Sizes</span>.<span class="py">ALL</span>[<span class="nv">Sizes</span>.<span class="py">DEFAULT</span>]</span>
-<span class="line" data-line="88">    <span class="kd">local</span> <span class="nv">game</span> <span class="o">=</span> <span class="nv">Game</span>.<span class="nf">new</span>({ <span class="nv">columns</span> <span class="o">=</span> <span class="nv">size</span>.<span class="py">columns</span>, <span class="nv">rows</span> <span class="o">=</span> <span class="nv">size</span>.<span class="py">rows</span>, <span class="nv">hasPuzzle</span> <span class="o">=</span> <span class="kc">false</span>, <span class="nv">random</span> <span class="o">=</span> <span class="nb">math.random</span> })</span>
-<span class="line" data-line="89">    <span class="nv">game</span>:<span class="nf">setAutopilot</span>(<span class="kc">true</span>)</span>
-<span class="line" data-line="90">    <span class="kr">return</span> <span class="nv">game</span></span>
-<span class="line" data-line="91"><span class="kr">end</span></span>
-<span class="line" data-line="92"></span>
-<span class="line" data-line="93"><span class="kd">local</span> <span class="kr">function</span> <span class="nf">drawTitleImage</span>()</span>
-<span class="line" data-line="94">    <span class="kd">local</span> <span class="nv">width</span>, <span class="nv">height</span> <span class="o">=</span> <span class="nv">playdate</span>.<span class="py">graphics</span>.<span class="nf">getTextSize</span>(<span class="s2">&quot;MAZE&quot;</span>)</span>
-<span class="line" data-line="95">    <span class="kd">local</span> <span class="nv">image</span> <span class="o">=</span> <span class="nv">playdate</span>.<span class="py">graphics</span>.<span class="py">image</span>.<span class="nf">new</span>(<span class="nv">width</span>, <span class="nv">height</span>)</span>
-<span class="line" data-line="96">    <span class="nv">playdate</span>.<span class="py">graphics</span>.<span class="nf">pushContext</span>(<span class="nv">image</span>)</span>
-<span class="line" data-line="97">    <span class="nv">playdate</span>.<span class="py">graphics</span>.<span class="nf">drawText</span>(<span class="s2">&quot;MAZE&quot;</span>, <span class="mi">0</span>, <span class="mi">0</span>)</span>
-<span class="line" data-line="98">    <span class="nv">playdate</span>.<span class="py">graphics</span>.<span class="nf">popContext</span>()</span>
-<span class="line" data-line="99">    <span class="kr">return</span> <span class="nv">image</span></span>
-<span class="line" data-line="100"><span class="kr">end</span></span>
-<span class="line" data-line="101"></span>
-<span class="line" data-line="102"><span class="kr">function</span> <span class="nc">TitleScene</span>.<span class="nf">enter</span>()</span>
-<span class="line" data-line="103">    <span class="nv">TitleScene</span>.<span class="py">rows</span> <span class="o">=</span> <span class="nf">buildRows</span>()</span>
-<span class="line" data-line="104">    <span class="nv">TitleScene</span>.<span class="py">selection</span> <span class="o">=</span> <span class="mi">1</span></span>
-<span class="line" data-line="105">    <span class="nv">crankSteps</span>:<span class="nf">reset</span>()</span>
-<span class="line" data-line="106">    <span class="nv">backdrop</span> <span class="o">=</span> <span class="nf">newBackdrop</span>()</span>
-<span class="line" data-line="107">    <span class="nv">titleImage</span> <span class="o">=</span> <span class="nv">titleImage</span> <span class="ow">or</span> <span class="nf">drawTitleImage</span>()</span>
-<span class="line" data-line="108"><span class="kr">end</span></span>
-<span class="line" data-line="109"></span>
-<span class="line" data-line="110"><span class="kr">function</span> <span class="nc">TitleScene</span>.<span class="nf">handleInput</span>()</span>
-<span class="line" data-line="111">    <span class="kd">local</span> <span class="nv">rows</span> <span class="o">=</span> <span class="nv">TitleScene</span>.<span class="py">rows</span></span>
-<span class="line" data-line="112">    <span class="kd">local</span> <span class="nv">row</span> <span class="o">=</span> <span class="nv">rows</span>[<span class="nv">TitleScene</span>.<span class="py">selection</span>]</span>
-<span class="line" data-line="113">    <span class="kd">local</span> <span class="nv">move</span> <span class="o">=</span> <span class="nv">crankSteps</span>:<span class="nf">turn</span>(<span class="nv">playdate</span>.<span class="nf">getCrankChange</span>())</span>
-<span class="line" data-line="114">    <span class="kr">if</span> <span class="nv">playdate</span>.<span class="nf">buttonJustPressed</span>(<span class="nv">playdate</span>.<span class="py">kButtonUp</span>) <span class="kr">then</span> <span class="nv">move</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span> <span class="kr">end</span></span>
-<span class="line" data-line="115">    <span class="kr">if</span> <span class="nv">playdate</span>.<span class="nf">buttonJustPressed</span>(<span class="nv">playdate</span>.<span class="py">kButtonDown</span>) <span class="kr">then</span> <span class="nv">move</span> <span class="o">=</span> <span class="mi">1</span> <span class="kr">end</span></span>
-<span class="line" data-line="116">    <span class="c1">-- A press of the D-pad is a fresh start for the crank</span></span>
-<span class="line" data-line="117">    <span class="kr">if</span></span>
-<span class="line" data-line="118">        <span class="nv">move</span> <span class="o">~=</span> <span class="mi">0</span></span>
-<span class="line" data-line="119">        <span class="ow">and</span> (<span class="nv">playdate</span>.<span class="nf">buttonJustPressed</span>(<span class="nv">playdate</span>.<span class="py">kButtonUp</span>) <span class="ow">or</span> <span class="nv">playdate</span>.<span class="nf">buttonJustPressed</span>(<span class="nv">playdate</span>.<span class="py">kButtonDown</span>))</span>
-<span class="line" data-line="120">    <span class="kr">then</span></span>
+<span class="line" data-line="7"><span class="nv">import</span> <span class="s2">&quot;PlayInput&quot;</span></span>
+<span class="line" data-line="8"><span class="nv">import</span> <span class="s2">&quot;SaveGame&quot;</span></span>
+<span class="line" data-line="9"><span class="nv">import</span> <span class="s2">&quot;SceneManager&quot;</span></span>
+<span class="line" data-line="10"><span class="nv">import</span> <span class="s2">&quot;Sizes&quot;</span></span>
+<span class="line" data-line="11"></span>
+<span class="line" data-line="12"><span class="c1">-- rows is the menu as it stands: it starts with Continue only when there is a game to continue</span></span>
+<span class="line" data-line="13"><span class="nv">TitleScene</span> <span class="o">=</span> { <span class="nv">selection</span> <span class="o">=</span> <span class="mi">1</span>, <span class="nv">sizeIndex</span> <span class="o">=</span> <span class="nv">Sizes</span>.<span class="py">DEFAULT</span>, <span class="nv">rows</span> <span class="o">=</span> {} }</span>
+<span class="line" data-line="14"></span>
+<span class="line" data-line="15"><span class="kd">local</span> <span class="nv">PANEL_LEFT</span> <span class="o">&lt;</span><span class="nv">const</span><span class="o">&gt;</span> <span class="o">=</span> <span class="mi">100</span></span>
+<span class="line" data-line="16"><span class="kd">local</span> <span class="nv">PANEL_TOP</span> <span class="o">&lt;</span><span class="nv">const</span><span class="o">&gt;</span> <span class="o">=</span> <span class="mi">8</span></span>
+<span class="line" data-line="17"><span class="kd">local</span> <span class="nv">PANEL_WIDTH</span> <span class="o">&lt;</span><span class="nv">const</span><span class="o">&gt;</span> <span class="o">=</span> <span class="mi">200</span></span>
+<span class="line" data-line="18"><span class="kd">local</span> <span class="nv">PANEL_HEIGHT</span> <span class="o">&lt;</span><span class="nv">const</span><span class="o">&gt;</span> <span class="o">=</span> <span class="mi">224</span></span>
+<span class="line" data-line="19"><span class="kd">local</span> <span class="nv">TITLE_SCALE</span> <span class="o">&lt;</span><span class="nv">const</span><span class="o">&gt;</span> <span class="o">=</span> <span class="mi">2</span></span>
+<span class="line" data-line="20"><span class="kd">local</span> <span class="nv">ROWS_TOP</span> <span class="o">&lt;</span><span class="nv">const</span><span class="o">&gt;</span> <span class="o">=</span> <span class="nv">PANEL_TOP</span> <span class="o">+</span> <span class="mi">46</span></span>
+<span class="line" data-line="21"><span class="kd">local</span> <span class="nv">ROW_HEIGHT</span> <span class="o">&lt;</span><span class="nv">const</span><span class="o">&gt;</span> <span class="o">=</span> <span class="mi">21</span></span>
+<span class="line" data-line="22"><span class="c1">-- An eighth of a turn of the crank moves the highlight one row</span></span>
+<span class="line" data-line="23"><span class="kd">local</span> <span class="nv">CRANK_DEGREES_PER_ROW</span> <span class="o">&lt;</span><span class="nv">const</span><span class="o">&gt;</span> <span class="o">=</span> <span class="mi">45</span></span>
+<span class="line" data-line="24"></span>
+<span class="line" data-line="25"><span class="kd">local</span> <span class="kr">function</span> <span class="nf">playFirstPerson</span>(<span class="nv">submode</span>)</span>
+<span class="line" data-line="26">    <span class="kr">return</span> <span class="kr">function</span>() <span class="nv">SceneManager</span>.<span class="nf">switch</span>(<span class="nv">FirstPersonScene</span>, <span class="nv">submode</span>, <span class="nv">TitleScene</span>.<span class="py">sizeIndex</span>) <span class="kr">end</span></span>
+<span class="line" data-line="27"><span class="kr">end</span></span>
+<span class="line" data-line="28"></span>
+<span class="line" data-line="29"><span class="kr">function</span> <span class="nc">TitleScene</span>.<span class="nf">nextSize</span>() <span class="nv">TitleScene</span>.<span class="py">sizeIndex</span> <span class="o">=</span> <span class="nv">Sizes</span>.<span class="nf">next</span>(<span class="nv">TitleScene</span>.<span class="py">sizeIndex</span>) <span class="kr">end</span></span>
+<span class="line" data-line="30"><span class="kr">function</span> <span class="nc">TitleScene</span>.<span class="nf">previousSize</span>() <span class="nv">TitleScene</span>.<span class="py">sizeIndex</span> <span class="o">=</span> <span class="nv">Sizes</span>.<span class="nf">previous</span>(<span class="nv">TitleScene</span>.<span class="py">sizeIndex</span>) <span class="kr">end</span></span>
+<span class="line" data-line="31"></span>
+<span class="line" data-line="32"><span class="kr">function</span> <span class="nc">TitleScene</span>.<span class="nf">continueSavedGame</span>()</span>
+<span class="line" data-line="33">    <span class="kd">local</span> <span class="nv">game</span>, <span class="nv">submode</span>, <span class="nv">sizeIndex</span> <span class="o">=</span> <span class="nv">SaveGame</span>.<span class="nf">read</span>()</span>
+<span class="line" data-line="34">    <span class="c1">-- A save this version cannot read has just been thrown away: show the menu without it</span></span>
+<span class="line" data-line="35">    <span class="kr">if</span> <span class="ow">not</span> <span class="nv">game</span> <span class="kr">then</span></span>
+<span class="line" data-line="36">        <span class="nv">TitleScene</span>.<span class="nf">enter</span>()</span>
+<span class="line" data-line="37">        <span class="kr">return</span></span>
+<span class="line" data-line="38">    <span class="kr">end</span></span>
+<span class="line" data-line="39">    <span class="nv">SceneManager</span>.<span class="nf">switch</span>(<span class="nv">FirstPersonScene</span>, <span class="nv">submode</span>, <span class="nv">sizeIndex</span>, <span class="nv">game</span>)</span>
+<span class="line" data-line="40"><span class="kr">end</span></span>
+<span class="line" data-line="41"></span>
+<span class="line" data-line="42"><span class="c1">-- Each row has a name, a label, and what A does; left and right are optional</span></span>
+<span class="line" data-line="43"><span class="kd">local</span> <span class="nv">CONTINUE_ROW</span> <span class="o">&lt;</span><span class="nv">const</span><span class="o">&gt;</span> <span class="o">=</span></span>
+<span class="line" data-line="44">    { <span class="nv">name</span> <span class="o">=</span> <span class="s2">&quot;continue&quot;</span>, <span class="nv">label</span> <span class="o">=</span> <span class="kr">function</span>() <span class="kr">return</span> <span class="s2">&quot;Continue&quot;</span> <span class="kr">end</span>, <span class="nv">confirm</span> <span class="o">=</span> <span class="nv">TitleScene</span>.<span class="py">continueSavedGame</span> }</span>
+<span class="line" data-line="45"><span class="kd">local</span> <span class="nv">PLAY_ROWS</span> <span class="o">&lt;</span><span class="nv">const</span><span class="o">&gt;</span> <span class="o">=</span> {</span>
+<span class="line" data-line="46">    { <span class="nv">name</span> <span class="o">=</span> <span class="s2">&quot;explore&quot;</span>, <span class="nv">label</span> <span class="o">=</span> <span class="kr">function</span>() <span class="kr">return</span> <span class="s2">&quot;Explore&quot;</span> <span class="kr">end</span>, <span class="nv">confirm</span> <span class="o">=</span> <span class="nf">playFirstPerson</span>(<span class="s2">&quot;explore&quot;</span>) },</span>
+<span class="line" data-line="47">    { <span class="nv">name</span> <span class="o">=</span> <span class="s2">&quot;daily&quot;</span>, <span class="nv">label</span> <span class="o">=</span> <span class="kr">function</span>() <span class="kr">return</span> <span class="s2">&quot;Daily maze&quot;</span> <span class="kr">end</span>, <span class="nv">confirm</span> <span class="o">=</span> <span class="nf">playFirstPerson</span>(<span class="s2">&quot;daily&quot;</span>) },</span>
+<span class="line" data-line="48">    {</span>
+<span class="line" data-line="49">        <span class="nv">name</span> <span class="o">=</span> <span class="s2">&quot;tumble&quot;</span>,</span>
+<span class="line" data-line="50">        <span class="nv">label</span> <span class="o">=</span> <span class="kr">function</span>() <span class="kr">return</span> <span class="s2">&quot;Tumble&quot;</span> <span class="kr">end</span>,</span>
+<span class="line" data-line="51">        <span class="nv">confirm</span> <span class="o">=</span> <span class="kr">function</span>() <span class="nv">SceneManager</span>.<span class="nf">switch</span>(<span class="nv">TumbleScene</span>, <span class="nv">TitleScene</span>.<span class="py">sizeIndex</span>) <span class="kr">end</span>,</span>
+<span class="line" data-line="52">    },</span>
+<span class="line" data-line="53">    {</span>
+<span class="line" data-line="54">        <span class="nv">name</span> <span class="o">=</span> <span class="s2">&quot;slime&quot;</span>,</span>
+<span class="line" data-line="55">        <span class="nv">label</span> <span class="o">=</span> <span class="kr">function</span>() <span class="kr">return</span> <span class="s2">&quot;Slime&quot;</span> <span class="kr">end</span>,</span>
+<span class="line" data-line="56">        <span class="nv">confirm</span> <span class="o">=</span> <span class="kr">function</span>() <span class="nv">SceneManager</span>.<span class="nf">switch</span>(<span class="nv">SlimeScene</span>, <span class="nv">TitleScene</span>.<span class="py">sizeIndex</span>) <span class="kr">end</span>,</span>
+<span class="line" data-line="57">    },</span>
+<span class="line" data-line="58">    {</span>
+<span class="line" data-line="59">        <span class="nv">name</span> <span class="o">=</span> <span class="s2">&quot;myMazes&quot;</span>,</span>
+<span class="line" data-line="60">        <span class="nv">label</span> <span class="o">=</span> <span class="kr">function</span>() <span class="kr">return</span> <span class="s2">&quot;My mazes&quot;</span> <span class="kr">end</span>,</span>
+<span class="line" data-line="61">        <span class="nv">confirm</span> <span class="o">=</span> <span class="kr">function</span>() <span class="nv">SceneManager</span>.<span class="nf">switch</span>(<span class="nv">MyMazesScene</span>) <span class="kr">end</span>,</span>
+<span class="line" data-line="62">    },</span>
+<span class="line" data-line="63">    { <span class="nv">name</span> <span class="o">=</span> <span class="s2">&quot;screensaver&quot;</span>, <span class="nv">label</span> <span class="o">=</span> <span class="kr">function</span>() <span class="kr">return</span> <span class="s2">&quot;Screensaver&quot;</span> <span class="kr">end</span>, <span class="nv">confirm</span> <span class="o">=</span> <span class="nf">playFirstPerson</span>(<span class="s2">&quot;screensaver&quot;</span>) },</span>
+<span class="line" data-line="64">    {</span>
+<span class="line" data-line="65">        <span class="nv">name</span> <span class="o">=</span> <span class="s2">&quot;size&quot;</span>,</span>
+<span class="line" data-line="66">        <span class="nv">label</span> <span class="o">=</span> <span class="kr">function</span>() <span class="kr">return</span> <span class="s2">&quot;Size: &quot;</span> <span class="o">..</span> <span class="nv">Sizes</span>.<span class="py">ALL</span>[<span class="nv">TitleScene</span>.<span class="py">sizeIndex</span>].<span class="nv">name</span> <span class="kr">end</span>,</span>
+<span class="line" data-line="67">        <span class="nv">confirm</span> <span class="o">=</span> <span class="nv">TitleScene</span>.<span class="py">nextSize</span>,</span>
+<span class="line" data-line="68">        <span class="nv">left</span> <span class="o">=</span> <span class="nv">TitleScene</span>.<span class="py">previousSize</span>,</span>
+<span class="line" data-line="69">        <span class="nv">right</span> <span class="o">=</span> <span class="nv">TitleScene</span>.<span class="py">nextSize</span>,</span>
+<span class="line" data-line="70">    },</span>
+<span class="line" data-line="71">}</span>
+<span class="line" data-line="72"></span>
+<span class="line" data-line="73"><span class="kd">local</span> <span class="kr">function</span> <span class="nf">buildRows</span>()</span>
+<span class="line" data-line="74">    <span class="kd">local</span> <span class="nv">rows</span> <span class="o">=</span> {}</span>
+<span class="line" data-line="75">    <span class="kr">if</span> <span class="nv">SaveGame</span>.<span class="nf">exists</span>() <span class="kr">then</span> <span class="nv">rows</span>[<span class="mi">1</span>] <span class="o">=</span> <span class="nv">CONTINUE_ROW</span> <span class="kr">end</span></span>
+<span class="line" data-line="76">    <span class="kr">for</span> <span class="nv">_</span>, <span class="nv">row</span> <span class="kr">in</span> <span class="nb">ipairs</span>(<span class="nv">PLAY_ROWS</span>) <span class="kr">do</span></span>
+<span class="line" data-line="77">        <span class="nv">rows</span>[<span class="o">#</span><span class="nv">rows</span> <span class="o">+</span> <span class="mi">1</span>] <span class="o">=</span> <span class="nv">row</span></span>
+<span class="line" data-line="78">    <span class="kr">end</span></span>
+<span class="line" data-line="79">    <span class="kr">return</span> <span class="nv">rows</span></span>
+<span class="line" data-line="80"><span class="kr">end</span></span>
+<span class="line" data-line="81"></span>
+<span class="line" data-line="82"><span class="kd">local</span> <span class="nv">backdrop</span></span>
+<span class="line" data-line="83"><span class="kd">local</span> <span class="nv">headBob</span> <span class="o">=</span> <span class="nv">Bob</span>.<span class="nf">new</span>()</span>
+<span class="line" data-line="84"><span class="kd">local</span> <span class="nv">crankSteps</span> <span class="o">=</span> <span class="nv">CrankSteps</span>.<span class="nf">new</span>(<span class="nv">CRANK_DEGREES_PER_ROW</span>)</span>
+<span class="line" data-line="85"><span class="kd">local</span> <span class="nv">controls</span> <span class="o">=</span> <span class="nv">PlayInput</span>.<span class="nf">new</span>()</span>
+<span class="line" data-line="86"><span class="kd">local</span> <span class="nv">titleImage</span></span>
+<span class="line" data-line="87"></span>
+<span class="line" data-line="88"><span class="kd">local</span> <span class="kr">function</span> <span class="nf">newBackdrop</span>()</span>
+<span class="line" data-line="89">    <span class="kd">local</span> <span class="nv">size</span> <span class="o">=</span> <span class="nv">Sizes</span>.<span class="py">ALL</span>[<span class="nv">Sizes</span>.<span class="py">DEFAULT</span>]</span>
+<span class="line" data-line="90">    <span class="kd">local</span> <span class="nv">game</span> <span class="o">=</span> <span class="nv">Game</span>.<span class="nf">new</span>({ <span class="nv">columns</span> <span class="o">=</span> <span class="nv">size</span>.<span class="py">columns</span>, <span class="nv">rows</span> <span class="o">=</span> <span class="nv">size</span>.<span class="py">rows</span>, <span class="nv">hasPuzzle</span> <span class="o">=</span> <span class="kc">false</span>, <span class="nv">random</span> <span class="o">=</span> <span class="nb">math.random</span> })</span>
+<span class="line" data-line="91">    <span class="nv">game</span>:<span class="nf">setAutopilot</span>(<span class="kc">true</span>)</span>
+<span class="line" data-line="92">    <span class="kr">return</span> <span class="nv">game</span></span>
+<span class="line" data-line="93"><span class="kr">end</span></span>
+<span class="line" data-line="94"></span>
+<span class="line" data-line="95"><span class="kd">local</span> <span class="kr">function</span> <span class="nf">drawTitleImage</span>()</span>
+<span class="line" data-line="96">    <span class="kd">local</span> <span class="nv">width</span>, <span class="nv">height</span> <span class="o">=</span> <span class="nv">playdate</span>.<span class="py">graphics</span>.<span class="nf">getTextSize</span>(<span class="s2">&quot;MAZE&quot;</span>)</span>
+<span class="line" data-line="97">    <span class="kd">local</span> <span class="nv">image</span> <span class="o">=</span> <span class="nv">playdate</span>.<span class="py">graphics</span>.<span class="py">image</span>.<span class="nf">new</span>(<span class="nv">width</span>, <span class="nv">height</span>)</span>
+<span class="line" data-line="98">    <span class="nv">playdate</span>.<span class="py">graphics</span>.<span class="nf">pushContext</span>(<span class="nv">image</span>)</span>
+<span class="line" data-line="99">    <span class="nv">playdate</span>.<span class="py">graphics</span>.<span class="nf">drawText</span>(<span class="s2">&quot;MAZE&quot;</span>, <span class="mi">0</span>, <span class="mi">0</span>)</span>
+<span class="line" data-line="100">    <span class="nv">playdate</span>.<span class="py">graphics</span>.<span class="nf">popContext</span>()</span>
+<span class="line" data-line="101">    <span class="kr">return</span> <span class="nv">image</span></span>
+<span class="line" data-line="102"><span class="kr">end</span></span>
+<span class="line" data-line="103"></span>
+<span class="line" data-line="104"><span class="kr">function</span> <span class="nc">TitleScene</span>.<span class="nf">enter</span>()</span>
+<span class="line" data-line="105">    <span class="nv">TitleScene</span>.<span class="py">rows</span> <span class="o">=</span> <span class="nf">buildRows</span>()</span>
+<span class="line" data-line="106">    <span class="nv">TitleScene</span>.<span class="py">selection</span> <span class="o">=</span> <span class="mi">1</span></span>
+<span class="line" data-line="107">    <span class="nv">crankSteps</span>:<span class="nf">reset</span>()</span>
+<span class="line" data-line="108">    <span class="nv">backdrop</span> <span class="o">=</span> <span class="nf">newBackdrop</span>()</span>
+<span class="line" data-line="109">    <span class="nv">titleImage</span> <span class="o">=</span> <span class="nv">titleImage</span> <span class="ow">or</span> <span class="nf">drawTitleImage</span>()</span>
+<span class="line" data-line="110"><span class="kr">end</span></span>
+<span class="line" data-line="111"></span>
+<span class="line" data-line="112"><span class="kr">function</span> <span class="nc">TitleScene</span>.<span class="nf">handleInput</span>()</span>
+<span class="line" data-line="113">    <span class="kd">local</span> <span class="nv">input</span> <span class="o">=</span> <span class="nv">controls</span>:<span class="nf">read</span>()</span>
+<span class="line" data-line="114">    <span class="kd">local</span> <span class="nv">rows</span> <span class="o">=</span> <span class="nv">TitleScene</span>.<span class="py">rows</span></span>
+<span class="line" data-line="115">    <span class="kd">local</span> <span class="nv">row</span> <span class="o">=</span> <span class="nv">rows</span>[<span class="nv">TitleScene</span>.<span class="py">selection</span>]</span>
+<span class="line" data-line="116">    <span class="kd">local</span> <span class="nv">move</span> <span class="o">=</span> <span class="nv">crankSteps</span>:<span class="nf">turn</span>(<span class="nv">input</span>.<span class="py">crankChange</span>)</span>
+<span class="line" data-line="117">    <span class="kr">if</span> <span class="nv">input</span>:<span class="nf">isPressed</span>(<span class="nv">playdate</span>.<span class="py">kButtonUp</span>) <span class="kr">then</span> <span class="nv">move</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span> <span class="kr">end</span></span>
+<span class="line" data-line="118">    <span class="kr">if</span> <span class="nv">input</span>:<span class="nf">isPressed</span>(<span class="nv">playdate</span>.<span class="py">kButtonDown</span>) <span class="kr">then</span> <span class="nv">move</span> <span class="o">=</span> <span class="mi">1</span> <span class="kr">end</span></span>
+<span class="line" data-line="119">    <span class="c1">-- A press of the D-pad is a fresh start for the crank</span></span>
+<span class="line" data-line="120">    <span class="kr">if</span> <span class="nv">move</span> <span class="o">~=</span> <span class="mi">0</span> <span class="ow">and</span> (<span class="nv">input</span>:<span class="nf">isPressed</span>(<span class="nv">playdate</span>.<span class="py">kButtonUp</span>) <span class="ow">or</span> <span class="nv">input</span>:<span class="nf">isPressed</span>(<span class="nv">playdate</span>.<span class="py">kButtonDown</span>)) <span class="kr">then</span></span>
 <span class="line" data-line="121">        <span class="nv">crankSteps</span>:<span class="nf">reset</span>()</span>
 <span class="line" data-line="122">    <span class="kr">end</span></span>
 <span class="line" data-line="123">    <span class="nv">TitleScene</span>.<span class="py">selection</span> <span class="o">=</span> <span class="nb">math.max</span>(<span class="mi">1</span>, <span class="nb">math.min</span>(<span class="o">#</span><span class="nv">rows</span>, <span class="nv">TitleScene</span>.<span class="py">selection</span> <span class="o">+</span> <span class="nv">move</span>))</span>
-<span class="line" data-line="124">    <span class="kr">if</span> <span class="nv">playdate</span>.<span class="nf">buttonJustPressed</span>(<span class="nv">playdate</span>.<span class="py">kButtonLeft</span>) <span class="ow">and</span> <span class="nv">row</span>.<span class="py">left</span> <span class="kr">then</span> <span class="nv">row</span>.<span class="nf">left</span>() <span class="kr">end</span></span>
-<span class="line" data-line="125">    <span class="kr">if</span> <span class="nv">playdate</span>.<span class="nf">buttonJustPressed</span>(<span class="nv">playdate</span>.<span class="py">kButtonRight</span>) <span class="ow">and</span> <span class="nv">row</span>.<span class="py">right</span> <span class="kr">then</span> <span class="nv">row</span>.<span class="nf">right</span>() <span class="kr">end</span></span>
-<span class="line" data-line="126">    <span class="kr">if</span> <span class="nv">playdate</span>.<span class="nf">buttonJustPressed</span>(<span class="nv">playdate</span>.<span class="py">kButtonA</span>) <span class="kr">then</span> <span class="nv">row</span>.<span class="nf">confirm</span>() <span class="kr">end</span></span>
+<span class="line" data-line="124">    <span class="kr">if</span> <span class="nv">input</span>:<span class="nf">isPressed</span>(<span class="nv">playdate</span>.<span class="py">kButtonLeft</span>) <span class="ow">and</span> <span class="nv">row</span>.<span class="py">left</span> <span class="kr">then</span> <span class="nv">row</span>.<span class="nf">left</span>() <span class="kr">end</span></span>
+<span class="line" data-line="125">    <span class="kr">if</span> <span class="nv">input</span>:<span class="nf">isPressed</span>(<span class="nv">playdate</span>.<span class="py">kButtonRight</span>) <span class="ow">and</span> <span class="nv">row</span>.<span class="py">right</span> <span class="kr">then</span> <span class="nv">row</span>.<span class="nf">right</span>() <span class="kr">end</span></span>
+<span class="line" data-line="126">    <span class="kr">if</span> <span class="nv">input</span>:<span class="nf">isPressed</span>(<span class="nv">playdate</span>.<span class="py">kButtonA</span>) <span class="kr">then</span> <span class="nv">row</span>.<span class="nf">confirm</span>() <span class="kr">end</span></span>
 <span class="line" data-line="127"><span class="kr">end</span></span>
 <span class="line" data-line="128"></span>
 <span class="line" data-line="129"><span class="kr">function</span> <span class="nc">TitleScene</span>.<span class="nf">update</span>()</span>

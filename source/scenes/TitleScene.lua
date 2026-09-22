@@ -4,6 +4,7 @@ import "Bob"
 import "CrankSteps"
 import "Game"
 import "MazeView"
+import "PlayInput"
 import "SaveGame"
 import "SceneManager"
 import "Sizes"
@@ -81,6 +82,7 @@ end
 local backdrop
 local headBob = Bob.new()
 local crankSteps = CrankSteps.new(CRANK_DEGREES_PER_ROW)
+local controls = PlayInput.new()
 local titleImage
 
 local function newBackdrop()
@@ -108,22 +110,20 @@ function TitleScene.enter()
 end
 
 function TitleScene.handleInput()
+    local input = controls:read()
     local rows = TitleScene.rows
     local row = rows[TitleScene.selection]
-    local move = crankSteps:turn(playdate.getCrankChange())
-    if playdate.buttonJustPressed(playdate.kButtonUp) then move = -1 end
-    if playdate.buttonJustPressed(playdate.kButtonDown) then move = 1 end
+    local move = crankSteps:turn(input.crankChange)
+    if input:isPressed(playdate.kButtonUp) then move = -1 end
+    if input:isPressed(playdate.kButtonDown) then move = 1 end
     -- A press of the D-pad is a fresh start for the crank
-    if
-        move ~= 0
-        and (playdate.buttonJustPressed(playdate.kButtonUp) or playdate.buttonJustPressed(playdate.kButtonDown))
-    then
+    if move ~= 0 and (input:isPressed(playdate.kButtonUp) or input:isPressed(playdate.kButtonDown)) then
         crankSteps:reset()
     end
     TitleScene.selection = math.max(1, math.min(#rows, TitleScene.selection + move))
-    if playdate.buttonJustPressed(playdate.kButtonLeft) and row.left then row.left() end
-    if playdate.buttonJustPressed(playdate.kButtonRight) and row.right then row.right() end
-    if playdate.buttonJustPressed(playdate.kButtonA) then row.confirm() end
+    if input:isPressed(playdate.kButtonLeft) and row.left then row.left() end
+    if input:isPressed(playdate.kButtonRight) and row.right then row.right() end
+    if input:isPressed(playdate.kButtonA) then row.confirm() end
 end
 
 function TitleScene.update()

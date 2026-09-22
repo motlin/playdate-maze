@@ -1,10 +1,12 @@
 -- Shown after walking out of the exit: how long it took, and what next.
 
+import "PlayInput"
 import "SceneManager"
 
 EscapedScene = { seconds = 0, playAgain = nil, detail = nil }
 
 local FRAMES_PER_SECOND <const> = 30
+local controls = PlayInput.new()
 local titleImage
 
 local function drawTitleImage()
@@ -27,11 +29,12 @@ function EscapedScene.enter(frames, playAgain, detail)
 end
 
 function EscapedScene.update()
-    if playdate.buttonJustPressed(playdate.kButtonA) then
+    local input = controls:read()
+    if input:isPressed(playdate.kButtonA) then
         EscapedScene.playAgain()
         return
     end
-    if playdate.buttonJustPressed(playdate.kButtonB) then
+    if input:isPressed(playdate.kButtonB) then
         SceneManager.switch(TitleScene)
         return
     end
