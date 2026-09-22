@@ -15,7 +15,6 @@ function playdate.update() SceneManager.update() end
 
 playdate.gameWillPause = SceneManager.pause
 
--- Work must survive the console sleeping or the game being closed
 playdate.deviceWillSleep = SceneManager.save
 playdate.deviceWillLock = SceneManager.save
 playdate.gameWillTerminate = SceneManager.save
