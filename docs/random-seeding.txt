@@ -13,10 +13,23 @@ No Playdate was available: system_profiler SPUSBDataType and /dev/cu.* listed
 no Playdate; the USB serial device was a Flipper. No hardware runtime version
 or hardware RNG sequence was measured. Do not extrapolate the Simulator result.
 
-Keep source/main.lua's seeding call for now. A possible later simplification
-is to remove it if physical-device evidence and the supported runtime contract
-justify relying on automatic initialization. This investigation does not change
-production seeding, SeededRandom.lua, or the date-seeded Daily maze path.
+Decision on conditional removal
+
+Craig authorized removal if testing establishes that the supported runtime
+already supplies suitable varying startup seeds. The 15 fresh-launch samples
+above establish this only for the Simulator; the hardware condition remains
+unproven. A follow-up USB scan on 2026-09-21 again listed a Flipper and no
+Playdate, so no physical-device sample could be collected.
+
+Retain source/main.lua's seeding call under the task's explicit instruction to
+keep it when necessity remains uncertain. Further Simulator launches would not
+resolve the missing hardware evidence. Removal can be reconsidered when fresh
+physical-device launches without the call establish suitable varying initial
+sequences, with the hardware runtime version recorded.
+
+Production seeding, SeededRandom.lua, and the date-seeded Daily maze path remain
+unchanged. No tutorial anchors or generated listings need updating because the
+production source is unchanged.
 
 Method and reproduction
 
