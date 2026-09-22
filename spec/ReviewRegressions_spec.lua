@@ -3,6 +3,10 @@ import "Game"
 import "SeededRandom"
 import "Slime"
 import "MusicScore"
+import "Bob"
+import "PlayInput"
+import "CrankSteps"
+import "Sizes"
 
 local function cornerMaze()
     local maze = Maze.new(2, 2)
@@ -17,6 +21,51 @@ local function supportedSlime()
 end
 
 describe("review regressions", function()
+    it("replaces the startup backdrop with the same harness backdrop for different clock seeds", function()
+        local function startup(seed)
+            local backdrops = {}
+            local environment = setmetatable({
+                import = function() end,
+                playdate = {
+                    isSimulator = true,
+                    getSecondsSinceEpoch = function() return seed end,
+                    graphics = {
+                        getTextSize = function() return 10, 10 end,
+                        image = { new = function() return {} end },
+                        pushContext = function() end,
+                        popContext = function() end,
+                        drawText = function() end,
+                    },
+                },
+                Game = {
+                    new = function(options)
+                        local game = Game.new(options)
+                        backdrops[#backdrops + 1] = game
+                        return game
+                    end,
+                },
+                SaveGame = { exists = function() return false end, delete = function() end },
+                MapSlots = { NAMES = {} },
+                Settings = { load = function() end },
+                SystemMenu = { refresh = function() end },
+                Sounds = { setVolume = function() end },
+                Music = { setVolume = function() end },
+            }, { __index = _G })
+            for _, path in ipairs({
+                "source/SceneManager.lua",
+                "source/scenes/TitleScene.lua",
+                "source/main.lua",
+                "tools/screenshots/harness.lua",
+            }) do
+                assert(loadfile(path, "t", environment))()
+            end
+            return backdrops
+        end
+        local first, second = startup(100), startup(200)
+        assert.are_not.same(first[1], second[1])
+        assert.are.same(first[2], second[2])
+    end)
+
     it("places seed 180 landmarks without asking for a random wall in an open junction", function()
         local game = Game.new({ columns = 8, rows = 6, hasPuzzle = true, random = SeededRandom.new(180) })
         local junctionMarks = {}

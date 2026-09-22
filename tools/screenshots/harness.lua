@@ -21,15 +21,15 @@ if playdate.isSimulator then
     for _, name in ipairs(MapSlots.NAMES) do
         MapSlots.delete(name)
     end
+    -- Deterministic runs: the same mazes every time, so two runs of the same code produce
+    -- byte-identical screenshots.
+    math.randomseed(1995)
+
     TitleScene.enter()
 
     -- Silent, but still playing every note, so that the sound code runs here as it will for a player
     Sounds.setVolume(0)
     Music.setVolume(0)
-
-    -- Deterministic runs: the same mazes every time, so two runs of the same code produce
-    -- byte-identical screenshots.
-    math.randomseed(1995)
 
     local function buttonMask(buttons)
         local mask = 0
