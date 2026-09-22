@@ -1,0 +1,95 @@
+Playdate startup random seeding investigation — 2026-09-21
+
+Finding
+
+Explicit startup seeding was redundant for obtaining different initial sequences
+in the tested macOS Simulator 3.1.2 (build 213590, SDK 3.1.2, Lua 5.4). Five
+fresh processes without math.randomseed produced five distinct sequences. Five
+with the current epoch-based seeding also produced five distinct sequences.
+The fixed-seed control reproduced the same 12 integers in all five processes.
+
+Whether the production call is redundant on physical Playdate remains uncertain.
+No Playdate was available: system_profiler SPUSBDataType and /dev/cu.* listed
+no Playdate; the USB serial device was a Flipper. No hardware runtime version
+or hardware RNG sequence was measured. Do not extrapolate the Simulator result.
+
+Keep source/main.lua's seeding call for now. A possible later simplification
+is to remove it if physical-device evidence and the supported runtime contract
+justify relying on automatic initialization. This investigation does not change
+production seeding, SeededRandom.lua, or the date-seeded Daily maze path.
+
+Method and reproduction
+
+From the repository root, on macOS with the SDK installed:
+
+    python3 tools/random-seeding/run.py --runs 5
+
+For another SDK location, append --sdk /absolute/path/to/PlaydateSDK.
+The runner compiles tools/random-seeding with that SDK's pdc --skip-unknown,
+then invokes the Simulator executable directly, once per sample:
+
+    "$PLAYDATE_SDK_PATH/bin/Playdate Simulator.app/Contents/MacOS/Playdate Simulator" \
+      "$PWD/builds/random-seeding/RandomSeedDiagnostic.pdx" omitted
+
+Use explicit or fixed instead of omitted to reproduce either control. Each
+process exits on its third update; each subsequent process starts a fresh Lua
+game runtime. These are not scene transitions, new-maze operations, resumes,
+or repeated draws from a running game's RNG. The executable launch avoids
+routing samples through an already-running Simulator instance.
+
+The harness imports no game modules or CoreLibs. Before any other consumer,
+it calls math.random(1, 1000000) exactly twelve times. The explicit arm captures
+both returns of playdate.getSecondsSinceEpoch() and passes them to
+math.randomseed(seconds, milliseconds), equivalent to the production nested
+call. Lua passes both values in math.randomseed(playdate.getSecondsSinceEpoch()).
+The fixed control uses math.randomseed(12345, 67890). The omitted arm never calls
+math.randomseed. Modes alternate omitted/explicit/fixed over five rounds.
+
+The diagnostic bundle ID is com.motlin.maze.random-seed-diagnostic; it does not
+read or write datastore files or load Maze. All logs are console-only and the
+host saves them beneath builds/random-seeding. No diagnostic logging is added
+to production source, and the runner does not terminate another Simulator.
+
+Measured output
+
+The complete 15 sequences, epoch arguments, timestamp, host, Lua and Simulator
+versions are retained in docs/random-seeding-results.json. Reproduction writes
+a new results.json and per-launch raw logs under builds/random-seeding.
+First four numbers from each omitted-seed fresh launch:
+
+    1: 93168, 700007, 164851, 534205
+    2: 497931, 610858, 331932, 351432
+    3: 992957, 399015, 746937, 727983
+    4: 325265, 88138, 782391, 725369
+    5: 639537, 606414, 941128, 26283
+
+First four from the explicit-seed fresh launches:
+
+    1: 996219, 17367, 549162, 323023
+    2: 592371, 62984, 847929, 345520
+    3: 279102, 623230, 56920, 287792
+    4: 745754, 435858, 49413, 78641
+    5: 309968, 573046, 680263, 554027
+
+Every fixed-seed launch began: 62344, 388621, 840625, 803541.
+
+Official evidence and limits
+
+https://sdk.play.date/3.1.2/Inside%20Playdate.html#f-getSecondsSinceEpoch
+The installed SDK documentation and current official documentation describe the
+epoch function's seconds and milliseconds results and give the production
+seeding expression as an example. That demonstrates a supported way to seed;
+it does not establish that explicit seeding is necessary or promise automatic
+initialization. No Playdate runtime implementation evidence establishing the
+startup seeding mechanism was found in the installed SDK/CoreLibs.
+
+https://sdk.play.date/3.1.2/Inside%20Playdate.html#f-print
+https://sdk.play.date/3.1.2/Inside%20Playdate.html#f-simulator.exit
+The official API documents console output to stdout and the Simulator exit API
+used to isolate and capture these launches.
+
+Varying sequences support launch-dependent initial RNG state in this tested
+Simulator, but do not identify the entropy source or prove variation across
+all launches, OS versions, or hardware. Repeated sequences without seeding
+would instead be evidence for retaining the explicit call for that runtime.
+Desktop Lua defaults and SDK example prevalence were not used as proof.
