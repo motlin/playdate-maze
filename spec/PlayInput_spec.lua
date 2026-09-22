@@ -115,4 +115,44 @@ describe("input and actions", function()
             walkingFrame(second, 0, 0, pd.kButtonB, 0, false, false)
         )
     end)
+
+    for _, resume in ipairs({ false, true }) do
+        it("clears a B hold released outside the scene on " .. (resume and "resume" or "fresh entry"), function()
+            import "Bob"
+            import "DockTimer"
+            local actions
+            local function nothing() end
+            local game = {
+                distanceWalked = 0,
+                isAutopilotOn = function() return false end,
+                setAutopilot = nothing,
+                update = function(_, input) actions = input end,
+            }
+            local environment = setmetatable({
+                import = nothing,
+                PlayInput = { new = function() return controls end },
+                Game = { new = function() return game end },
+                Sizes = { DEFAULT = 1, ALL = { { columns = 3, rows = 3 } } },
+                SaveGame = { delete = nothing },
+                Sounds = { play = nothing, hum = nothing, stopHum = nothing },
+                Music = { update = nothing, stop = nothing },
+                MazeView = { draw = nothing },
+                Hud = { draw = nothing },
+            }, { __index = _G })
+            assert(loadfile("source/scenes/FirstPersonScene.lua", "t", environment))()
+            local scene = environment.FirstPersonScene
+            scene.enter(scene.SUBMODES.EXPLORE, 1)
+            frame(pd.kButtonB, pd.kButtonB, 0, 0, false)
+            scene.update()
+            scene.exit()
+            frame(0, 0, pd.kButtonB, 0, false)
+            scene.enter(scene.SUBMODES.EXPLORE, 1, resume and game or nil)
+            frame(0, 0, 0, 10, false)
+            scene.update()
+            assert.are.same(
+                { forward = 0, turn = 10, crank = 10, reel = 0, strafe = 0, pickUp = false, drop = false },
+                actions
+            )
+        end)
+    end
 end)

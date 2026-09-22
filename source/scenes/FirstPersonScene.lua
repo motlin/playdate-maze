@@ -73,6 +73,7 @@ end
 function FirstPersonScene.enter(submode, sizeIndex, savedGame, design)
     FirstPersonScene.submode = submode
     FirstPersonScene.design = design
+    walkingActions = WalkingActions.new(controls)
     dockTimer = DockTimer.new()
     headBob = Bob.new()
     -- The daily maze is the same size for everyone
