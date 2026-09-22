@@ -757,6 +757,16 @@ if playdate.isSimulator then
         SceneManager.switch(TitleScene)
         frames(3)
         expect(TitleScene.rows[1].name == "continue", "and leaving that one saves it in turn")
+        pd.datastore.write({}, SaveGame.FILE)
+        press(pd.kButtonA, 3)
+        expect(SceneManager.isCurrent(TitleScene), "corrupt Continue stays on the title")
+        expect(TitleScene.rows[1].name == "explore", "corrupt Continue is removed")
+        expect(pd.datastore.read(SaveGame.FILE) == nil, "the unreadable envelope is discarded")
+        pd.datastore.write({ game = { version = Game.SAVE_VERSION }, mode = "explore", sizeIndex = 2 }, SaveGame.FILE)
+        TitleScene.enter()
+        frames(2)
+        expect(TitleScene.rows[1].name == "explore", "malformed nested state is never offered as Continue")
+        expect(pd.datastore.read(SaveGame.FILE) == nil, "malformed nested state is discarded")
     end
 
     -- Not a test: draws the launcher card, its highlighted animation, and the list icon from the
