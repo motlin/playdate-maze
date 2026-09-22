@@ -1145,11 +1145,11 @@
 <span class="line" data-line="138">        <span class="kr">if</span> <span class="nv">editor</span>.<span class="py">message</span> <span class="kr">then</span> <span class="nv">Hud</span>.<span class="nf">drawLine</span>(<span class="nv">editor</span>.<span class="py">message</span>) <span class="kr">end</span></span>
 <span class="line" data-line="139">    <span class="kr">end</span></span>
 <span class="line" data-line="140"><span class="kr">end</span></span></code></pre>
-<footer class="code-footer"><span class="focus-label">Highlighted lines follow the explanation</span><button class="follow" type="button" aria-pressed="true">Follow scroll: on</button></footer></div></section><section class="section" id="section-11" data-title="Editing state belongs together" data-file="source/MapEditor.lua"><div class="explanations"><h2><span>11</span> Editing state belongs together</h2><article class="step" id="step-11-0" data-first="68" data-last="74">
-<p class="location">source/MapEditor.lua<br><a href="#step-11-0">Lines 68–74</a></p>
-<h3>Replace the drawing and reset the tools</h3><p>Generate a maze at the current size and convert it to a drawing. Reset the cursor to the entrance and select the cells tool. Record the message and unsaved change in the same operation.</p></article><article class="step" id="step-11-1" data-first="78" data-last="85">
-<p class="location">source/MapEditor.lua<br><a href="#step-11-1">Lines 78–85</a></p>
-<h3>Explain a blocked play attempt</h3><p>Validation can update the action message without marking the drawing dirty. A valid drawing is returned for play; only saving clears the dirty flag.</p></article></div><div class="code-panel"><header class="file-header"><div class="file-path"><span>source/</span><strong>MapEditor.lua</strong></div><div class="file-meta"><span>Lua · Complete file · 205 lines</span><output class="range">Lines 68–74</output></div></header>
+<footer class="code-footer"><span class="focus-label">Highlighted lines follow the explanation</span><button class="follow" type="button" aria-pressed="true">Follow scroll: on</button></footer></div></section><section class="section" id="section-11" data-title="Editing state belongs together" data-file="source/MapEditor.lua"><div class="explanations"><h2><span>11</span> Editing state belongs together</h2><article class="step" id="step-11-0" data-first="73" data-last="78">
+<p class="location">source/MapEditor.lua<br><a href="#step-11-0">Lines 73–78</a></p>
+<h3>Replace the drawing and reset the tools</h3><p>Generate a maze at the current size and convert it to a drawing. Use the same cursor initialization as a newly opened drawing: select the cells tool and snap to the cell nearest the entrance without moving the design’s start. Record the message and unsaved change in the same operation.</p></article><article class="step" id="step-11-1" data-first="82" data-last="89">
+<p class="location">source/MapEditor.lua<br><a href="#step-11-1">Lines 82–89</a></p>
+<h3>Explain a blocked play attempt</h3><p>Validation can update the action message without marking the drawing dirty. A valid drawing is returned for play; only saving clears the dirty flag.</p></article></div><div class="code-panel"><header class="file-header"><div class="file-path"><span>source/</span><strong>MapEditor.lua</strong></div><div class="file-meta"><span>Lua · Complete file · 209 lines</span><output class="range">Lines 73–78</output></div></header>
 <pre tabindex="0" aria-label="Complete source/MapEditor.lua"><code class="language-lua"><span class="line" data-line="1"><span class="c1">-- The hands of the map editor: a cursor on a MapDesign, a dial of tools, and what adding (A) and</span></span>
 <span class="line" data-line="2"><span class="c1">-- removing (B) do with each tool, still or on the move. It draws nothing and reads no buttons, so</span></span>
 <span class="line" data-line="3"><span class="c1">-- the editor&#39;s screen is a thin shell over it. `message` is what the last action has to say.</span></span>
@@ -1201,160 +1201,164 @@
 <span class="line" data-line="49"></span>
 <span class="line" data-line="50"><span class="kd">local</span> <span class="nv">DIRECTIONS</span> <span class="o">&lt;</span><span class="nv">const</span><span class="o">&gt;</span> <span class="o">=</span> { [<span class="s2">&quot;1,0&quot;</span>] <span class="o">=</span> <span class="s2">&quot;east&quot;</span>, [<span class="s2">&quot;-1,0&quot;</span>] <span class="o">=</span> <span class="s2">&quot;west&quot;</span>, [<span class="s2">&quot;0,1&quot;</span>] <span class="o">=</span> <span class="s2">&quot;south&quot;</span>, [<span class="s2">&quot;0,-1&quot;</span>] <span class="o">=</span> <span class="s2">&quot;north&quot;</span> }</span>
 <span class="line" data-line="51"></span>
-<span class="line" data-line="52"><span class="c1">---@param design MapDesign</span></span>
-<span class="line" data-line="53"><span class="c1">---@return MapEditor</span></span>
-<span class="line" data-line="54"><span class="kr">function</span> <span class="nc">MapEditor</span>.<span class="nf">new</span>(<span class="nv">design</span>)</span>
-<span class="line" data-line="55">    <span class="kr">return</span> <span class="nb">setmetatable</span>({</span>
-<span class="line" data-line="56">        <span class="nv">design</span> <span class="o">=</span> <span class="nv">design</span>,</span>
-<span class="line" data-line="57">        <span class="nv">cursorX</span> <span class="o">=</span> <span class="nv">design</span>.<span class="py">start</span>.<span class="py">gridX</span>,</span>
-<span class="line" data-line="58">        <span class="nv">cursorY</span> <span class="o">=</span> <span class="nv">design</span>.<span class="py">start</span>.<span class="py">gridY</span>,</span>
-<span class="line" data-line="59">        <span class="nv">toolIndex</span> <span class="o">=</span> <span class="mi">1</span>,</span>
-<span class="line" data-line="60">        <span class="nv">message</span> <span class="o">=</span> <span class="kc">nil</span>,</span>
-<span class="line" data-line="61">        <span class="nv">hasUnsavedChanges</span> <span class="o">=</span> <span class="kc">false</span>,</span>
-<span class="line" data-line="62">    }, <span class="nv">MapEditor</span>)</span>
-<span class="line" data-line="63"><span class="kr">end</span></span>
-<span class="line" data-line="64"></span>
-<span class="line" data-line="65"><span class="c1">-- Replacing a drawing starts at its entrance with the cells tool, and needs saving.</span></span>
-<span class="line" data-line="66"><span class="c1">---@param random Random</span></span>
-<span class="line" data-line="67"><span class="c1">---@return nil</span></span>
-<span class="line" data-line="68"><span class="kr">function</span> <span class="nc">MapEditor</span>:<span class="nf">generateMaze</span>(<span class="nv">random</span>)</span>
-<span class="line" data-line="69">    <span class="nv">self</span>.<span class="py">design</span> <span class="o">=</span> <span class="nv">MapDesign</span>.<span class="nf">fromMaze</span>(<span class="nv">Maze</span>.<span class="nf">generate</span>(<span class="nv">self</span>.<span class="py">design</span>.<span class="py">columns</span>, <span class="nv">self</span>.<span class="py">design</span>.<span class="py">rows</span>, <span class="nv">random</span>))</span>
-<span class="line" data-line="70">    <span class="nv">self</span>.<span class="py">cursorX</span>, <span class="nv">self</span>.<span class="py">cursorY</span> <span class="o">=</span> <span class="nv">self</span>.<span class="py">design</span>.<span class="py">start</span>.<span class="py">gridX</span>, <span class="nv">self</span>.<span class="py">design</span>.<span class="py">start</span>.<span class="py">gridY</span></span>
-<span class="line" data-line="71">    <span class="nv">self</span>.<span class="py">toolIndex</span> <span class="o">=</span> <span class="mi">1</span></span>
-<span class="line" data-line="72">    <span class="nv">self</span>.<span class="py">message</span> <span class="o">=</span> <span class="s2">&quot;A new maze to alter&quot;</span></span>
-<span class="line" data-line="73">    <span class="nv">self</span>.<span class="py">hasUnsavedChanges</span> <span class="o">=</span> <span class="kc">true</span></span>
-<span class="line" data-line="74"><span class="kr">end</span></span>
-<span class="line" data-line="75"></span>
-<span class="line" data-line="76"><span class="c1">-- A failed play attempt explains the problem without changing the drawing&#39;s save state.</span></span>
-<span class="line" data-line="77"><span class="c1">---@return MapDesign?</span></span>
-<span class="line" data-line="78"><span class="kr">function</span> <span class="nc">MapEditor</span>:<span class="nf">designToPlay</span>()</span>
-<span class="line" data-line="79">    <span class="kd">local</span> <span class="nv">problem</span> <span class="o">=</span> <span class="nv">self</span>.<span class="py">design</span>:<span class="nf">problems</span>()[<span class="mi">1</span>]</span>
-<span class="line" data-line="80">    <span class="kr">if</span> <span class="nv">problem</span> <span class="kr">then</span></span>
-<span class="line" data-line="81">        <span class="nv">self</span>.<span class="py">message</span> <span class="o">=</span> <span class="nv">problem</span></span>
-<span class="line" data-line="82">        <span class="kr">return</span> <span class="kc">nil</span></span>
-<span class="line" data-line="83">    <span class="kr">end</span></span>
-<span class="line" data-line="84">    <span class="kr">return</span> <span class="nv">self</span>.<span class="py">design</span></span>
-<span class="line" data-line="85"><span class="kr">end</span></span>
-<span class="line" data-line="86"></span>
-<span class="line" data-line="87"><span class="c1">-- Borrowed immutable data; callers must not modify it.</span></span>
-<span class="line" data-line="88"><span class="c1">---@return EditorTool</span></span>
-<span class="line" data-line="89"><span class="kr">function</span> <span class="nc">MapEditor</span>:<span class="nf">tool</span>() <span class="kr">return</span> <span class="nv">MapEditor</span>.<span class="py">TOOLS</span>[<span class="nv">self</span>.<span class="py">toolIndex</span>] <span class="kr">end</span></span>
+<span class="line" data-line="52"><span class="kd">local</span> <span class="kr">function</span> <span class="nf">resetCursor</span>(<span class="nv">self</span>)</span>
+<span class="line" data-line="53">    <span class="nv">self</span>.<span class="py">cursorX</span>, <span class="nv">self</span>.<span class="py">cursorY</span> <span class="o">=</span> <span class="nv">self</span>.<span class="py">design</span>.<span class="py">start</span>.<span class="py">gridX</span>, <span class="nv">self</span>.<span class="py">design</span>.<span class="py">start</span>.<span class="py">gridY</span></span>
+<span class="line" data-line="54">    <span class="nv">self</span>.<span class="py">toolIndex</span> <span class="o">=</span> <span class="mi">1</span></span>
+<span class="line" data-line="55">    <span class="nv">self</span>:<span class="nf">turnTool</span>(<span class="mi">0</span>)</span>
+<span class="line" data-line="56"><span class="kr">end</span></span>
+<span class="line" data-line="57"></span>
+<span class="line" data-line="58"><span class="c1">---@param design MapDesign</span></span>
+<span class="line" data-line="59"><span class="c1">---@return MapEditor</span></span>
+<span class="line" data-line="60"><span class="kr">function</span> <span class="nc">MapEditor</span>.<span class="nf">new</span>(<span class="nv">design</span>)</span>
+<span class="line" data-line="61">    <span class="kd">local</span> <span class="nv">editor</span> <span class="o">=</span> <span class="nb">setmetatable</span>({</span>
+<span class="line" data-line="62">        <span class="nv">design</span> <span class="o">=</span> <span class="nv">design</span>,</span>
+<span class="line" data-line="63">        <span class="nv">message</span> <span class="o">=</span> <span class="kc">nil</span>,</span>
+<span class="line" data-line="64">        <span class="nv">hasUnsavedChanges</span> <span class="o">=</span> <span class="kc">false</span>,</span>
+<span class="line" data-line="65">    }, <span class="nv">MapEditor</span>)</span>
+<span class="line" data-line="66">    <span class="nf">resetCursor</span>(<span class="nv">editor</span>)</span>
+<span class="line" data-line="67">    <span class="kr">return</span> <span class="nv">editor</span></span>
+<span class="line" data-line="68"><span class="kr">end</span></span>
+<span class="line" data-line="69"></span>
+<span class="line" data-line="70"><span class="c1">-- Replacing a drawing starts at its entrance with the cells tool, and needs saving.</span></span>
+<span class="line" data-line="71"><span class="c1">---@param random Random</span></span>
+<span class="line" data-line="72"><span class="c1">---@return nil</span></span>
+<span class="line" data-line="73"><span class="kr">function</span> <span class="nc">MapEditor</span>:<span class="nf">generateMaze</span>(<span class="nv">random</span>)</span>
+<span class="line" data-line="74">    <span class="nv">self</span>.<span class="py">design</span> <span class="o">=</span> <span class="nv">MapDesign</span>.<span class="nf">fromMaze</span>(<span class="nv">Maze</span>.<span class="nf">generate</span>(<span class="nv">self</span>.<span class="py">design</span>.<span class="py">columns</span>, <span class="nv">self</span>.<span class="py">design</span>.<span class="py">rows</span>, <span class="nv">random</span>))</span>
+<span class="line" data-line="75">    <span class="nf">resetCursor</span>(<span class="nv">self</span>)</span>
+<span class="line" data-line="76">    <span class="nv">self</span>.<span class="py">message</span> <span class="o">=</span> <span class="s2">&quot;A new maze to alter&quot;</span></span>
+<span class="line" data-line="77">    <span class="nv">self</span>.<span class="py">hasUnsavedChanges</span> <span class="o">=</span> <span class="kc">true</span></span>
+<span class="line" data-line="78"><span class="kr">end</span></span>
+<span class="line" data-line="79"></span>
+<span class="line" data-line="80"><span class="c1">-- A failed play attempt explains the problem without changing the drawing&#39;s save state.</span></span>
+<span class="line" data-line="81"><span class="c1">---@return MapDesign?</span></span>
+<span class="line" data-line="82"><span class="kr">function</span> <span class="nc">MapEditor</span>:<span class="nf">designToPlay</span>()</span>
+<span class="line" data-line="83">    <span class="kd">local</span> <span class="nv">problem</span> <span class="o">=</span> <span class="nv">self</span>.<span class="py">design</span>:<span class="nf">problems</span>()[<span class="mi">1</span>]</span>
+<span class="line" data-line="84">    <span class="kr">if</span> <span class="nv">problem</span> <span class="kr">then</span></span>
+<span class="line" data-line="85">        <span class="nv">self</span>.<span class="py">message</span> <span class="o">=</span> <span class="nv">problem</span></span>
+<span class="line" data-line="86">        <span class="kr">return</span> <span class="kc">nil</span></span>
+<span class="line" data-line="87">    <span class="kr">end</span></span>
+<span class="line" data-line="88">    <span class="kr">return</span> <span class="nv">self</span>.<span class="py">design</span></span>
+<span class="line" data-line="89"><span class="kr">end</span></span>
 <span class="line" data-line="90"></span>
-<span class="line" data-line="91"><span class="c1">-- The nearest cell&#39;s block along one axis: cells are the even blocks inside the outer wall</span></span>
-<span class="line" data-line="92"><span class="kd">local</span> <span class="kr">function</span> <span class="nf">nearestCellBlock</span>(<span class="nv">value</span>, <span class="nv">gridSize</span>)</span>
-<span class="line" data-line="93">    <span class="kr">return</span> <span class="nb">math.max</span>(<span class="mi">2</span>, <span class="nb">math.min</span>(<span class="nv">gridSize</span> <span class="o">-</span> <span class="mi">1</span>, <span class="mi">2</span> <span class="o">*</span> <span class="nb">math.floor</span>(<span class="nv">value</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">+</span> <span class="mf">0.5</span>)))</span>
-<span class="line" data-line="94"><span class="kr">end</span></span>
-<span class="line" data-line="95"></span>
-<span class="line" data-line="96"><span class="c1">---@param steps integer</span></span>
-<span class="line" data-line="97"><span class="c1">---@return nil</span></span>
-<span class="line" data-line="98"><span class="kr">function</span> <span class="nc">MapEditor</span>:<span class="nf">turnTool</span>(<span class="nv">steps</span>)</span>
-<span class="line" data-line="99">    <span class="nv">self</span>.<span class="py">toolIndex</span> <span class="o">=</span> (<span class="nv">self</span>.<span class="py">toolIndex</span> <span class="o">-</span> <span class="mi">1</span> <span class="o">+</span> <span class="nv">steps</span>) <span class="o">%</span> <span class="o">#</span><span class="nv">MapEditor</span>.<span class="py">TOOLS</span> <span class="o">+</span> <span class="mi">1</span></span>
-<span class="line" data-line="100">    <span class="c1">-- The cells tool&#39;s cursor lives on cells</span></span>
-<span class="line" data-line="101">    <span class="kr">if</span> <span class="nv">self</span>:<span class="nf">tool</span>().<span class="nv">name</span> <span class="o">==</span> <span class="s2">&quot;cells&quot;</span> <span class="kr">then</span></span>
-<span class="line" data-line="102">        <span class="nv">self</span>.<span class="py">cursorX</span> <span class="o">=</span> <span class="nf">nearestCellBlock</span>(<span class="nv">self</span>.<span class="py">cursorX</span>, <span class="nv">self</span>.<span class="py">design</span>.<span class="py">gridWidth</span>)</span>
-<span class="line" data-line="103">        <span class="nv">self</span>.<span class="py">cursorY</span> <span class="o">=</span> <span class="nf">nearestCellBlock</span>(<span class="nv">self</span>.<span class="py">cursorY</span>, <span class="nv">self</span>.<span class="py">design</span>.<span class="py">gridHeight</span>)</span>
-<span class="line" data-line="104">    <span class="kr">end</span></span>
-<span class="line" data-line="105"><span class="kr">end</span></span>
-<span class="line" data-line="106"></span>
-<span class="line" data-line="107"><span class="c1">---@return nil</span></span>
-<span class="line" data-line="108"><span class="kr">function</span> <span class="nc">MapEditor</span>:<span class="nf">markSaved</span>() <span class="nv">self</span>.<span class="py">hasUnsavedChanges</span> <span class="o">=</span> <span class="kc">false</span> <span class="kr">end</span></span>
-<span class="line" data-line="109"></span>
-<span class="line" data-line="110"><span class="c1">-- Records the outcome of trying to change the design</span></span>
-<span class="line" data-line="111"><span class="kd">local</span> <span class="kr">function</span> <span class="nf">changed</span>(<span class="nv">self</span>, <span class="nv">didChange</span>, <span class="nv">message</span>)</span>
-<span class="line" data-line="112">    <span class="kr">if</span> <span class="nv">didChange</span> <span class="kr">then</span> <span class="nv">self</span>.<span class="py">hasUnsavedChanges</span> <span class="o">=</span> <span class="kc">true</span> <span class="kr">end</span></span>
-<span class="line" data-line="113">    <span class="nv">self</span>.<span class="py">message</span> <span class="o">=</span> <span class="nv">message</span></span>
-<span class="line" data-line="114">    <span class="kr">return</span> <span class="nv">didChange</span></span>
-<span class="line" data-line="115"><span class="kr">end</span></span>
-<span class="line" data-line="116"></span>
-<span class="line" data-line="117"><span class="kd">local</span> <span class="kr">function</span> <span class="nf">setBlock</span>(<span class="nv">self</span>, <span class="nv">gridX</span>, <span class="nv">gridY</span>, <span class="nv">isOpen</span>)</span>
-<span class="line" data-line="118">    <span class="kd">local</span> <span class="nv">design</span> <span class="o">=</span> <span class="nv">self</span>.<span class="py">design</span></span>
-<span class="line" data-line="119">    <span class="kr">if</span> <span class="nv">design</span>:<span class="nf">isOpen</span>(<span class="nv">gridX</span>, <span class="nv">gridY</span>) <span class="o">==</span> <span class="nv">isOpen</span> <span class="ow">and</span> <span class="nv">design</span>:<span class="nf">isInside</span>(<span class="nv">gridX</span>, <span class="nv">gridY</span>) <span class="kr">then</span> <span class="kr">return</span> <span class="kc">false</span> <span class="kr">end</span></span>
-<span class="line" data-line="120">    <span class="kr">if</span> <span class="nv">design</span>:<span class="nf">setBlock</span>(<span class="nv">gridX</span>, <span class="nv">gridY</span>, <span class="nv">isOpen</span>) <span class="kr">then</span> <span class="kr">return</span> <span class="nf">changed</span>(<span class="nv">self</span>, <span class="kc">true</span>, <span class="kc">nil</span>) <span class="kr">end</span></span>
-<span class="line" data-line="121">    <span class="kr">if</span> <span class="ow">not</span> <span class="nv">design</span>:<span class="nf">isInside</span>(<span class="nv">gridX</span>, <span class="nv">gridY</span>) <span class="kr">then</span> <span class="kr">return</span> <span class="nf">changed</span>(<span class="nv">self</span>, <span class="kc">false</span>, <span class="s2">&quot;The outer wall stays solid&quot;</span>) <span class="kr">end</span></span>
-<span class="line" data-line="122">    <span class="kr">if</span> <span class="nv">design</span>:<span class="nf">thingAt</span>(<span class="nv">gridX</span>, <span class="nv">gridY</span>) <span class="kr">then</span> <span class="kr">return</span> <span class="nf">changed</span>(<span class="nv">self</span>, <span class="kc">false</span>, <span class="s2">&quot;Something is standing there&quot;</span>) <span class="kr">end</span></span>
-<span class="line" data-line="123">    <span class="kr">return</span> <span class="nf">changed</span>(<span class="nv">self</span>, <span class="kc">false</span>, <span class="s2">&quot;That block is the way in to the exit&quot;</span>)</span>
-<span class="line" data-line="124"><span class="kr">end</span></span>
-<span class="line" data-line="125"></span>
-<span class="line" data-line="126"><span class="c1">-- Moves the cursor a step. isAdding and isRemoving say whether A or B is held as it moves.</span></span>
-<span class="line" data-line="127"><span class="c1">---@param stepX integer</span></span>
-<span class="line" data-line="128"><span class="c1">---@param stepY integer</span></span>
-<span class="line" data-line="129"><span class="c1">---@param isAdding boolean?</span></span>
-<span class="line" data-line="130"><span class="c1">---@param isRemoving boolean?</span></span>
-<span class="line" data-line="131"><span class="c1">---@return nil</span></span>
-<span class="line" data-line="132"><span class="kr">function</span> <span class="nc">MapEditor</span>:<span class="nf">move</span>(<span class="nv">stepX</span>, <span class="nv">stepY</span>, <span class="nv">isAdding</span>, <span class="nv">isRemoving</span>)</span>
-<span class="line" data-line="133">    <span class="kd">local</span> <span class="nv">design</span> <span class="o">=</span> <span class="nv">self</span>.<span class="py">design</span></span>
-<span class="line" data-line="134">    <span class="kr">if</span> <span class="nv">self</span>:<span class="nf">tool</span>().<span class="nv">name</span> <span class="o">==</span> <span class="s2">&quot;cells&quot;</span> <span class="kr">then</span></span>
-<span class="line" data-line="135">        <span class="kd">local</span> <span class="nv">column</span>, <span class="nv">row</span> <span class="o">=</span> <span class="nv">self</span>.<span class="py">cursorX</span> <span class="o">//</span> <span class="mi">2</span>, <span class="nv">self</span>.<span class="py">cursorY</span> <span class="o">//</span> <span class="mi">2</span></span>
-<span class="line" data-line="136">        <span class="kd">local</span> <span class="nv">nextColumn</span>, <span class="nv">nextRow</span> <span class="o">=</span> <span class="nv">column</span> <span class="o">+</span> <span class="nv">stepX</span>, <span class="nv">row</span> <span class="o">+</span> <span class="nv">stepY</span></span>
-<span class="line" data-line="137">        <span class="kd">local</span> <span class="nv">isInside</span> <span class="o">=</span> <span class="nv">nextColumn</span> <span class="o">&gt;=</span> <span class="mi">1</span> <span class="ow">and</span> <span class="nv">nextColumn</span> <span class="o">&lt;=</span> <span class="nv">design</span>.<span class="py">columns</span> <span class="ow">and</span> <span class="nv">nextRow</span> <span class="o">&gt;=</span> <span class="mi">1</span> <span class="ow">and</span> <span class="nv">nextRow</span> <span class="o">&lt;=</span> <span class="nv">design</span>.<span class="py">rows</span></span>
-<span class="line" data-line="138">        <span class="kr">if</span> <span class="ow">not</span> <span class="nv">isInside</span> <span class="kr">then</span> <span class="kr">return</span> <span class="kr">end</span></span>
-<span class="line" data-line="139">        <span class="kd">local</span> <span class="nv">direction</span> <span class="o">=</span> <span class="nv">DIRECTIONS</span>[<span class="nv">stepX</span> <span class="o">..</span> <span class="s2">&quot;,&quot;</span> <span class="o">..</span> <span class="nv">stepY</span>]</span>
-<span class="line" data-line="140">        <span class="kr">if</span> <span class="nv">isRemoving</span> <span class="kr">then</span></span>
-<span class="line" data-line="141">            <span class="c1">-- Pushing at a wall with B builds it back, without stepping through</span></span>
-<span class="line" data-line="142">            <span class="nf">setBlock</span>(<span class="nv">self</span>, <span class="mi">2</span> <span class="o">*</span> <span class="nv">column</span> <span class="o">+</span> <span class="nv">stepX</span>, <span class="mi">2</span> <span class="o">*</span> <span class="nv">row</span> <span class="o">+</span> <span class="nv">stepY</span>, <span class="kc">false</span>)</span>
-<span class="line" data-line="143">            <span class="kr">return</span></span>
-<span class="line" data-line="144">        <span class="kr">end</span></span>
-<span class="line" data-line="145">        <span class="c1">-- Moving with A held carves the way through</span></span>
-<span class="line" data-line="146">        <span class="kr">if</span> <span class="nv">isAdding</span> <span class="ow">and</span> <span class="nv">design</span>:<span class="nf">setPassage</span>(<span class="nv">column</span>, <span class="nv">row</span>, <span class="nv">direction</span>, <span class="kc">true</span>) <span class="kr">then</span> <span class="nv">self</span>.<span class="py">hasUnsavedChanges</span> <span class="o">=</span> <span class="kc">true</span> <span class="kr">end</span></span>
-<span class="line" data-line="147">        <span class="nv">self</span>.<span class="py">cursorX</span>, <span class="nv">self</span>.<span class="py">cursorY</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="nv">nextColumn</span>, <span class="mi">2</span> <span class="o">*</span> <span class="nv">nextRow</span></span>
-<span class="line" data-line="148">        <span class="kr">return</span></span>
-<span class="line" data-line="149">    <span class="kr">end</span></span>
-<span class="line" data-line="150"></span>
-<span class="line" data-line="151">    <span class="nv">self</span>.<span class="py">cursorX</span> <span class="o">=</span> <span class="nb">math.max</span>(<span class="mi">1</span>, <span class="nb">math.min</span>(<span class="nv">design</span>.<span class="py">gridWidth</span>, <span class="nv">self</span>.<span class="py">cursorX</span> <span class="o">+</span> <span class="nv">stepX</span>))</span>
-<span class="line" data-line="152">    <span class="nv">self</span>.<span class="py">cursorY</span> <span class="o">=</span> <span class="nb">math.max</span>(<span class="mi">1</span>, <span class="nb">math.min</span>(<span class="nv">design</span>.<span class="py">gridHeight</span>, <span class="nv">self</span>.<span class="py">cursorY</span> <span class="o">+</span> <span class="nv">stepY</span>))</span>
-<span class="line" data-line="153">    <span class="kr">if</span> <span class="nv">self</span>:<span class="nf">tool</span>().<span class="nv">name</span> <span class="o">==</span> <span class="s2">&quot;blocks&quot;</span> <span class="kr">then</span></span>
-<span class="line" data-line="154">        <span class="kr">if</span> <span class="nv">isAdding</span> <span class="kr">then</span> <span class="nf">setBlock</span>(<span class="nv">self</span>, <span class="nv">self</span>.<span class="py">cursorX</span>, <span class="nv">self</span>.<span class="py">cursorY</span>, <span class="kc">true</span>) <span class="kr">end</span></span>
-<span class="line" data-line="155">        <span class="kr">if</span> <span class="nv">isRemoving</span> <span class="kr">then</span> <span class="nf">setBlock</span>(<span class="nv">self</span>, <span class="nv">self</span>.<span class="py">cursorX</span>, <span class="nv">self</span>.<span class="py">cursorY</span>, <span class="kc">false</span>) <span class="kr">end</span></span>
-<span class="line" data-line="156">    <span class="kr">end</span></span>
-<span class="line" data-line="157"><span class="kr">end</span></span>
-<span class="line" data-line="158"></span>
-<span class="line" data-line="159"><span class="kd">local</span> <span class="kr">function</span> <span class="nf">nameOf</span>(<span class="nv">kind</span>, <span class="nv">shape</span>)</span>
-<span class="line" data-line="160">    <span class="kr">if</span> <span class="nv">kind</span> <span class="o">==</span> <span class="s2">&quot;item&quot;</span> <span class="kr">then</span> <span class="kr">return</span> <span class="s2">&quot;the &quot;</span> <span class="o">..</span> <span class="nv">shape</span> <span class="kr">end</span></span>
-<span class="line" data-line="161">    <span class="kr">if</span> <span class="nv">kind</span> <span class="o">==</span> <span class="s2">&quot;pedestal&quot;</span> <span class="kr">then</span> <span class="kr">return</span> <span class="s2">&quot;the &quot;</span> <span class="o">..</span> <span class="nv">shape</span> <span class="o">..</span> <span class="s2">&quot;&#39;s pedestal&quot;</span> <span class="kr">end</span></span>
-<span class="line" data-line="162">    <span class="kr">return</span> <span class="s2">&quot;the &quot;</span> <span class="o">..</span> <span class="nv">kind</span></span>
-<span class="line" data-line="163"><span class="kr">end</span></span>
-<span class="line" data-line="164"></span>
-<span class="line" data-line="165"><span class="c1">-- A, pressed where the cursor stands</span></span>
-<span class="line" data-line="166"><span class="c1">---@return nil</span></span>
-<span class="line" data-line="167"><span class="kr">function</span> <span class="nc">MapEditor</span>:<span class="nf">add</span>()</span>
-<span class="line" data-line="168">    <span class="kd">local</span> <span class="nv">tool</span>, <span class="nv">design</span> <span class="o">=</span> <span class="nv">self</span>:<span class="nf">tool</span>(), <span class="nv">self</span>.<span class="py">design</span></span>
-<span class="line" data-line="169">    <span class="kr">if</span> <span class="nv">tool</span>.<span class="py">name</span> <span class="o">==</span> <span class="s2">&quot;cells&quot;</span> <span class="kr">then</span> <span class="kr">return</span> <span class="kr">end</span></span>
-<span class="line" data-line="170">    <span class="kr">if</span> <span class="nv">tool</span>.<span class="py">name</span> <span class="o">==</span> <span class="s2">&quot;blocks&quot;</span> <span class="kr">then</span></span>
-<span class="line" data-line="171">        <span class="nf">setBlock</span>(<span class="nv">self</span>, <span class="nv">self</span>.<span class="py">cursorX</span>, <span class="nv">self</span>.<span class="py">cursorY</span>, <span class="kc">true</span>)</span>
-<span class="line" data-line="172">        <span class="kr">return</span></span>
-<span class="line" data-line="173">    <span class="kr">end</span></span>
-<span class="line" data-line="174">    <span class="kr">if</span> <span class="nv">design</span>:<span class="nf">place</span>(<span class="nv">tool</span>.<span class="py">kind</span>, <span class="nv">tool</span>.<span class="py">shape</span>, <span class="nv">self</span>.<span class="py">cursorX</span>, <span class="nv">self</span>.<span class="py">cursorY</span>) <span class="kr">then</span></span>
-<span class="line" data-line="175">        <span class="nf">changed</span>(<span class="nv">self</span>, <span class="kc">true</span>, <span class="s2">&quot;Placed &quot;</span> <span class="o">..</span> <span class="nf">nameOf</span>(<span class="nv">tool</span>.<span class="py">kind</span>, <span class="nv">tool</span>.<span class="py">shape</span>))</span>
-<span class="line" data-line="176">    <span class="kr">elseif</span> <span class="nv">tool</span>.<span class="py">kind</span> <span class="o">==</span> <span class="s2">&quot;exit&quot;</span> <span class="kr">then</span></span>
-<span class="line" data-line="177">        <span class="nf">changed</span>(<span class="nv">self</span>, <span class="kc">false</span>, <span class="s2">&quot;The exit goes in the outer wall, beside an open block&quot;</span>)</span>
-<span class="line" data-line="178">    <span class="kr">elseif</span> <span class="nv">design</span>:<span class="nf">thingAt</span>(<span class="nv">self</span>.<span class="py">cursorX</span>, <span class="nv">self</span>.<span class="py">cursorY</span>) <span class="kr">then</span></span>
-<span class="line" data-line="179">        <span class="nf">changed</span>(<span class="nv">self</span>, <span class="kc">false</span>, <span class="s2">&quot;Something is already there&quot;</span>)</span>
-<span class="line" data-line="180">    <span class="kr">else</span></span>
-<span class="line" data-line="181">        <span class="nf">changed</span>(<span class="nv">self</span>, <span class="kc">false</span>, <span class="s2">&quot;That is a wall&quot;</span>)</span>
-<span class="line" data-line="182">    <span class="kr">end</span></span>
-<span class="line" data-line="183"><span class="kr">end</span></span>
-<span class="line" data-line="184"></span>
-<span class="line" data-line="185"><span class="c1">-- B, pressed where the cursor stands</span></span>
-<span class="line" data-line="186"><span class="c1">---@return nil</span></span>
-<span class="line" data-line="187"><span class="kr">function</span> <span class="nc">MapEditor</span>:<span class="nf">remove</span>()</span>
-<span class="line" data-line="188">    <span class="kd">local</span> <span class="nv">design</span> <span class="o">=</span> <span class="nv">self</span>.<span class="py">design</span></span>
-<span class="line" data-line="189">    <span class="kr">if</span> <span class="nv">self</span>:<span class="nf">tool</span>().<span class="nv">name</span> <span class="o">==</span> <span class="s2">&quot;cells&quot;</span> <span class="kr">then</span> <span class="kr">return</span> <span class="kr">end</span></span>
-<span class="line" data-line="190">    <span class="kr">if</span> <span class="nv">self</span>:<span class="nf">tool</span>().<span class="nv">name</span> <span class="o">==</span> <span class="s2">&quot;blocks&quot;</span> <span class="kr">then</span></span>
-<span class="line" data-line="191">        <span class="nf">setBlock</span>(<span class="nv">self</span>, <span class="nv">self</span>.<span class="py">cursorX</span>, <span class="nv">self</span>.<span class="py">cursorY</span>, <span class="kc">false</span>)</span>
-<span class="line" data-line="192">        <span class="kr">return</span></span>
-<span class="line" data-line="193">    <span class="kr">end</span></span>
-<span class="line" data-line="194">    <span class="kd">local</span> <span class="nv">kind</span>, <span class="nv">shape</span> <span class="o">=</span> <span class="nv">design</span>:<span class="nf">thingAt</span>(<span class="nv">self</span>.<span class="py">cursorX</span>, <span class="nv">self</span>.<span class="py">cursorY</span>)</span>
-<span class="line" data-line="195">    <span class="kr">if</span> <span class="nv">kind</span> <span class="o">==</span> <span class="s2">&quot;start&quot;</span> <span class="kr">then</span></span>
-<span class="line" data-line="196">        <span class="nf">changed</span>(<span class="nv">self</span>, <span class="kc">false</span>, <span class="s2">&quot;The start can be moved, not removed&quot;</span>)</span>
-<span class="line" data-line="197">    <span class="kr">elseif</span> <span class="nv">kind</span> <span class="kr">then</span></span>
-<span class="line" data-line="198">        <span class="nv">design</span>:<span class="nf">remove</span>(<span class="nv">self</span>.<span class="py">cursorX</span>, <span class="nv">self</span>.<span class="py">cursorY</span>)</span>
-<span class="line" data-line="199">        <span class="nf">changed</span>(<span class="nv">self</span>, <span class="kc">true</span>, <span class="s2">&quot;Removed &quot;</span> <span class="o">..</span> <span class="nf">nameOf</span>(<span class="nv">kind</span>, <span class="nv">shape</span>))</span>
-<span class="line" data-line="200">    <span class="kr">end</span></span>
-<span class="line" data-line="201"><span class="kr">end</span></span>
-<span class="line" data-line="202"></span>
-<span class="line" data-line="203"><span class="c1">-- One line on whether the map can be played yet</span></span>
-<span class="line" data-line="204"><span class="c1">---@return string</span></span>
-<span class="line" data-line="205"><span class="kr">function</span> <span class="nc">MapEditor</span>:<span class="nf">status</span>() <span class="kr">return</span> <span class="nv">self</span>.<span class="py">design</span>:<span class="nf">problems</span>()[<span class="mi">1</span>] <span class="ow">or</span> <span class="s2">&quot;Ready to play&quot;</span> <span class="kr">end</span></span></code></pre>
+<span class="line" data-line="91"><span class="c1">-- Borrowed immutable data; callers must not modify it.</span></span>
+<span class="line" data-line="92"><span class="c1">---@return EditorTool</span></span>
+<span class="line" data-line="93"><span class="kr">function</span> <span class="nc">MapEditor</span>:<span class="nf">tool</span>() <span class="kr">return</span> <span class="nv">MapEditor</span>.<span class="py">TOOLS</span>[<span class="nv">self</span>.<span class="py">toolIndex</span>] <span class="kr">end</span></span>
+<span class="line" data-line="94"></span>
+<span class="line" data-line="95"><span class="c1">-- The nearest cell&#39;s block along one axis: cells are the even blocks inside the outer wall</span></span>
+<span class="line" data-line="96"><span class="kd">local</span> <span class="kr">function</span> <span class="nf">nearestCellBlock</span>(<span class="nv">value</span>, <span class="nv">gridSize</span>)</span>
+<span class="line" data-line="97">    <span class="kr">return</span> <span class="nb">math.max</span>(<span class="mi">2</span>, <span class="nb">math.min</span>(<span class="nv">gridSize</span> <span class="o">-</span> <span class="mi">1</span>, <span class="mi">2</span> <span class="o">*</span> <span class="nb">math.floor</span>(<span class="nv">value</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">+</span> <span class="mf">0.5</span>)))</span>
+<span class="line" data-line="98"><span class="kr">end</span></span>
+<span class="line" data-line="99"></span>
+<span class="line" data-line="100"><span class="c1">---@param steps integer</span></span>
+<span class="line" data-line="101"><span class="c1">---@return nil</span></span>
+<span class="line" data-line="102"><span class="kr">function</span> <span class="nc">MapEditor</span>:<span class="nf">turnTool</span>(<span class="nv">steps</span>)</span>
+<span class="line" data-line="103">    <span class="nv">self</span>.<span class="py">toolIndex</span> <span class="o">=</span> (<span class="nv">self</span>.<span class="py">toolIndex</span> <span class="o">-</span> <span class="mi">1</span> <span class="o">+</span> <span class="nv">steps</span>) <span class="o">%</span> <span class="o">#</span><span class="nv">MapEditor</span>.<span class="py">TOOLS</span> <span class="o">+</span> <span class="mi">1</span></span>
+<span class="line" data-line="104">    <span class="c1">-- The cells tool&#39;s cursor lives on cells</span></span>
+<span class="line" data-line="105">    <span class="kr">if</span> <span class="nv">self</span>:<span class="nf">tool</span>().<span class="nv">name</span> <span class="o">==</span> <span class="s2">&quot;cells&quot;</span> <span class="kr">then</span></span>
+<span class="line" data-line="106">        <span class="nv">self</span>.<span class="py">cursorX</span> <span class="o">=</span> <span class="nf">nearestCellBlock</span>(<span class="nv">self</span>.<span class="py">cursorX</span>, <span class="nv">self</span>.<span class="py">design</span>.<span class="py">gridWidth</span>)</span>
+<span class="line" data-line="107">        <span class="nv">self</span>.<span class="py">cursorY</span> <span class="o">=</span> <span class="nf">nearestCellBlock</span>(<span class="nv">self</span>.<span class="py">cursorY</span>, <span class="nv">self</span>.<span class="py">design</span>.<span class="py">gridHeight</span>)</span>
+<span class="line" data-line="108">    <span class="kr">end</span></span>
+<span class="line" data-line="109"><span class="kr">end</span></span>
+<span class="line" data-line="110"></span>
+<span class="line" data-line="111"><span class="c1">---@return nil</span></span>
+<span class="line" data-line="112"><span class="kr">function</span> <span class="nc">MapEditor</span>:<span class="nf">markSaved</span>() <span class="nv">self</span>.<span class="py">hasUnsavedChanges</span> <span class="o">=</span> <span class="kc">false</span> <span class="kr">end</span></span>
+<span class="line" data-line="113"></span>
+<span class="line" data-line="114"><span class="c1">-- Records the outcome of trying to change the design</span></span>
+<span class="line" data-line="115"><span class="kd">local</span> <span class="kr">function</span> <span class="nf">changed</span>(<span class="nv">self</span>, <span class="nv">didChange</span>, <span class="nv">message</span>)</span>
+<span class="line" data-line="116">    <span class="kr">if</span> <span class="nv">didChange</span> <span class="kr">then</span> <span class="nv">self</span>.<span class="py">hasUnsavedChanges</span> <span class="o">=</span> <span class="kc">true</span> <span class="kr">end</span></span>
+<span class="line" data-line="117">    <span class="nv">self</span>.<span class="py">message</span> <span class="o">=</span> <span class="nv">message</span></span>
+<span class="line" data-line="118">    <span class="kr">return</span> <span class="nv">didChange</span></span>
+<span class="line" data-line="119"><span class="kr">end</span></span>
+<span class="line" data-line="120"></span>
+<span class="line" data-line="121"><span class="kd">local</span> <span class="kr">function</span> <span class="nf">setBlock</span>(<span class="nv">self</span>, <span class="nv">gridX</span>, <span class="nv">gridY</span>, <span class="nv">isOpen</span>)</span>
+<span class="line" data-line="122">    <span class="kd">local</span> <span class="nv">design</span> <span class="o">=</span> <span class="nv">self</span>.<span class="py">design</span></span>
+<span class="line" data-line="123">    <span class="kr">if</span> <span class="nv">design</span>:<span class="nf">isOpen</span>(<span class="nv">gridX</span>, <span class="nv">gridY</span>) <span class="o">==</span> <span class="nv">isOpen</span> <span class="ow">and</span> <span class="nv">design</span>:<span class="nf">isInside</span>(<span class="nv">gridX</span>, <span class="nv">gridY</span>) <span class="kr">then</span> <span class="kr">return</span> <span class="kc">false</span> <span class="kr">end</span></span>
+<span class="line" data-line="124">    <span class="kr">if</span> <span class="nv">design</span>:<span class="nf">setBlock</span>(<span class="nv">gridX</span>, <span class="nv">gridY</span>, <span class="nv">isOpen</span>) <span class="kr">then</span> <span class="kr">return</span> <span class="nf">changed</span>(<span class="nv">self</span>, <span class="kc">true</span>, <span class="kc">nil</span>) <span class="kr">end</span></span>
+<span class="line" data-line="125">    <span class="kr">if</span> <span class="ow">not</span> <span class="nv">design</span>:<span class="nf">isInside</span>(<span class="nv">gridX</span>, <span class="nv">gridY</span>) <span class="kr">then</span> <span class="kr">return</span> <span class="nf">changed</span>(<span class="nv">self</span>, <span class="kc">false</span>, <span class="s2">&quot;The outer wall stays solid&quot;</span>) <span class="kr">end</span></span>
+<span class="line" data-line="126">    <span class="kr">if</span> <span class="nv">design</span>:<span class="nf">thingAt</span>(<span class="nv">gridX</span>, <span class="nv">gridY</span>) <span class="kr">then</span> <span class="kr">return</span> <span class="nf">changed</span>(<span class="nv">self</span>, <span class="kc">false</span>, <span class="s2">&quot;Something is standing there&quot;</span>) <span class="kr">end</span></span>
+<span class="line" data-line="127">    <span class="kr">return</span> <span class="nf">changed</span>(<span class="nv">self</span>, <span class="kc">false</span>, <span class="s2">&quot;That block is the way in to the exit&quot;</span>)</span>
+<span class="line" data-line="128"><span class="kr">end</span></span>
+<span class="line" data-line="129"></span>
+<span class="line" data-line="130"><span class="c1">-- Moves the cursor a step. isAdding and isRemoving say whether A or B is held as it moves.</span></span>
+<span class="line" data-line="131"><span class="c1">---@param stepX integer</span></span>
+<span class="line" data-line="132"><span class="c1">---@param stepY integer</span></span>
+<span class="line" data-line="133"><span class="c1">---@param isAdding boolean?</span></span>
+<span class="line" data-line="134"><span class="c1">---@param isRemoving boolean?</span></span>
+<span class="line" data-line="135"><span class="c1">---@return nil</span></span>
+<span class="line" data-line="136"><span class="kr">function</span> <span class="nc">MapEditor</span>:<span class="nf">move</span>(<span class="nv">stepX</span>, <span class="nv">stepY</span>, <span class="nv">isAdding</span>, <span class="nv">isRemoving</span>)</span>
+<span class="line" data-line="137">    <span class="kd">local</span> <span class="nv">design</span> <span class="o">=</span> <span class="nv">self</span>.<span class="py">design</span></span>
+<span class="line" data-line="138">    <span class="kr">if</span> <span class="nv">self</span>:<span class="nf">tool</span>().<span class="nv">name</span> <span class="o">==</span> <span class="s2">&quot;cells&quot;</span> <span class="kr">then</span></span>
+<span class="line" data-line="139">        <span class="kd">local</span> <span class="nv">column</span>, <span class="nv">row</span> <span class="o">=</span> <span class="nv">self</span>.<span class="py">cursorX</span> <span class="o">//</span> <span class="mi">2</span>, <span class="nv">self</span>.<span class="py">cursorY</span> <span class="o">//</span> <span class="mi">2</span></span>
+<span class="line" data-line="140">        <span class="kd">local</span> <span class="nv">nextColumn</span>, <span class="nv">nextRow</span> <span class="o">=</span> <span class="nv">column</span> <span class="o">+</span> <span class="nv">stepX</span>, <span class="nv">row</span> <span class="o">+</span> <span class="nv">stepY</span></span>
+<span class="line" data-line="141">        <span class="kd">local</span> <span class="nv">isInside</span> <span class="o">=</span> <span class="nv">nextColumn</span> <span class="o">&gt;=</span> <span class="mi">1</span> <span class="ow">and</span> <span class="nv">nextColumn</span> <span class="o">&lt;=</span> <span class="nv">design</span>.<span class="py">columns</span> <span class="ow">and</span> <span class="nv">nextRow</span> <span class="o">&gt;=</span> <span class="mi">1</span> <span class="ow">and</span> <span class="nv">nextRow</span> <span class="o">&lt;=</span> <span class="nv">design</span>.<span class="py">rows</span></span>
+<span class="line" data-line="142">        <span class="kr">if</span> <span class="ow">not</span> <span class="nv">isInside</span> <span class="kr">then</span> <span class="kr">return</span> <span class="kr">end</span></span>
+<span class="line" data-line="143">        <span class="kd">local</span> <span class="nv">direction</span> <span class="o">=</span> <span class="nv">DIRECTIONS</span>[<span class="nv">stepX</span> <span class="o">..</span> <span class="s2">&quot;,&quot;</span> <span class="o">..</span> <span class="nv">stepY</span>]</span>
+<span class="line" data-line="144">        <span class="kr">if</span> <span class="nv">isRemoving</span> <span class="kr">then</span></span>
+<span class="line" data-line="145">            <span class="c1">-- Pushing at a wall with B builds it back, without stepping through</span></span>
+<span class="line" data-line="146">            <span class="nf">setBlock</span>(<span class="nv">self</span>, <span class="mi">2</span> <span class="o">*</span> <span class="nv">column</span> <span class="o">+</span> <span class="nv">stepX</span>, <span class="mi">2</span> <span class="o">*</span> <span class="nv">row</span> <span class="o">+</span> <span class="nv">stepY</span>, <span class="kc">false</span>)</span>
+<span class="line" data-line="147">            <span class="kr">return</span></span>
+<span class="line" data-line="148">        <span class="kr">end</span></span>
+<span class="line" data-line="149">        <span class="c1">-- Moving with A held carves the way through</span></span>
+<span class="line" data-line="150">        <span class="kr">if</span> <span class="nv">isAdding</span> <span class="ow">and</span> <span class="nv">design</span>:<span class="nf">setPassage</span>(<span class="nv">column</span>, <span class="nv">row</span>, <span class="nv">direction</span>, <span class="kc">true</span>) <span class="kr">then</span> <span class="nv">self</span>.<span class="py">hasUnsavedChanges</span> <span class="o">=</span> <span class="kc">true</span> <span class="kr">end</span></span>
+<span class="line" data-line="151">        <span class="nv">self</span>.<span class="py">cursorX</span>, <span class="nv">self</span>.<span class="py">cursorY</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="nv">nextColumn</span>, <span class="mi">2</span> <span class="o">*</span> <span class="nv">nextRow</span></span>
+<span class="line" data-line="152">        <span class="kr">return</span></span>
+<span class="line" data-line="153">    <span class="kr">end</span></span>
+<span class="line" data-line="154"></span>
+<span class="line" data-line="155">    <span class="nv">self</span>.<span class="py">cursorX</span> <span class="o">=</span> <span class="nb">math.max</span>(<span class="mi">1</span>, <span class="nb">math.min</span>(<span class="nv">design</span>.<span class="py">gridWidth</span>, <span class="nv">self</span>.<span class="py">cursorX</span> <span class="o">+</span> <span class="nv">stepX</span>))</span>
+<span class="line" data-line="156">    <span class="nv">self</span>.<span class="py">cursorY</span> <span class="o">=</span> <span class="nb">math.max</span>(<span class="mi">1</span>, <span class="nb">math.min</span>(<span class="nv">design</span>.<span class="py">gridHeight</span>, <span class="nv">self</span>.<span class="py">cursorY</span> <span class="o">+</span> <span class="nv">stepY</span>))</span>
+<span class="line" data-line="157">    <span class="kr">if</span> <span class="nv">self</span>:<span class="nf">tool</span>().<span class="nv">name</span> <span class="o">==</span> <span class="s2">&quot;blocks&quot;</span> <span class="kr">then</span></span>
+<span class="line" data-line="158">        <span class="kr">if</span> <span class="nv">isAdding</span> <span class="kr">then</span> <span class="nf">setBlock</span>(<span class="nv">self</span>, <span class="nv">self</span>.<span class="py">cursorX</span>, <span class="nv">self</span>.<span class="py">cursorY</span>, <span class="kc">true</span>) <span class="kr">end</span></span>
+<span class="line" data-line="159">        <span class="kr">if</span> <span class="nv">isRemoving</span> <span class="kr">then</span> <span class="nf">setBlock</span>(<span class="nv">self</span>, <span class="nv">self</span>.<span class="py">cursorX</span>, <span class="nv">self</span>.<span class="py">cursorY</span>, <span class="kc">false</span>) <span class="kr">end</span></span>
+<span class="line" data-line="160">    <span class="kr">end</span></span>
+<span class="line" data-line="161"><span class="kr">end</span></span>
+<span class="line" data-line="162"></span>
+<span class="line" data-line="163"><span class="kd">local</span> <span class="kr">function</span> <span class="nf">nameOf</span>(<span class="nv">kind</span>, <span class="nv">shape</span>)</span>
+<span class="line" data-line="164">    <span class="kr">if</span> <span class="nv">kind</span> <span class="o">==</span> <span class="s2">&quot;item&quot;</span> <span class="kr">then</span> <span class="kr">return</span> <span class="s2">&quot;the &quot;</span> <span class="o">..</span> <span class="nv">shape</span> <span class="kr">end</span></span>
+<span class="line" data-line="165">    <span class="kr">if</span> <span class="nv">kind</span> <span class="o">==</span> <span class="s2">&quot;pedestal&quot;</span> <span class="kr">then</span> <span class="kr">return</span> <span class="s2">&quot;the &quot;</span> <span class="o">..</span> <span class="nv">shape</span> <span class="o">..</span> <span class="s2">&quot;&#39;s pedestal&quot;</span> <span class="kr">end</span></span>
+<span class="line" data-line="166">    <span class="kr">return</span> <span class="s2">&quot;the &quot;</span> <span class="o">..</span> <span class="nv">kind</span></span>
+<span class="line" data-line="167"><span class="kr">end</span></span>
+<span class="line" data-line="168"></span>
+<span class="line" data-line="169"><span class="c1">-- A, pressed where the cursor stands</span></span>
+<span class="line" data-line="170"><span class="c1">---@return nil</span></span>
+<span class="line" data-line="171"><span class="kr">function</span> <span class="nc">MapEditor</span>:<span class="nf">add</span>()</span>
+<span class="line" data-line="172">    <span class="kd">local</span> <span class="nv">tool</span>, <span class="nv">design</span> <span class="o">=</span> <span class="nv">self</span>:<span class="nf">tool</span>(), <span class="nv">self</span>.<span class="py">design</span></span>
+<span class="line" data-line="173">    <span class="kr">if</span> <span class="nv">tool</span>.<span class="py">name</span> <span class="o">==</span> <span class="s2">&quot;cells&quot;</span> <span class="kr">then</span> <span class="kr">return</span> <span class="kr">end</span></span>
+<span class="line" data-line="174">    <span class="kr">if</span> <span class="nv">tool</span>.<span class="py">name</span> <span class="o">==</span> <span class="s2">&quot;blocks&quot;</span> <span class="kr">then</span></span>
+<span class="line" data-line="175">        <span class="nf">setBlock</span>(<span class="nv">self</span>, <span class="nv">self</span>.<span class="py">cursorX</span>, <span class="nv">self</span>.<span class="py">cursorY</span>, <span class="kc">true</span>)</span>
+<span class="line" data-line="176">        <span class="kr">return</span></span>
+<span class="line" data-line="177">    <span class="kr">end</span></span>
+<span class="line" data-line="178">    <span class="kr">if</span> <span class="nv">design</span>:<span class="nf">place</span>(<span class="nv">tool</span>.<span class="py">kind</span>, <span class="nv">tool</span>.<span class="py">shape</span>, <span class="nv">self</span>.<span class="py">cursorX</span>, <span class="nv">self</span>.<span class="py">cursorY</span>) <span class="kr">then</span></span>
+<span class="line" data-line="179">        <span class="nf">changed</span>(<span class="nv">self</span>, <span class="kc">true</span>, <span class="s2">&quot;Placed &quot;</span> <span class="o">..</span> <span class="nf">nameOf</span>(<span class="nv">tool</span>.<span class="py">kind</span>, <span class="nv">tool</span>.<span class="py">shape</span>))</span>
+<span class="line" data-line="180">    <span class="kr">elseif</span> <span class="nv">tool</span>.<span class="py">kind</span> <span class="o">==</span> <span class="s2">&quot;exit&quot;</span> <span class="kr">then</span></span>
+<span class="line" data-line="181">        <span class="nf">changed</span>(<span class="nv">self</span>, <span class="kc">false</span>, <span class="s2">&quot;The exit goes in the outer wall, beside an open block&quot;</span>)</span>
+<span class="line" data-line="182">    <span class="kr">elseif</span> <span class="nv">design</span>:<span class="nf">thingAt</span>(<span class="nv">self</span>.<span class="py">cursorX</span>, <span class="nv">self</span>.<span class="py">cursorY</span>) <span class="kr">then</span></span>
+<span class="line" data-line="183">        <span class="nf">changed</span>(<span class="nv">self</span>, <span class="kc">false</span>, <span class="s2">&quot;Something is already there&quot;</span>)</span>
+<span class="line" data-line="184">    <span class="kr">else</span></span>
+<span class="line" data-line="185">        <span class="nf">changed</span>(<span class="nv">self</span>, <span class="kc">false</span>, <span class="s2">&quot;That is a wall&quot;</span>)</span>
+<span class="line" data-line="186">    <span class="kr">end</span></span>
+<span class="line" data-line="187"><span class="kr">end</span></span>
+<span class="line" data-line="188"></span>
+<span class="line" data-line="189"><span class="c1">-- B, pressed where the cursor stands</span></span>
+<span class="line" data-line="190"><span class="c1">---@return nil</span></span>
+<span class="line" data-line="191"><span class="kr">function</span> <span class="nc">MapEditor</span>:<span class="nf">remove</span>()</span>
+<span class="line" data-line="192">    <span class="kd">local</span> <span class="nv">design</span> <span class="o">=</span> <span class="nv">self</span>.<span class="py">design</span></span>
+<span class="line" data-line="193">    <span class="kr">if</span> <span class="nv">self</span>:<span class="nf">tool</span>().<span class="nv">name</span> <span class="o">==</span> <span class="s2">&quot;cells&quot;</span> <span class="kr">then</span> <span class="kr">return</span> <span class="kr">end</span></span>
+<span class="line" data-line="194">    <span class="kr">if</span> <span class="nv">self</span>:<span class="nf">tool</span>().<span class="nv">name</span> <span class="o">==</span> <span class="s2">&quot;blocks&quot;</span> <span class="kr">then</span></span>
+<span class="line" data-line="195">        <span class="nf">setBlock</span>(<span class="nv">self</span>, <span class="nv">self</span>.<span class="py">cursorX</span>, <span class="nv">self</span>.<span class="py">cursorY</span>, <span class="kc">false</span>)</span>
+<span class="line" data-line="196">        <span class="kr">return</span></span>
+<span class="line" data-line="197">    <span class="kr">end</span></span>
+<span class="line" data-line="198">    <span class="kd">local</span> <span class="nv">kind</span>, <span class="nv">shape</span> <span class="o">=</span> <span class="nv">design</span>:<span class="nf">thingAt</span>(<span class="nv">self</span>.<span class="py">cursorX</span>, <span class="nv">self</span>.<span class="py">cursorY</span>)</span>
+<span class="line" data-line="199">    <span class="kr">if</span> <span class="nv">kind</span> <span class="o">==</span> <span class="s2">&quot;start&quot;</span> <span class="kr">then</span></span>
+<span class="line" data-line="200">        <span class="nf">changed</span>(<span class="nv">self</span>, <span class="kc">false</span>, <span class="s2">&quot;The start can be moved, not removed&quot;</span>)</span>
+<span class="line" data-line="201">    <span class="kr">elseif</span> <span class="nv">kind</span> <span class="kr">then</span></span>
+<span class="line" data-line="202">        <span class="nv">design</span>:<span class="nf">remove</span>(<span class="nv">self</span>.<span class="py">cursorX</span>, <span class="nv">self</span>.<span class="py">cursorY</span>)</span>
+<span class="line" data-line="203">        <span class="nf">changed</span>(<span class="nv">self</span>, <span class="kc">true</span>, <span class="s2">&quot;Removed &quot;</span> <span class="o">..</span> <span class="nf">nameOf</span>(<span class="nv">kind</span>, <span class="nv">shape</span>))</span>
+<span class="line" data-line="204">    <span class="kr">end</span></span>
+<span class="line" data-line="205"><span class="kr">end</span></span>
+<span class="line" data-line="206"></span>
+<span class="line" data-line="207"><span class="c1">-- One line on whether the map can be played yet</span></span>
+<span class="line" data-line="208"><span class="c1">---@return string</span></span>
+<span class="line" data-line="209"><span class="kr">function</span> <span class="nc">MapEditor</span>:<span class="nf">status</span>() <span class="kr">return</span> <span class="nv">self</span>.<span class="py">design</span>:<span class="nf">problems</span>()[<span class="mi">1</span>] <span class="ow">or</span> <span class="s2">&quot;Ready to play&quot;</span> <span class="kr">end</span></span></code></pre>
 <footer class="code-footer"><span class="focus-label">Highlighted lines follow the explanation</span><button class="follow" type="button" aria-pressed="true">Follow scroll: on</button></footer></div></section><section class="section" id="section-12" data-title="Grid and maze generation" data-file="source/Maze.lua"><div class="explanations"><h2><span>12</span> Grid and maze generation</h2><article class="step" id="step-12-0" data-first="85" data-last="96">
 <p class="location">source/Maze.lua<br><a href="#step-12-0">Lines 85–96</a></p>
 <h3>Build a playable grid inside its owner</h3><p>Maze copies the design’s open blocks and installs a closed exit gate. Game no longer constructs the grid through nested field writes. The copy lets play open the gate without changing the editor drawing.</p></article><article class="step" id="step-12-1" data-first="231" data-last="233">

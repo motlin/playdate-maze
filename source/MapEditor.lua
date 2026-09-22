@@ -49,17 +49,22 @@ MapEditor.TOOLS = {
 
 local DIRECTIONS <const> = { ["1,0"] = "east", ["-1,0"] = "west", ["0,1"] = "south", ["0,-1"] = "north" }
 
+local function resetCursor(self)
+    self.cursorX, self.cursorY = self.design.start.gridX, self.design.start.gridY
+    self.toolIndex = 1
+    self:turnTool(0)
+end
+
 ---@param design MapDesign
 ---@return MapEditor
 function MapEditor.new(design)
-    return setmetatable({
+    local editor = setmetatable({
         design = design,
-        cursorX = design.start.gridX,
-        cursorY = design.start.gridY,
-        toolIndex = 1,
         message = nil,
         hasUnsavedChanges = false,
     }, MapEditor)
+    resetCursor(editor)
+    return editor
 end
 
 -- Replacing a drawing starts at its entrance with the cells tool, and needs saving.
@@ -67,8 +72,7 @@ end
 ---@return nil
 function MapEditor:generateMaze(random)
     self.design = MapDesign.fromMaze(Maze.generate(self.design.columns, self.design.rows, random))
-    self.cursorX, self.cursorY = self.design.start.gridX, self.design.start.gridY
-    self.toolIndex = 1
+    resetCursor(self)
     self.message = "A new maze to alter"
     self.hasUnsavedChanges = true
 end

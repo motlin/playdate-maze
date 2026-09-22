@@ -114,7 +114,7 @@ section('scenes/EditorScene.lua', 'Editor screen', [
     step('function EditorScene.randomMaze()', 1, 'Request a complete editing transition', '<p>The scene requests a new maze. MapEditor owns replacing the drawing, resetting the cursor and tool, and recording the change.</p>'),
 ])
 section('MapEditor.lua', 'Editing state belongs together', [
-    step('function MapEditor:generateMaze(random)', 7, 'Replace the drawing and reset the tools', '<p>Generate a maze at the current size and convert it to a drawing. Reset the cursor to the entrance and select the cells tool. Record the message and unsaved change in the same operation.</p>'),
+    step('function MapEditor:generateMaze(random)', 6, 'Replace the drawing and reset the tools', '<p>Generate a maze at the current size and convert it to a drawing. Use the same cursor initialization as a newly opened drawing: select the cells tool and snap to the cell nearest the entrance without moving the design’s start. Record the message and unsaved change in the same operation.</p>'),
     step('function MapEditor:designToPlay()', 8, 'Explain a blocked play attempt', '<p>Validation can update the action message without marking the drawing dirty. A valid drawing is returned for play; only saving clears the dirty flag.</p>'),
 ])
 section('Maze.lua', 'Grid and maze generation', [

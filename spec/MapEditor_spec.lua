@@ -20,6 +20,56 @@ describe("MapEditor", function()
         assert.are.equal("cells", editor:tool().name)
     end)
 
+    it("opens an arbitrary-block start on the nearest cell and walls the intended passage", function()
+        local design = MapDesign.new(3, 2)
+        for gridY = 2, 4 do
+            for gridX = 2, 6 do
+                design:setBlock(gridX, gridY, true)
+            end
+        end
+        design:place("start", nil, 3, 3)
+        design:place("exit", nil, 7, 2)
+        assert.are.same({}, design:problems())
+        local expected = design:toSave()
+        local editor = MapEditor.new(design)
+        assert.are.same({ 4, 4, "cells", false }, {
+            editor.cursorX,
+            editor.cursorY,
+            editor:tool().name,
+            editor.hasUnsavedChanges,
+        })
+        expected.blocks[4][5] = false
+        editor:move(1, 0, false, true)
+        assert.are.same(expected, design:toSave())
+        assert.are.same({ 4, 4, true }, { editor.cursorX, editor.cursorY, editor.hasUnsavedChanges })
+    end)
+
+    it("keeps boundary starts and snaps the cells cursor after switching from blocks", function()
+        for _, point in ipairs({ { 2, 2 }, { 6, 4 } }) do
+            local design = MapDesign.new(3, 2)
+            design:place("start", nil, point[1], point[2])
+            local saved = design:toSave()
+            local editor = MapEditor.new(design)
+            assert.are.same(point, { editor.cursorX, editor.cursorY })
+            editor:turnTool(1)
+            assert.are.same(point, { editor.cursorX, editor.cursorY })
+            local direction = point[1] == 2 and -1 or 1
+            editor:move(direction, 0)
+            editor:move(0, direction)
+            assert.are.same({ point[1] + direction, point[2] + direction }, { editor.cursorX, editor.cursorY })
+            editor:turnTool(-1)
+            editor:move(direction, 0, false, true)
+            editor:move(0, direction, false, true)
+            assert.are.same({ point[1], point[2], "cells", false }, {
+                editor.cursorX,
+                editor.cursorY,
+                editor:tool().name,
+                editor.hasUnsavedChanges,
+            })
+            assert.are.same(saved, design:toSave())
+        end
+    end)
+
     describe("the tool dial", function()
         it("offers walls, blocks, the start, the exit, and each shape and its pedestal", function()
             local names = {}
@@ -116,7 +166,7 @@ describe("MapEditor", function()
             editor:move(0, 1, false, false)
             assert.are.same({ 3, 3 }, { editor.cursorX, editor.cursorY })
             pick(editor, "cells")
-            assert.are.same({ 0, 0 }, { editor.cursorX % 2, editor.cursorY % 2 })
+            assert.are.same({ 4, 4 }, { editor.cursorX, editor.cursorY })
         end)
     end)
 
