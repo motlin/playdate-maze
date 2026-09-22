@@ -1,4 +1,4 @@
-local function loadScene(file, name)
+local function loadScene(name)
     local log = {}
     local function constructor() return {} end
     local environment = setmetatable({
@@ -15,7 +15,7 @@ local function loadScene(file, name)
         SaveGame = { write = function() log[#log + 1] = "save" end },
     }, { __index = _G })
     assert(loadfile("source/SceneManager.lua", "t", environment))()
-    assert(loadfile("source/scenes/" .. file .. ".lua", "t", environment))()
+    assert(loadfile("source/scenes/" .. name .. ".lua", "t", environment))()
     local scene = environment[name]
     scene.enter = nil
     scene.game = { puzzle = {} }
@@ -25,7 +25,7 @@ end
 
 describe("scene audio lifecycle", function()
     it("saves and stops first-person held audio on pause and when leaving", function()
-        local scene, manager, log = loadScene("FirstPerson", "FirstPersonScene")
+        local scene, manager, log = loadScene("FirstPersonScene")
         manager.pause()
         assert.are.same({ "save", "hum off", "music off" }, log)
         assert.is_true(manager.isCurrent(scene))
@@ -35,9 +35,9 @@ describe("scene audio lifecycle", function()
         assert.are.same({ "save", "hum off", "music off", "save", "hum off", "music off" }, log)
     end)
 
-    for _, mode in ipairs({ { "PlaySlime", "SlimeScene" }, { "PlayTumble", "TumbleScene" } }) do
-        it("stops " .. mode[2] .. " music on pause and when leaving", function()
-            local scene, manager, log = loadScene(mode[1], mode[2])
+    for _, mode in ipairs({ "SlimeScene", "TumbleScene" }) do
+        it("stops " .. mode .. " music on pause and when leaving", function()
+            local scene, manager, log = loadScene(mode)
             manager.pause()
             assert.are.same({ "music off" }, log)
             assert.is_true(manager.isCurrent(scene))

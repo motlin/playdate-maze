@@ -13,17 +13,12 @@ for _, name in ipairs(modules) do
 end
 
 local scenes = {
-    Title = "TitleScene",
-    FirstPerson = "FirstPersonScene",
-    PlayTumble = "TumbleScene",
-    PlaySlime = "SlimeScene",
-    MyMazes = "MyMazesScene",
-    MazeEditor = "EditorScene",
-    Escaped = "EscapedScene",
+    "TitleScene", "FirstPersonScene", "TumbleScene", "SlimeScene",
+    "MyMazesScene", "EditorScene", "EscapedScene",
 }
-for name, global in pairs(scenes) do
-    read_globals[#read_globals + 1] = global
-    files["source/scenes/" .. name .. ".lua"] = { globals = { global } }
+for _, name in ipairs(scenes) do
+    read_globals[#read_globals + 1] = name
+    files["source/scenes/" .. name .. ".lua"] = { globals = { name } }
 end
 
 files["source/main.lua"] = {
