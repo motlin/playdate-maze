@@ -130,11 +130,12 @@ function FirstPersonScene.exit()
 end
 
 function FirstPersonScene.restart()
-    if FirstPersonScene.submode ~= FirstPersonScene.SUBMODES.SCREENSAVER then SaveGame.delete() end
     if FirstPersonScene.submode == FirstPersonScene.SUBMODES.CUSTOM and not FirstPersonScene.hasDesign() then
         SceneManager.switch(MyMazesScene)
+        SaveGame.delete()
         return
     end
+    if FirstPersonScene.submode ~= FirstPersonScene.SUBMODES.SCREENSAVER then SaveGame.delete() end
     FirstPersonScene.newGame(FirstPersonScene.game:isAutopilotOn())
 end
 

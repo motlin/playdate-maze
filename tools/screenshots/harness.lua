@@ -971,6 +971,17 @@ if playdate.isSimulator then
         docked = false
         expect(not game:isAutopilotOn(), "a hand-made maze has no autopilot, even with the crank docked")
 
+        SceneManager.switch(TitleScene)
+        expect(SaveGame.exists(), "ordinary custom scene exit saves the unfinished run")
+        expect(TitleScene.rows[1].name == "continue", "the title offers the saved custom run")
+        TitleScene.continueSavedGame()
+        expect(FirstPersonScene.design == nil, "resuming a custom run has no original design")
+        FirstPersonScene.restart()
+        expect(SceneManager.isCurrent(MyMazesScene), "restarting without a design returns to My mazes")
+        expect(not SaveGame.exists(), "restart keeps the discarded custom save deleted after scene exit")
+        SceneManager.switch(TitleScene)
+        expect(TitleScene.rows[1].name == "explore", "the discarded custom run is not offered as Continue")
+
         -- It is in the list now, with a picture
         SceneManager.switch(MyMazesScene)
         frames(3)
