@@ -500,6 +500,31 @@ if playdate.isSimulator then
         expect(not isSameMaze(FirstPersonScene.game.maze.blocks), "the next day gives a different maze")
     end
 
+    scenarios.spikes = function()
+        for _, mode in ipairs({ "tumble", "slime" }) do
+            SceneManager.switch(TitleScene)
+            frames(3)
+            titleRow(mode)
+            press(pd.kButtonA, 3)
+            local run = mode == "tumble" and TumbleScene.tumble or SlimeScene.slime
+            expect(#run.spikes > 0, mode .. " has spikes")
+            local spike = run.spikes[1]
+            run.player.x, run.player.y = spike.x - 0.75, spike.y - 0.21
+            frames(1)
+            shot(mode .. "-spikes")
+            local item = run.puzzle.items[1]
+            run.player.x, run.player.y = run.maze:blockCenter(item.gridX, item.gridY)
+            frames(1)
+            expect(item.state == Puzzle.STATES.PLACED, "shape collected before spike hit")
+            run.player.x, run.player.y = spike.x, spike.y - 0.2
+            frames(1)
+            local startX, startY = run.maze:cellCenter(1, 1)
+            expect(run.player.x == startX and run.player.y == startY, mode .. " returns to start")
+            expect(item.state == Puzzle.STATES.PLACED, mode .. " keeps collected shapes")
+            shot(mode .. "-respawn")
+        end
+    end
+
     -- The platformer: fall, walk, jump, turn the maze, collect the shapes, and leave
     scenarios.tumble = function()
         frames(5)

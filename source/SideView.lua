@@ -7,6 +7,7 @@ import "Maze"
 import "Puzzle"
 import "Shades"
 import "ShapeArt"
+import "Spikes"
 
 SideView = {}
 
@@ -106,4 +107,16 @@ function SideView.drawMaze()
     drawCorridors(run.maze)
     drawExit(run.maze)
     drawShapes()
+    playdate.graphics.setColor(playdate.graphics.kColorBlack)
+    for _, spike in ipairs(run.spikes) do
+        if math.abs(spike.x - playerX) < visibleDistance and math.abs(spike.y - playerY) < visibleDistance then
+            for tooth = -1, 1 do
+                local x = spike.x + tooth * 0.2
+                local x1, y1 = SideView.toScreen(x - 0.1, spike.y)
+                local x2, y2 = SideView.toScreen(x, spike.y - Spikes.HEIGHT)
+                local x3, y3 = SideView.toScreen(x + 0.1, spike.y)
+                playdate.graphics.fillTriangle(x1, y1, x2, y2, x3, y3)
+            end
+        end
+    end
 end

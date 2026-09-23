@@ -13,6 +13,7 @@ import "Maze"
 import "Player"
 import "Puzzle"
 import "Run"
+import "Spikes"
 
 ---@class SlimeInput
 ---@field aim number
@@ -26,6 +27,8 @@ import "Run"
 
 ---@class Slime: Run
 ---@field puzzle Puzzle
+---@field spikes Spike[]
+---@field spawn Player
 ---@field state string
 ---@field surface string?
 ---@field stickFrames integer
@@ -71,6 +74,8 @@ function Slime.inMaze(maze, puzzle)
     local slime = setmetatable(Run.new(maze, Player.new(startX, startY, 0)), Slime)
     ---@cast slime Slime
     slime.puzzle = puzzle
+    slime.spikes = {}
+    slime.spawn = Player.new(startX, startY, 0)
     slime.state = Slime.STATES.FLYING
     -- What it is stuck to: "floor", "ceiling", "left", or "right"
     slime.surface = nil
@@ -90,7 +95,19 @@ end
 ---@return Slime
 function Slime.new(options)
     local maze = Maze.generate(options.columns, options.rows, options.random, Slime.CORRIDOR_WIDTH)
-    return Slime.inMaze(maze, Puzzle.scatterItems(maze, options.random))
+    local slime = Slime.inMaze(maze, Puzzle.scatterItems(maze, options.random))
+    slime.spikes = Spikes.place(maze, slime.puzzle)
+    return slime
+end
+
+---@return nil
+function Slime:respawn()
+    self.player:copyFrom(self.spawn)
+    self.velocityX, self.velocityY = 0, 0
+    self.state, self.surface = Slime.STATES.FLYING, nil
+    self.stickFrames, self.flightFrames = 0, 0
+    self.isAiming, self.isAimCancelled = false, true
+    self:say("Spikes! Back to the start")
 end
 
 ---@return string?
@@ -141,7 +158,7 @@ function Slime:arc(result)
     for frame = 1, ARC_FRAMES do
         local surface
         velocityX, velocityY, surface = fly(self.maze, scout, velocityX, velocityY)
-        if surface then break end
+        if surface or Spikes.touches(self.spikes, scout.x, scout.y) then break end
         if frame % ARC_POINT_EVERY == 0 then
             count = count + 1
             local point = points[count]
@@ -276,6 +293,11 @@ function Slime:update(input)
     self.aimAngle = input.aim
     self:aim(input)
     self:move(input)
+
+    if Spikes.touches(self.spikes, self.player.x, self.player.y) then
+        self:respawn()
+        return
+    end
 
     self:visit()
     local item = self.puzzle:itemTouching(self.player.x, self.player.y)

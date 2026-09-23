@@ -11,6 +11,7 @@ import "Maze"
 import "Player"
 import "Puzzle"
 import "Run"
+import "Spikes"
 
 ---@class TumbleInput
 ---@field turn? number
@@ -19,6 +20,8 @@ import "Run"
 
 ---@class Tumble: Run
 ---@field puzzle Puzzle
+---@field spikes Spike[]
+---@field spawn Player
 ---@field angle number
 ---@field velocityX number
 ---@field velocityY number
@@ -27,6 +30,7 @@ import "Run"
 Tumble = setmetatable({}, { __index = Run })
 Tumble.__index = Tumble
 
+Tumble.CORRIDOR_WIDTH = 2
 Tumble.RADIUS = Player.RADIUS
 Tumble.GRAVITY = 0.012
 Tumble.WALK_SPEED = 0.06
@@ -51,6 +55,8 @@ function Tumble.inMaze(maze, puzzle)
     local tumble = setmetatable(Run.new(maze, Player.new(startX, startY, 90)), Tumble)
     ---@cast tumble Tumble
     tumble.puzzle = puzzle
+    tumble.spikes = {}
+    tumble.spawn = Player.new(startX, startY, 90)
     tumble.angle = 0
     tumble.velocityX, tumble.velocityY = 0, 0
     tumble.isGrounded = false
@@ -63,8 +69,18 @@ end
 ---@param options RunOptions
 ---@return Tumble
 function Tumble.new(options)
-    local maze = Maze.generate(options.columns, options.rows, options.random)
-    return Tumble.inMaze(maze, Puzzle.scatterItems(maze, options.random))
+    local maze = Maze.generate(options.columns, options.rows, options.random, Tumble.CORRIDOR_WIDTH)
+    local tumble = Tumble.inMaze(maze, Puzzle.scatterItems(maze, options.random))
+    tumble.spikes = Spikes.place(maze, tumble.puzzle)
+    return tumble
+end
+
+---@return nil
+function Tumble:respawn()
+    self.player:copyFrom(self.spawn)
+    self.velocityX, self.velocityY = 0, 0
+    self.angle, self.isGrounded, self.facing = 0, false, 1
+    self:say("Spikes! Back to the start")
 end
 
 ---@return nil
@@ -137,6 +153,11 @@ function Tumble:update(input)
     local wasGrounded = self.isGrounded
     self.isGrounded = self.player:wouldHit(self.maze, downX * GROUND_PROBE, downY * GROUND_PROBE)
     if self.isGrounded and not wasGrounded then self:emit("land") end
+
+    if Spikes.touches(self.spikes, self.player.x, self.player.y) then
+        self:respawn()
+        return
+    end
 
     self:visit()
     local item = self.puzzle:itemTouching(self.player.x, self.player.y)

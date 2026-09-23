@@ -121,7 +121,7 @@ section('MapEditor.lua', 'Editing state belongs together', [
 section('Maze.lua', 'Grid and maze generation', [
     step('function Maze.fromDesign(design)', 12, 'Build a playable grid inside its owner', '<p>Maze copies the design’s open blocks and installs a closed exit gate. Game no longer constructs the grid through nested field writes. The copy lets play open the gate without changing the editor drawing.</p>'),
     step('function Maze:blockAt(x, y)', 3, 'World positions to grid indices', '<p>World x grows right; y grows down. Positions can be fractional. Grid indices start at 1.</p><p><code>(1.5, 1.5)</code> becomes block <code>(2, 2)</code>: floor each coordinate, then add one.</p>'),
-    step('    local pitch = corridorWidth + 1', 10, 'Rooms separated by walls', '<p><code>pitch</code> is corridor width plus one wall block. The remainder operator <code>%</code> places wall rows and columns.</p><p>With width 1, a 3 × 2-cell maze occupies 7 × 5 blocks. Slime uses wider corridors.</p>'),
+    step('    local pitch = corridorWidth + 1', 10, 'Rooms separated by walls', '<p><code>pitch</code> is corridor width plus one wall block. The remainder operator <code>%</code> places wall rows and columns.</p><p>With width 1, a 3 × 2-cell maze occupies 7 × 5 blocks. Tumble uses two-block corridors for jumping; Slime uses three-block corridors for throwing.</p>'),
     step('    local visited = { [1] = true }', 13, 'Find unvisited neighbors', '<p>Start at cell (1, 1). The last entry of <code>stack</code> is the current cell; <code>#stack</code> is the list length.</p><p>The loop gathers neighboring cells that are inside the maze and have not been visited.</p>'),
     step('        if #unvisited == 0 then', 10, 'Carve or backtrack', '<p>Choose a random unvisited neighbor, carve the wall, and push that cell. If none remain, remove the stack’s last entry by assigning <code>nil</code>.</p><p>This is depth-first search. Connecting only new cells prevents loops: N cells get N − 1 internal passages.</p>'),
 ])
@@ -147,6 +147,10 @@ section('Autopilot.lua', 'Wall-following navigation', [
 section('Thread.lua', 'Recording and reversing a path', [
     step('function Thread:record', 22, 'Keep collision-safe path segments', '<p>Record a point every 0.25 blocks, with extra points where a shortcut would cross a wall. Check clearance for the player’s whole body before removing a retraced point.</p><p>The scene’s game records both axes of movement. The list is capped at 800 points.</p>'),
     step('        local share = stretch > 0', 8, 'Check the segment before rewinding', '<p><code>share = distance / stretch</code>, capped at 1, gives the fraction to rewind. Reeling 0.1 blocks along 0.25 blocks moves 40% of the segment.</p><p>Check the entire segment for body clearance before moving. Stop at blocked segments, including unsafe paths from older saves.</p>'),
+])
+section('Spikes.lua', 'Platforming hazards', [
+    step('function Spikes.place', 22, 'Leave safe takeoff and landing space', '<p>Place short spike patches on solid floors, leaving the starting cell, collectible cells, and exit cell clear. Each run owns its hazards. The triangles rotate with the maze in Tumble.</p>'),
+    step('function Spikes.touches', 10, 'Contact sends you back to the start', '<p>Check the player body against each patch. Tumble and Slime reset movement on contact but retain collected shapes, the open exit, and elapsed time. Slime trajectory previews stop at spikes as well as walls.</p>'),
 ])
 section('Tumble.lua', 'Rotating gravity', [
     step('    self.angle = (self.angle', 9, 'Convert screen directions to maze directions', '<p>The view rotates clockwise by <code>angle</code>. Gravity must still point down the screen.</p><p>In maze coordinates, down = (sin θ, cos θ). At 90°, gravity points east. Right = (cos θ, −sin θ).</p><p>Tumble requests a turn through Player’s existing method to align its heading with gravity.</p>'),
