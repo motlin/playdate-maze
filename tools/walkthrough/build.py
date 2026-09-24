@@ -149,7 +149,7 @@ section('Thread.lua', 'Recording and reversing a path', [
     step('        local share = stretch > 0', 8, 'Check the segment before rewinding', '<p><code>share = distance / stretch</code>, capped at 1, gives the fraction to rewind. Reeling 0.1 blocks along 0.25 blocks moves 40% of the segment.</p><p>Check the entire segment for body clearance before moving. Stop at blocked segments, including unsafe paths from older saves.</p>'),
 ])
 section('Spikes.lua', 'Platforming hazards', [
-    step('function Spikes.place', 22, 'Leave safe takeoff and landing space', '<p>Place short spike patches on solid floors, leaving the starting cell, collectible cells, and exit cell clear. Each run owns its hazards. The triangles rotate with the maze in Tumble.</p>'),
+    step('function Spikes.place', 22, 'Leave safe takeoff and landing space', '<p>Place short spike patches on solid floors, leaving the starting cell, its first landing below any open shaft, collectible cells, and exit cell clear. Slime cannot steer while falling, so the first landing remains safe on both entry and respawn. Each run owns its hazards. The triangles rotate with the maze in Tumble.</p>'),
     step('function Spikes.touches', 10, 'Contact sends you back to the start', '<p>Check the player body against each patch. Tumble and Slime reset movement on contact but retain collected shapes, the open exit, and elapsed time. Slime trajectory previews stop at spikes as well as walls.</p>'),
 ])
 section('Tumble.lua', 'Rotating gravity', [

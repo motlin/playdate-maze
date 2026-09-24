@@ -14,12 +14,19 @@ Spikes.HEIGHT = 0.35
 ---@return Spike[]
 function Spikes.place(maze, puzzle)
     local spikes = {}
+    local startX, startY = maze:cellCenter(1, 1)
+    local spawnGridX, landingGridY = maze:blockAt(startX, startY)
+    -- Slime cannot steer or throw during this fall; its first landing must be safe.
+    while not maze:isWall(spawnGridX, landingGridY + 1) do
+        landingGridY = landingGridY + 1
+    end
     for row = 1, maze.rows do
         for column = 1, maze.columns do
             local x = maze:cellCenter(column, row)
             local floorY = row * (maze.corridorWidth + 1)
             local gridX = math.floor(x) + 1
-            local protected = (column == 1 and row == 1) or (column == maze.columns and row == maze.rows)
+            local protected = (column == 1 and (row == 1 or floorY == landingGridY))
+                or (column == maze.columns and row == maze.rows)
             for _, item in ipairs(puzzle.items) do
                 local itemX, itemY = maze:blockCenter(item.gridX, item.gridY)
                 local itemColumn, itemRow = maze:nearestCell(itemX, itemY)

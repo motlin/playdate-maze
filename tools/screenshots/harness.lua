@@ -500,6 +500,33 @@ if playdate.isSimulator then
         expect(not isSameMaze(FirstPersonScene.game.maze.blocks), "the next day gives a different maze")
     end
 
+    scenarios.spawnSafety = function()
+        local slime
+        for seed = 1, 100 do
+            math.randomseed(seed)
+            SceneManager.switch(SlimeScene, 1)
+            slime = SlimeScene.slime
+            if slime.maze:hasPassage(1, 1, "south") then break end
+        end
+        expect(slime.maze:hasPassage(1, 1, "south"), "spawn opens into a shaft")
+        shot("falling-from-start")
+        frames(150)
+        expect(slime.state == Slime.STATES.RESTING and slime:canThrow(), "uncontrolled spawn fall lands safely")
+        shot("safe-first-landing")
+        local spike = slime.spikes[1]
+        expect(spike ~= nil, "maze still has hazards")
+        slime.player.x, slime.player.y = spike.x, spike.y - 0.2
+        slime.state, slime.velocityX, slime.velocityY = Slime.STATES.FLYING, 0, 0
+        frames(1)
+        expect(slime.message == "Spikes! Back to the start", "hazard triggers respawn")
+        frames(150)
+        expect(slime.state == Slime.STATES.RESTING and slime:canThrow(), "respawn also lands safely")
+        hold(pd.kButtonA, 2)
+        frames(1)
+        expect(slime.state == Slime.STATES.FLYING and slime.throws == 1, "player can throw after respawning")
+        shot("throw-after-respawn")
+    end
+
     scenarios.spikes = function()
         for _, mode in ipairs({ "tumble", "slime" }) do
             SceneManager.switch(TitleScene)

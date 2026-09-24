@@ -2,8 +2,49 @@ require("spec.support.playdate_stub")
 import "Tumble"
 import "Slime"
 import "SeededRandom"
+import "Sizes"
 
 describe("platforming spikes", function()
+    it("lets Slime land and regain control below an open starting shaft, including after respawn", function()
+        local maze = Maze.new(2, 3, Slime.CORRIDOR_WIDTH)
+        maze:carve(1, 1, "south")
+        maze:carve(1, 2, "south")
+        local run = Slime.inMaze(maze, Puzzle.new({}, {}))
+        run.spikes = Spikes.place(maze, run.puzzle)
+        for attempt = 1, 2 do
+            for _ = 1, 120 do
+                run:update({ aim = 0 })
+            end
+            assert.are.same({ Slime.STATES.RESTING, true, 2.5, nil }, {
+                run.state,
+                run:canThrow(),
+                run.player.x,
+                run.message,
+            })
+            run:update({ aim = 0, isAimHeld = true })
+            run:update({ aim = 0 })
+            assert.are.same({ Slime.STATES.FLYING, attempt }, { run.state, run.throws })
+            run:respawn()
+        end
+        assert.are.same({ { x = 6.5, y = 4 }, { x = 6.5, y = 8 } }, run.spikes)
+    end)
+
+    it("lands safely without input across generated Slime sizes and seeds", function()
+        for _, size in ipairs(Sizes.ALL) do
+            for seed = 1, 30 do
+                local run = Slime.new({
+                    columns = size.slimeColumns,
+                    rows = size.slimeRows,
+                    random = SeededRandom.new(seed),
+                })
+                for _ = 1, 300 do
+                    run:update({ aim = 0 })
+                end
+                assert.are.same({ Slime.STATES.RESTING, true, nil }, { run.state, run:canThrow(), run.message })
+            end
+        end
+    end)
+
     it("widens Tumble corridors and gives both modes safe spawns and hazards", function()
         for _, mode in ipairs({ Tumble, Slime }) do
             local run = mode.new({ columns = 6, rows = 4, random = SeededRandom.new(100) })
