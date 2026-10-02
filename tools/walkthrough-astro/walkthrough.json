@@ -1,0 +1,886 @@
+{
+  "title": "Maze",
+  "sections": [
+    {
+      "file": "source/main.lua",
+      "title": "Game structure",
+      "steps": [
+        {
+          "id": "step-1-0",
+          "title": "One update per frame",
+          "anchor": "playdate.update = SceneManager.update",
+          "reviewed_sha256": "2e16136873219b8acae7c6597a7fd750b246a0bd56086066093ad40d25348071",
+          "html": "<p>Playdate calls <code>playdate.update()</code> every frame.</p><p>What happens each frame depends on where we are: the title screen, the first-person maze, Tumble, or Slime. We call each of these a <em>scene</em>. We created <code>SceneManager</code> to keep track of the current scene and call its update function.</p><p>This assignment registers <code>SceneManager.update</code> as Playdate’s update callback. Without parentheses, it assigns the function rather than calling it.</p><p>SceneManager is imported before registration. Switching scenes changes the current scene used by that function, so the same callback keeps dispatching to the active scene.</p>"
+        },
+        {
+          "id": "step-1-1",
+          "title": "Delegate pause to the scene manager",
+          "anchor": "playdate.gameWillPause = SceneManager.pause",
+          "reviewed_sha256": "7bd0d08c6b96f9026f09e0b74de1004fccd1f2c13a03e4e023efdc7f2ae42832",
+          "html": "<p>Register <code>SceneManager.pause</code> as the Playdate pause callback. It saves the active scene before calling that scene’s optional pause hook. Audio shutdown belongs to the scenes that play it.</p><p>Sleep, lock, and termination callbacks below continue to use <code>SceneManager.save</code>.</p>"
+        },
+        {
+          "id": "step-1-2",
+          "title": "Start at the title screen",
+          "anchor": "SceneManager.onSwitch = SystemMenu.refresh\nSceneManager.switch(TitleScene)",
+          "reviewed_sha256": "f68206d8216bb84bd7878d6fc06b8eca110e9070575a8ea54d8c9ed6de2e5ff6",
+          "html": "<p>The first line stores <code>SystemMenu.refresh</code> as the callback to run after each scene switch. Without parentheses, it passes the function rather than calling it.</p><p>The second line calls <code>SceneManager.switch(TitleScene)</code>: select the title scene, call its <code>enter()</code> function, then refresh the system menu through that callback.</p><p>Next, where does <code>TitleScene</code> come from?</p>"
+        },
+        {
+          "id": "step-1-3",
+          "title": "Load the title-screen file",
+          "anchor": "import \"scenes/TitleScene\"",
+          "reviewed_sha256": "fe9feb422a05ebe13e8b26a3dd14a27b29192eef93ad361a72efdafdc05eecf5",
+          "html": "<p>Earlier in <code>source/main.lua</code>, this import loads the title scene before the startup calls run.</p><p>Playdate’s <code>import</code> runs <code>source/scenes/TitleScene.lua</code> once. Later imports of the same file do nothing.</p><p>Lua lets a call omit parentheses around a single string argument: <code>import \"scenes/TitleScene\"</code> is equivalent to <code>import(\"scenes/TitleScene\")</code>.</p><p>Standard Lua uses <code>require</code>; <code>import</code> is supplied by Playdate. This game uses it to load files that define shared globals.</p><p>Next, in <code>source/scenes/TitleScene.lua</code>, we’ll see the assignment that creates <code>TitleScene</code>.</p><p><a href=\"https://sdk.play.date/Inside%20Playdate.html#_structuring_your_project\">SDK reference: imports</a></p>"
+        }
+      ],
+      "experiments": []
+    },
+    {
+      "file": "source/scenes/TitleScene.lua",
+      "title": "The imported scene",
+      "steps": [
+        {
+          "id": "step-2-0",
+          "title": "Create the shared scene table",
+          "anchor": "TitleScene = { selection = 1, sizeIndex = Sizes.DEFAULT, rows = {} }",
+          "reviewed_sha256": "b1bc12909884c6569689eeb1b4676113cc2e1eb558a8b2cb0a69e1e17a8d0e71",
+          "html": "<p>This assignment creates the global <code>TitleScene</code> because there is no <code>local</code>. After the import runs, <code>source/main.lua</code> can pass this table to <code>SceneManager.switch</code>.</p><p>The assignment creates the name, not the filename. The table initially holds the selected row, maze-size index, and menu rows.</p>"
+        },
+        {
+          "id": "step-2-1",
+          "title": "Keep a private input reader",
+          "anchor": "local controls = PlayInput.new()",
+          "reviewed_sha256": "3328caefbe281b6ec2fa79aa14dcb0a58c2b30bcb2b6066beb86c0170c457772",
+          "html": "<p>Each scene owns a local <code>PlayInput</code> reader. Hardware polling stays in that shared module; the reader is private to this scene.</p>"
+        },
+        {
+          "id": "step-2-2",
+          "title": "Read once, interpret the menu",
+          "anchor": "    local input = controls:read()\n    local rows = TitleScene.rows\n    local move = crankSteps:turn(input.crankChange)\n    if input:isPressed(playdate.kButtonUp) then move = -1 end\n    if input:isPressed(playdate.kButtonDown) then move = 1 end\n    -- A press of the D-pad is a fresh start for the crank",
+          "reviewed_sha256": "0c4ec46ee8e816d5704f221ab3d6c54654584d41642ec5dc16117d2ea9fdb298",
+          "html": "<p><code>controls:read()</code> captures one hardware snapshot for this frame. <code>input.crankChange</code> feeds <code>CrankSteps</code>, while <code>input:isPressed</code> checks button edges from the same snapshot.</p><p>The scene still interprets menu actions: D-pad presses override crank movement and reset partial turns. After navigation clamps the highlight to a valid row, the scene resolves that row for left, right, and confirmation actions. A simultaneous turn and A therefore confirms the newly highlighted entry.</p>"
+        }
+      ],
+      "experiments": []
+    },
+    {
+      "file": "source/SceneManager.lua",
+      "title": "Scene changes",
+      "steps": [
+        {
+          "id": "step-3-0",
+          "title": "Exit, replace, enter",
+          "anchor": "function SceneManager.switch(scene, ...)\n    if currentScene and currentScene.exit then currentScene.exit() end\n    currentScene = scene\n    if scene.enter then scene.enter(...) end\n    if SceneManager.onSwitch then SceneManager.onSwitch(scene) end\nend",
+          "reviewed_sha256": "41d823ce0809a65c2f0804a3ea49d79eb83b0048b7e1d67972e85dd2c21e9ece",
+          "html": "<p>Let the old scene clean up, replace <code>currentScene</code>, then initialize the new scene. The <code>...</code> passes its arguments through.</p>"
+        },
+        {
+          "id": "step-3-1",
+          "title": "Call the current scene",
+          "anchor": "function SceneManager.update() currentScene.update() end",
+          "reviewed_sha256": "ab6bb5638b0f98151d660824829bad32110a9617b167959bd7fc3d928bd5f74e",
+          "html": "<p>Only one scene receives updates. In first-person play, this calls <code>FirstPersonScene.update()</code> in <code>source/scenes/FirstPersonScene.lua</code>.</p>"
+        },
+        {
+          "id": "step-3-2",
+          "title": "Save through the scene",
+          "anchor": "function SceneManager.save()\n    if currentScene and currentScene.save then currentScene.save() end\nend",
+          "reviewed_sha256": "30229e287c93babd9bda864c174e20307f31863dd8854effdd347d65b54beb4c",
+          "html": "<p>If the current scene provides <code>save()</code>, call it. Before a scene is selected, or in a scene without a save hook, do nothing.</p><p><code>FirstPersonScene.save()</code> decides whether to store a run through <code>SaveGame</code>; <code>EditorScene.save()</code> keeps editor persistence separate. SceneManager does not choose a disk format or persistence policy.</p>"
+        },
+        {
+          "id": "step-3-3",
+          "title": "Save, then pause the active scene",
+          "anchor": "function SceneManager.pause()\n    SceneManager.save()\n    if currentScene and currentScene.pause then currentScene.pause() end\nend",
+          "reviewed_sha256": "718dfb5176ca566a72644d51ee8be8113bfcf9d965fcd005684a22838eb3e32b",
+          "html": "<p>Reuse the save dispatch first, then call the current scene’s optional <code>pause()</code> hook. No scene, or no hook, is safe. The current scene remains selected; SceneManager knows nothing about audio.</p>"
+        }
+      ],
+      "experiments": []
+    },
+    {
+      "file": "source/scenes/FirstPersonScene.lua",
+      "title": "First-person scene",
+      "steps": [
+        {
+          "id": "step-4-0",
+          "title": "Three first-person submodes",
+          "anchor": "    SUBMODES = { EXPLORE = \"explore\", DAILY = \"daily\", SCREENSAVER = \"screensaver\", CUSTOM = \"custom\" },",
+          "reviewed_sha256": "74fe2ee0322154b93b1a509273f257ca54ef831cf178796c9dcebb069b8981e3",
+          "html": "<p>Explore, Daily, and Screensaver share this scene and its 3D maze rules. Daily fixes the maze seed and size; Screensaver starts on autopilot without the puzzle. Tumble and Slime use separate scenes.</p>"
+        },
+        {
+          "id": "step-4-1",
+          "title": "Create the input reader and action mapper",
+          "anchor": "local controls = PlayInput.new()\nlocal walkingActions = WalkingActions.new(controls)",
+          "reviewed_sha256": "aa5b713ce284e346675e8fd4bd394f3d5ca5e904d2b195b5b84b2092be7008e6",
+          "html": "<p><code>PlayInput</code> reads hardware. <code>WalkingActions.new(controls)</code> connects a mapper to that reader. The mapper translates its snapshot into movement and item actions and owns the button history.</p>"
+        },
+        {
+          "id": "step-4-2",
+          "title": "Reset transient state on entry",
+          "anchor": "    walkingActions = WalkingActions.new(controls)\n    dockTimer = DockTimer.new()\n    headBob = Bob.new()",
+          "reviewed_sha256": "234c2e0db7d0a381dcda163758dfd7c6dad3f8c7bd28a874a6cf6c71001f7a93",
+          "html": "<p>Fresh and resumed runs get a new walking mapper, dock timer, and head bob. The mapper keeps the existing controls reader but forgets button history from the previous visit, including B released in another scene.</p>"
+        },
+        {
+          "id": "step-4-3",
+          "title": "Read, map, update",
+          "anchor": "    local input = controls:read()\n    local dockAction = dockTimer:update(input.isCrankDocked, input.current ~= 0 or input.pressed ~= 0)\n    FirstPersonScene.applyDockAction(dockAction)\n    local takingOver = game:isAutopilotOn() and input.pressed ~= 0\n    if takingOver then game:setAutopilot(false) end\n    game:update(walkingActions:read(takingOver, actionBuffer))",
+          "reviewed_sha256": "bf082e4842471d4f426e93d55250fcf332205134a987519a5c030bc6f5753319",
+          "html": "<p>Read one hardware snapshot. <code>dockTimer:update</code> returns a handover action; <code>FirstPersonScene.applyDockAction</code> applies it to the scene’s game. Then map the snapshot into walking actions.</p><p><code>takingOver</code> tells the mapper to consume item actions from the takeover press. The game receives only the resulting action table.</p>"
+        },
+        {
+          "id": "step-4-4",
+          "title": "Discard the run when restarting",
+          "anchor": "function FirstPersonScene.restart()\n    if FirstPersonScene.submode == FirstPersonScene.SUBMODES.CUSTOM and not FirstPersonScene.hasDesign() then\n        SceneManager.switch(MyMazesScene)\n        SaveGame.delete()\n        return\n    end\n    if FirstPersonScene.submode ~= FirstPersonScene.SUBMODES.SCREENSAVER then SaveGame.delete() end\n    FirstPersonScene.newGame(FirstPersonScene.game:isAutopilotOn())\nend",
+          "reviewed_sha256": "f2228f0ba2264798c53dcf7778a760bf17250e1b61a8db57606f643fddb2051b",
+          "html": "<p>A resumed custom run has no original drawing to restart. Switch to My mazes first so the outgoing exit hook finishes saving, then delete that save. The title will no longer offer Continue. Ordinary exits and pauses still save the run.</p><p>Other puzzle restarts delete the old save before generating the next maze; the screensaver leaves saves alone.</p>"
+        },
+        {
+          "id": "step-4-5",
+          "title": "Stop held audio for the system menu",
+          "anchor": "function FirstPersonScene.pause()\n    Sounds.stopHum()\n    Music.stop()\nend",
+          "reviewed_sha256": "c1eb2f0d13e77918389403139bd45e618675068602795f5246f4c722be7ed125",
+          "html": "<p>Stop the shape hums and music so held notes cannot drone behind the system menu. Leaving the scene saves the run and reuses this pause hook. Tumble and Slime stop their music in their own pause and exit hooks; they do not play shape hums.</p><p>Returning from the system menu keeps the same run. The existing per-frame sound and music updates resume playback without a new restart callback.</p>"
+        },
+        {
+          "id": "step-4-6",
+          "title": "Draw the result",
+          "anchor": "    Sounds.play(game.events)\n    Sounds.hum(game)\n    -- The screensaver's music stays calm and level; otherwise it follows the way to the exit\n    Music.update(game, FirstPersonScene.submode == FirstPersonScene.SUBMODES.SCREENSAVER and SCREENSAVER_MUSIC or nil)\n    if game.hasEscaped then\n        if FirstPersonScene.submode == FirstPersonScene.SUBMODES.SCREENSAVER then\n            FirstPersonScene.restart()\n        else\n            SaveGame.delete()\n            SceneManager.switch(EscapedScene, game.frames, FirstPersonScene.playAgain)\n            return\n        end\n    end\n\n    headBob:walk(FirstPersonScene.game.distanceWalked)\n    MazeView.draw(FirstPersonScene.game, headBob:headOffset())\n    Hud.draw(FirstPersonScene.game)\nend",
+          "reviewed_sha256": "3072829ee874a6e3d542811057c90392c3e24fdb7387a9680383693b9f5e6c52",
+          "html": "<p>Play sounds, check for escape, then draw the world and HUD. Drawing the HUD last keeps it above the 3D image.</p><p><code>distanceWalked</code> drives head bob from actual travel.</p>"
+        }
+      ],
+      "experiments": []
+    },
+    {
+      "file": "source/PlayInput.lua",
+      "title": "Shared hardware input",
+      "steps": [
+        {
+          "id": "step-5-0",
+          "title": "Capture one frame",
+          "anchor": "function PlayInput:read()\n    self.current, self.pressed, self.released = playdate.getButtonState()\n    self.crankChange = playdate.getCrankChange()\n    self.crankPosition = playdate.getCrankPosition()\n    self.isCrankDocked = playdate.isCrankDocked()\n    return self\nend",
+          "reviewed_sha256": "f5811e44172f61806adfbc250ee2479f1017907324560a62c679d78a345f0092",
+          "html": "<p>The three play modes use this reader. It records held, pressed, and released buttons, crank movement, crank angle, and whether the crank is docked.</p><p>These are hardware readings; their meaning depends on the game mode.</p>"
+        },
+        {
+          "id": "step-5-1",
+          "title": "Test a button bit",
+          "anchor": "function PlayInput:isDown(button) return self.current & button ~= 0 end",
+          "reviewed_sha256": "abde0bf9d3eaafa0a8643228523e31aa01bea4174af742a1c83b153792512235",
+          "html": "<p>Each button has its own bit in the mask. <code>&amp;</code> keeps the bits shared by the mask and the requested button. A nonzero result means that button is down.</p>"
+        },
+        {
+          "id": "step-5-2",
+          "title": "Combine opposite directions",
+          "anchor": "function PlayInput:axis(negativeButton, positiveButton)\n    return (self:isDown(positiveButton) and 1 or 0) - (self:isDown(negativeButton) and 1 or 0)\nend",
+          "reviewed_sha256": "9dbb02d1e9004c0d6d71329aca327e0c4e30c55d808d9a54c988e0b41a0ca4b8",
+          "html": "<p>Subtract the negative button from the positive button. Left alone gives −1, right alone gives +1, and both or neither gives 0.</p>"
+        }
+      ],
+      "experiments": []
+    },
+    {
+      "file": "source/WalkingActions.lua",
+      "title": "Walking actions",
+      "steps": [
+        {
+          "id": "step-6-0",
+          "title": "Own the button history",
+          "anchor": "function WalkingActions.new(controls)\n    return setmetatable({ controls = controls, bButton = TapOrReel.new() }, WalkingActions)\nend",
+          "reviewed_sha256": "c0b6199c2b68b8b0b1fc668548b1e261f4b18039bb69ac4d4105ebd982167d5f",
+          "html": "<p>The constructor stores the supplied <code>controls</code> reader. Each mapper owns its <code>TapOrReel</code> tracker. Reads return fresh actions unless the scene explicitly supplies its reusable output table. The tracker distinguishes tapping B from holding B while reeling.</p>"
+        },
+        {
+          "id": "step-6-1",
+          "title": "Map hardware to actions",
+          "anchor": "    actions.forward = input:axis(playdate.kButtonDown, playdate.kButtonUp)\n    actions.turn = button:isHeld() and 0 or input.crankChange\n    actions.crank = actions.turn\n    actions.reel = reel\n    actions.strafe = 0\n    if input.isCrankDocked then\n        actions.turn = sideways * DPAD_TURN_SPEED\n    else\n        actions.strafe = sideways\n    end\n    actions.pickUp = input:isPressed(playdate.kButtonA)\n    actions.drop = isBTapped",
+          "reviewed_sha256": "adf640d253b7790fb0fb2c92a7ec35aa9f847b60d914c8bd53e095f76d78d399",
+          "html": "<p>Up/down moves forward/back. The crank turns the view unless B is held. Left/right turns when docked and strafes when undocked.</p><p><code>crank</code> preserves actual crank movement for the gate; D-pad turning does not operate it.</p>"
+        },
+        {
+          "id": "step-6-2",
+          "title": "Consume the takeover press",
+          "anchor": "    if suppressItemActions then\n        button:ignoreThisPress()\n        actions.pickUp, actions.drop, actions.reel = false, false, 0\n    end",
+          "reviewed_sha256": "794d89d1ff7a8f07a977595437d141dc3b3a130e46a41fafeeba36b48c6719fb",
+          "html": "<p>Suppress pickup, drop, and reel for this frame. Tell the B tracker to ignore the rest of this press too, so releasing it later cannot drop an item.</p>"
+        }
+      ],
+      "experiments": []
+    },
+    {
+      "file": "source/TumbleActions.lua",
+      "title": "Tumble actions",
+      "steps": [
+        {
+          "id": "step-7-0",
+          "title": "Map the same controls for Tumble",
+          "anchor": "    actions.turn = input.crankChange\n    actions.move = input:axis(playdate.kButtonLeft, playdate.kButtonRight)\n    actions.jump = input:isPressed(playdate.kButtonA)",
+          "reviewed_sha256": "e7307fea3e19feae8b061dd0dd188e4cc811e631b0f8f2435c785e94608e8b4d",
+          "html": "<p>Crank movement rotates the maze. Left/right moves the player. A, B, or up starts a jump on a fresh press.</p>"
+        }
+      ],
+      "experiments": []
+    },
+    {
+      "file": "source/SlimeActions.lua",
+      "title": "Slime actions",
+      "steps": [
+        {
+          "id": "step-8-0",
+          "title": "Map the same controls for Slime",
+          "anchor": "    actions.aim = input.crankPosition\n    actions.isAimHeld = input:isDown(playdate.kButtonA)\n    actions.cancel = input:isPressed(playdate.kButtonB)\n    actions.move = input:axis(playdate.kButtonLeft, playdate.kButtonRight)",
+          "reviewed_sha256": "1989d1d91d465b27f5732bd04905081df19070d898cf99083fadd3358d30ca66",
+          "html": "<p>Crank angle sets aim, holding A keeps aiming, and a fresh B press cancels. Left/right moves along a surface.</p>"
+        }
+      ],
+      "experiments": []
+    },
+    {
+      "file": "source/Game.lua",
+      "title": "First-person rules",
+      "steps": [
+        {
+          "id": "step-9-0",
+          "title": "Create the world",
+          "anchor": "function Game.new(options)\n    local maze = Maze.generate(options.columns, options.rows, options.random)\n    local startX, startY = maze:cellCenter(1, 1)\n    local startAngle = maze:hasPassage(1, 1, \"east\") and ANGLES.east or ANGLES.south\n    local game = begin(maze, startX, startY, startAngle)\n    if options.hasPuzzle then\n        game.puzzle = Puzzle.scatter(maze, options.random)\n    else\n        maze:openExit()",
+          "reviewed_sha256": "551bf997cc9599ef08b95280cf801bf3bb1afdc981acc7de78368cbd798a414a",
+          "html": "<p>Generate a maze, place the player in its first cell, and combine them in a <code>Run</code>. Face an open passage at the start.</p><p>A Lua table holds state; <code>setmetatable</code> lets it find the module’s methods.</p>"
+        },
+        {
+          "id": "step-9-1",
+          "title": "Choose one movement mode",
+          "anchor": "    if self.autopilot then\n        self.autopilot:update()\n        self.thread:record(self.player.x, fromY)\n        self.thread:record(self.player.x, self.player.y)\n    elseif reel > 0 then\n        self:reelIn(reel)\n        fromX, fromY = self.player.x, self.player.y\n    else\n        -- While the crank is lifting the gate it does not also swing the view\n        if not isCrankingGate then self.player:turn(input.turn or 0) end\n        self.player:move(self.maze, (input.forward or 0) * Game.WALK_SPEED, (input.strafe or 0) * Game.WALK_SPEED)\n        self.thread:record(self.player.x, fromY)\n        self.thread:record(self.player.x, self.player.y)\n    end\n    local walkedX, walkedY = self.player.x - fromX, self.player.y - fromY",
+          "reviewed_sha256": "c5c9a31f02de097bd809b8e2aa3a2e1c67eb790b4c4ab43f2de4f63e567ea90d",
+          "html": "<p>Autopilot, thread reeling, and manual movement are exclusive branches. Manual movement scales input by <code>Game.WALK_SPEED</code>: 0.08 blocks per frame.</p><p><code>player:move(...)</code> passes the player as <code>self</code>. The colon marks a method call.</p>"
+        },
+        {
+          "id": "step-9-2",
+          "title": "Measure what moved",
+          "anchor": "    local walkedX, walkedY = self.player.x - fromX, self.player.y - fromY\n    self.distanceWalked = math.sqrt(walkedX * walkedX + walkedY * walkedY)\n    self.blocksSinceStep = self.blocksSinceStep + self.distanceWalked\n    if self.blocksSinceStep >= Game.STEP_BLOCKS then\n        self.blocksSinceStep = self.blocksSinceStep - Game.STEP_BLOCKS\n        self:emit(\"step\")\n    end\n    local isPushing = not self.autopilot and reel == 0 and ((input.forward or 0) ~= 0 or (input.strafe or 0) ~= 0)\n    if isPushing and self.distanceWalked == 0 and self.frames - self.lastBumpFrame >= Game.BUMP_FRAMES_APART then\n        self.lastBumpFrame = self.frames\n        self:emit(\"bump\")\n    end",
+          "reviewed_sha256": "ca093042a5ef6a0c00d4e3c699000b6cddc08d1c7cc5ecca6d3e4c90f110673f",
+          "html": "<p>Subtract the old position and use √(dx² + dy²) for distance. Footsteps follow actual travel; a blocked push can produce a bump.</p>"
+        },
+        {
+          "id": "step-9-3",
+          "title": "Check interactions",
+          "anchor": "    self:visit()\n    if self.flippers:touch(self.player.x, self.player.y) then\n        self.isFlipped = not self.isFlipped\n        self:emit(\"flip\")\n        self:say(\"The world turns over!\")\n    end\n    if self.puzzle and input.pickUp then self:pickUp() end\n    if self.puzzle and input.drop then self:drop() end\n\n    self.hasEscaped = self.maze:isExit(self.player.x, self.player.y)\n    if self.hasEscaped then self:emit(\"escape\") end",
+          "reviewed_sha256": "bb2479a8187e67003c4442af4d589208726dbaddd041fae1e63c5f0409daeadf",
+          "html": "<p>Record the visited cell, handle flippers and shapes, then check whether the player entered the exit block.</p><p>The drawing code reads this state after the update.</p>"
+        }
+      ],
+      "experiments": []
+    },
+    {
+      "file": "source/scenes/EditorScene.lua",
+      "title": "Editor screen",
+      "steps": [
+        {
+          "id": "step-10-0",
+          "title": "Ask the editor whether the drawing can play",
+          "anchor": "function EditorScene.play()\n    local design = EditorScene.editor:designToPlay()\n    if not design then return end\n    SceneManager.switch(FirstPersonScene, FirstPersonScene.SUBMODES.CUSTOM, TitleScene.sizeIndex, nil, design)\nend",
+          "reviewed_sha256": "681a7b5dfee796586a4ceb6a87d863833d3e54cc312361a42e34e0a199fcae51",
+          "html": "<p><code>designToPlay()</code> returns a playable drawing or records the reason play is blocked. The scene handles navigation without writing the editor’s message or save state.</p>"
+        },
+        {
+          "id": "step-10-1",
+          "title": "Request a complete editing transition",
+          "anchor": "function EditorScene.randomMaze() EditorScene.editor:generateMaze(math.random) end",
+          "reviewed_sha256": "41de9ce08f5f46136e92b73062d09f999c2cf187255c5835123c8e048209cc3e",
+          "html": "<p>The scene requests a new maze. MapEditor owns replacing the drawing, resetting the cursor and tool, and recording the change.</p>"
+        }
+      ],
+      "experiments": []
+    },
+    {
+      "file": "source/MapEditor.lua",
+      "title": "Editing state belongs together",
+      "steps": [
+        {
+          "id": "step-11-0",
+          "title": "Replace the drawing and reset the tools",
+          "anchor": "function MapEditor:generateMaze(random)\n    self.design = MapDesign.fromMaze(Maze.generate(self.design.columns, self.design.rows, random))\n    resetCursor(self)\n    self.message = \"A new maze to alter\"\n    self.hasUnsavedChanges = true\nend",
+          "reviewed_sha256": "34dfcb998979f00e93bf3a83b19417755560adbada37d581d82ce6e4849190e6",
+          "html": "<p>Generate a maze at the current size and convert it to a drawing. Use the same cursor initialization as a newly opened drawing: select the cells tool and snap to the cell nearest the entrance without moving the design’s start. Record the message and unsaved change in the same operation.</p>"
+        },
+        {
+          "id": "step-11-1",
+          "title": "Explain a blocked play attempt",
+          "anchor": "function MapEditor:designToPlay()\n    local problem = self.design:problems()[1]\n    if problem then\n        self.message = problem\n        return nil\n    end\n    return self.design\nend",
+          "reviewed_sha256": "b30fa08d2dcc779df2fc3c5865d011a00b992fb5d9c505a772d611481a6bccee",
+          "html": "<p>Validation can update the action message without marking the drawing dirty. A valid drawing is returned for play; only saving clears the dirty flag.</p>"
+        }
+      ],
+      "experiments": []
+    },
+    {
+      "file": "source/Maze.lua",
+      "title": "Grid and maze generation",
+      "steps": [
+        {
+          "id": "step-12-0",
+          "title": "Build a playable grid inside its owner",
+          "anchor": "function Maze.fromDesign(design)\n    assert(design.exit, \"a playable maze needs an exit\")\n    local maze = Maze.new(design.columns, design.rows)\n    for gridY = 1, maze.gridHeight do\n        for gridX = 1, maze.gridWidth do\n            maze.blocks[gridY][gridX] = design:isOpen(gridX, gridY) and Maze.BLOCKS.OPEN or Maze.BLOCKS.WALL\n        end\n    end\n    maze.exitGridX, maze.exitGridY = design.exit.gridX, design.exit.gridY\n    maze.blocks[maze.exitGridY][maze.exitGridX] = Maze.BLOCKS.DOOR\n    return maze\nend",
+          "reviewed_sha256": "b38fb35f1d88446b14d47517e6a0990c8c37a3220036be97930dede45676f07e",
+          "html": "<p>Maze copies the design’s open blocks and installs a closed exit gate. Game no longer constructs the grid through nested field writes. The copy lets play open the gate without changing the editor drawing.</p>"
+        },
+        {
+          "id": "step-12-1",
+          "title": "World positions to grid indices",
+          "anchor": "function Maze:blockAt(x, y) return math.floor(x) + 1, math.floor(y) + 1 end -- luacheck: ignore 212/self\n\n-- A wall or passage belongs with the cell before it up to its middle, and the next cell after",
+          "reviewed_sha256": "7da09949be55b4e1bef1ef6999a12e8ff721377d68c7a3bd77b24aa8f736da57",
+          "html": "<p>World x grows right; y grows down. Positions can be fractional. Grid indices start at 1.</p><p><code>(1.5, 1.5)</code> becomes block <code>(2, 2)</code>: floor each coordinate, then add one.</p>"
+        },
+        {
+          "id": "step-12-2",
+          "title": "Rooms separated by walls",
+          "anchor": "    local pitch = corridorWidth + 1\n    for gridY = 1, maze.gridHeight do\n        local line = {}\n        for gridX = 1, maze.gridWidth do\n            -- Wall lines run along every grid index that is one more than a multiple of the pitch\n            local isCell = gridX % pitch ~= 1 and gridY % pitch ~= 1\n            line[gridX] = isCell and Maze.BLOCKS.OPEN or Maze.BLOCKS.WALL\n        end\n        maze.blocks[gridY] = line\n    end",
+          "reviewed_sha256": "3e5fbb1fc1c47975c9252d01f1944c1ae4237dca1feb2063d59179da198b9204",
+          "html": "<p><code>pitch</code> is corridor width plus one wall block. The remainder operator <code>%</code> places wall rows and columns.</p><p>With width 1, a 3 × 2-cell maze occupies 7 × 5 blocks. Tumble uses two-block corridors for jumping; Slime uses three-block corridors for throwing.</p>"
+        },
+        {
+          "id": "step-12-3",
+          "title": "Find unvisited neighbors",
+          "anchor": "    local visited = { [1] = true }\n    local stack = { { 1, 1 } }\n    while #stack > 0 do\n        local column, row = stack[#stack][1], stack[#stack][2]\n        local unvisited = {}\n        for _, direction in ipairs(Maze.DIRECTIONS) do\n            local nextColumn = column + Maze.OFFSETS[direction][1]\n            local nextRow = row + Maze.OFFSETS[direction][2]\n            local isInside = nextColumn >= 1 and nextColumn <= columns and nextRow >= 1 and nextRow <= rows\n            if isInside and not visited[(nextRow - 1) * columns + nextColumn] then\n                unvisited[#unvisited + 1] = direction\n            end\n        end",
+          "reviewed_sha256": "c14fe75d81ece80859d1bc277c5f7084e233663ce03c4ef6833c2960eb85a345",
+          "html": "<p>Start at cell (1, 1). The last entry of <code>stack</code> is the current cell; <code>#stack</code> is the list length.</p><p>The loop gathers neighboring cells that are inside the maze and have not been visited.</p>"
+        },
+        {
+          "id": "step-12-4",
+          "title": "Carve or backtrack",
+          "anchor": "        if #unvisited == 0 then\n            stack[#stack] = nil\n        else\n            local direction = unvisited[random(#unvisited)]\n            maze:carve(column, row, direction)\n            local nextColumn = column + Maze.OFFSETS[direction][1]\n            local nextRow = row + Maze.OFFSETS[direction][2]\n            visited[(nextRow - 1) * columns + nextColumn] = true\n            stack[#stack + 1] = { nextColumn, nextRow }\n        end",
+          "reviewed_sha256": "2af85bc1ac3a09ce288441aa37ef2532d4147a1d5383bd16fa751bae1720114d",
+          "html": "<p>Choose a random unvisited neighbor, carve the wall, and push that cell. If none remain, remove the stack’s last entry by assigning <code>nil</code>.</p><p>This is depth-first search. Connecting only new cells prevents loops: N cells get N − 1 internal passages.</p>"
+        }
+      ],
+      "experiments": [
+        {
+          "id": "maze",
+          "title": "Watch the stack work",
+          "html": "<p>Step through carving and backtracking. Cyan marks the current stack; gold marks its last cell.</p>",
+          "file": "tools/walkthrough/maze.html"
+        }
+      ]
+    },
+    {
+      "file": "source/Player.lua",
+      "title": "Movement and collision",
+      "steps": [
+        {
+          "id": "step-13-0",
+          "title": "Follow a navigation target",
+          "anchor": "function Player:walkTowards(targetX, targetY, speed)\n    local offsetX, offsetY = targetX - self.x, targetY - self.y\n    local distance = math.sqrt(offsetX * offsetX + offsetY * offsetY)\n    if distance == 0 then return false end\n    if distance <= speed then\n        self.x, self.y = targetX, targetY\n    else\n        self.x = self.x + offsetX / distance * speed\n        self.y = self.y + offsetY / distance * speed\n    end\n    return true\nend",
+          "reviewed_sha256": "65ad980aebe56b56c626aaeb8ad680e1d0dbbbebb9fdbbc5b50f81b9c62ebc31",
+          "html": "<p>Player owns the speed-limited move and exact arrival at a clear cell center. Autopilot chooses the route and asks for a step; it does not assign coordinates.</p>"
+        },
+        {
+          "id": "step-13-1",
+          "title": "Rewind position and heading together",
+          "anchor": "function Player:rewindAlong(thread, distance, turnSpeed)\n    local x, y, heading, blocked = thread:rewindFrom(self.x, self.y, distance)\n    if not x then return false, blocked end\n    ---@cast y number\n    ---@cast heading number\n    self.x, self.y = x, y\n    local turn = (heading - self.angle + 180) % 360 - 180\n    self:turn(math.max(-turnSpeed, math.min(turnSpeed, turn)))\n    return true, blocked\nend",
+          "reviewed_sha256": "38ca1018127d3044f5242493e0dd1ce1f7a75c626774182fd739d81164040c39",
+          "html": "<p>The thread checks its swept path. Player applies the resulting position and turns toward the backward heading at the allowed speed. If no clear movement remains, position and heading stay unchanged.</p>"
+        },
+        {
+          "id": "step-13-2",
+          "title": "Check the body’s four corners",
+          "anchor": "local function isBlocked(maze, x, y)\n    return maze:isWall(maze:blockAt(x - Player.RADIUS, y - Player.RADIUS))\n        or maze:isWall(maze:blockAt(x + Player.RADIUS, y - Player.RADIUS))\n        or maze:isWall(maze:blockAt(x - Player.RADIUS, y + Player.RADIUS))\n        or maze:isWall(maze:blockAt(x + Player.RADIUS, y + Player.RADIUS))\nend",
+          "reviewed_sha256": "aff0b7cc1277fe5bc4db0ae0a9d82e231a8b1bf57d691e21fd8fefdd4b0c91d8",
+          "html": "<p>The player is a square, 0.4 blocks wide. Test all four corners at the proposed position. Walls and closed doors block movement.</p>"
+        },
+        {
+          "id": "step-13-3",
+          "title": "Stop at the wall edge",
+          "anchor": "local function slide(from, to, isBlockedAt)\n    if not isBlockedAt(to) then return to end\n    local edge\n    if to > from then\n        edge = math.floor(to + Player.RADIUS) - Player.RADIUS - GAP\n    else\n        edge = math.ceil(to - Player.RADIUS) + Player.RADIUS + GAP\n    end\n    -- Only rest somewhere between where the body was and where it wanted to go\n    local isBetween = (edge - from) * (to - from) >= 0\n    if isBetween and not isBlockedAt(edge) then return edge end\n    return from\nend",
+          "reviewed_sha256": "aad9802e68dd38be37db0b1e43ba69480d1d9bd27557d5b34ec9508e1522c2ce",
+          "html": "<p>Try the target first. If blocked, calculate a position just short of the wall. <code>GAP</code> avoids rounding a touching body into it.</p><p>This checks destinations, not the entire path. The game must use small movement steps.</p>"
+        },
+        {
+          "id": "step-13-4",
+          "title": "Slide along walls",
+          "anchor": "function Player:moveBy(maze, offsetX, offsetY)\n    local targetX, targetY = self.x + offsetX, self.y + offsetY\n    self.x = slide(self.x, targetX, function(x) return isBlocked(maze, x, self.y) end)\n    local isBlockedX = self.x ~= targetX\n    self.y = slide(self.y, targetY, function(y) return isBlocked(maze, self.x, y) end)\n    return isBlockedX, self.y ~= targetY\nend",
+          "reviewed_sha256": "d8e909c612e35eb7ac02e0713cbf33c6c7987a180f6c7c6b65280aa79cc9910e",
+          "html": "<p>Move x first, then y using the updated x. A wall can block one axis while allowing movement along the other.</p>"
+        },
+        {
+          "id": "step-13-5",
+          "title": "Rotate forward and sideways motion",
+          "anchor": "function Player:move(maze, forward, strafe)\n    local radians = math.rad(self.angle)\n    local cosine, sine = math.cos(radians), math.sin(radians)\n    self:moveBy(maze, cosine * forward - sine * strafe, sine * forward + cosine * strafe)\nend",
+          "reviewed_sha256": "4583a3979855eb25398a44b17c623d27f54fc13329f843fb337a31bbdcd2bdec",
+          "html": "<p><code>cos(angle)</code> gives the horizontal part of forward; <code>sin(angle)</code> gives its vertical part. Lua takes radians, so convert degrees first.</p><p>Forward = (cos θ, sin θ). Right = (−sin θ, cos θ). At 90°, forward is down and right is left on the map.</p>"
+        }
+      ],
+      "experiments": [
+        {
+          "id": "movement",
+          "title": "Direction and angle",
+          "html": "<p>Change the heading. Compare the forward vector with its horizontal and vertical components.</p>",
+          "file": "tools/walkthrough/movement.html"
+        }
+      ]
+    },
+    {
+      "file": "source/ExitDistance.lua",
+      "title": "Shortest corridor distances",
+      "steps": [
+        {
+          "id": "step-14-0",
+          "title": "Start a queue at the exit",
+          "anchor": "    local queue, head = { { exitColumn, exitRow } }, 1\n    while head <= #queue do\n        local column, row = queue[head][1], queue[head][2]\n        head = head + 1\n        local distance = distances.byCell[(row - 1) * maze.columns + column]\n        for _, direction in ipairs(Maze.DIRECTIONS) do",
+          "reviewed_sha256": "fde227eea0afe7d7712341a2cbf2dfe44df3da63fabee00988bdc060b9843fea",
+          "html": "<p>The exit cell has distance zero. Process the oldest queued cell first by advancing <code>head</code>.</p><p>This is breadth-first search: visit distance 0, then 1, then 2, and so on.</p>"
+        },
+        {
+          "id": "step-14-1",
+          "title": "Visit each reachable neighbor once",
+          "anchor": "            if isInside and not distances.byCell[key] and maze:hasPassage(column, row, direction) then\n                distances.byCell[key] = distance + 1\n                distances.farthest = math.max(distances.farthest, distance + 1)\n                queue[#queue + 1] = { nextColumn, nextRow }\n            end",
+          "reviewed_sha256": "d0e9b9dd886a3212d5bd6b736390e33f558c4384e8e4d23167f8bc62daa7020a",
+          "html": "<p>Follow passages, assign the neighbor’s distance, and enqueue it. Every passage costs one step, so the first assigned distance is shortest.</p><p>Zero is true in Lua. The exit’s zero distance therefore still marks it as visited.</p>"
+        },
+        {
+          "id": "step-14-2",
+          "title": "Follow custom maps block by block",
+          "anchor": "local function blockDistances(maze)\n    local distances = setmetatable({ maze = maze, byBlock = {}, farthest = 0 }, ExitDistance)\n    distances.byBlock[(maze.exitGridY - 1) * maze.gridWidth + maze.exitGridX] = 0\n    local queue, head = { { maze.exitGridX, maze.exitGridY } }, 1\n    while head <= #queue do",
+          "reviewed_sha256": "39e1a8ca5b0eec6a71c87e8169044344211df0d425f576b0a76439d645c1192d",
+          "html": "<p>Hand-made maps can connect between cell centers. Their breadth-first search starts at the gate, even while closed, and follows every open block. Walls and disconnected blocks have zero proximity.</p>"
+        },
+        {
+          "id": "step-14-3",
+          "title": "Convert distance to proximity",
+          "anchor": "function ExitDistance:proximity(x, y)\n    if self.byBlock then\n        local gridX, gridY = self.maze:blockAt(x, y)\n        local distance = self.byBlock[(gridY - 1) * self.maze.gridWidth + gridX] or self.farthest + 1\n        return 1 - math.min(1, distance / math.max(1, self.farthest))\n    end\n    local column, row = self.maze:nearestCell(x, y)\n    return 1 - math.min(1, self:cells(column, row) / math.max(1, self.farthest))\nend",
+          "reviewed_sha256": "3eed80eebecd1f485b9dc4e1161b66dd463abe3d6389dd5592e6533d78f22c86",
+          "html": "<p>Generated mazes measure cells; custom maps measure blocks, with proximity 1 at the gate. Proximity is 0 at the farthest reachable position. Music follows this corridor distance rather than straight-line distance through walls.</p>"
+        }
+      ],
+      "experiments": []
+    },
+    {
+      "file": "source/Autopilot.lua",
+      "title": "Wall-following navigation",
+      "steps": [
+        {
+          "id": "step-15-0",
+          "title": "Try left, ahead, right, back",
+          "anchor": "local PREFERENCE <const> = { -1, 0, 1, 2 }\n\nfunction Autopilot.chooseDirection(maze, column, row, facing)\n    for _, quarterTurns in ipairs(PREFERENCE) do\n        local direction = CLOCKWISE[(CLOCKWISE_INDEX[facing] - 1 + quarterTurns) % 4 + 1]\n        if maze:hasPassage(column, row, direction) then return direction end\n    end\n    error(\"cell \" .. column .. \",\" .. row .. \" has no way out\")\nend",
+          "reviewed_sha256": "692a65c53e24aaa97dc26a92a43ae46a48cce72e3c957f468d7366d416824e93",
+          "html": "<p>The numbers are quarter-turn offsets from the current heading. Choose the first open passage.</p><p>This works for the game’s tree-shaped maze, but does not choose the shortest route.</p>"
+        },
+        {
+          "id": "step-15-1",
+          "title": "Let Player perform the move",
+          "anchor": "    if player:walkTowards(self.targetX, self.targetY, Autopilot.WALK_SPEED) then return end",
+          "reviewed_sha256": "f38dce7b70113eaab85a9c22d3382f97bd8e71ff65d2f93df4f4cd9abd7b23f0",
+          "html": "<p>If a target step was needed, finish this frame. Once at the target, choose the next passage and turn before advancing.</p>"
+        },
+        {
+          "id": "step-15-2",
+          "title": "Turn by the shorter angle",
+          "anchor": "    local turn = (ANGLES[self.direction] - player.angle + 180) % 360 - 180\n    if turn ~= 0 then\n        player:turn(math.max(-Autopilot.TURN_SPEED, math.min(Autopilot.TURN_SPEED, turn)))\n        return\n    end",
+          "reviewed_sha256": "c9827661e8028bd4197b14874ca3036b51d3e3ff73279c11a2b578934989edfb",
+          "html": "<p>Wrap the turn into [−180°, 180°). From 350° to 10°, the result is +20°.</p><p>Limit turning to six degrees per frame before moving toward the next cell center.</p>"
+        }
+      ],
+      "experiments": []
+    },
+    {
+      "file": "source/Thread.lua",
+      "title": "Recording and reversing a path",
+      "steps": [
+        {
+          "id": "step-16-0",
+          "title": "Keep collision-safe path segments",
+          "anchor": "function Thread:record(x, y)\n    local points = self.points\n    -- Nearer the point before last than the last point is: the player has turned back\n    while #points >= 2 do\n        local last, previous = points[#points], points[#points - 1]\n        local isRetracing = distanceBetween(x, y, previous.x, previous.y)\n            < distanceBetween(last.x, last.y, previous.x, previous.y)\n        if not isRetracing or not Player.isPathClear(self.maze, previous.x, previous.y, x, y) then break end\n        points[#points] = nil\n    end\n    local last = points[#points]\n    if not Player.isPathClear(self.maze, last.x, last.y, x, y) then\n        points[#points + 1] = { x = self.lastX, y = self.lastY }\n        last = points[#points]\n    end\n    if distanceBetween(x, y, last.x, last.y) >= Thread.SPACING then points[#points + 1] = { x = x, y = y } end\n    while #points > Thread.MOST_POINTS do\n        table.remove(points, 1)\n    end\n    self.lastX, self.lastY = x, y\nend\n",
+          "reviewed_sha256": "794de0cf42b396854a0eeb38c1a9d9a4d90acc2fd6e9b07a98d369275e99f568",
+          "html": "<p>Record a point every 0.25 blocks, with extra points where a shortcut would cross a wall. Check clearance for the player’s whole body before removing a retraced point.</p><p>The scene’s game records both axes of movement. The list is capped at 800 points.</p>"
+        },
+        {
+          "id": "step-16-1",
+          "title": "Check the segment before rewinding",
+          "anchor": "        local share = stretch > 0 and math.min(1, distance / stretch) or 1\n        local targetX, targetY = x + (last.x - x) * share, y + (last.y - y) * share\n        if not Player.isPathClear(self.maze, x, y, targetX, targetY) then\n            blocked = true\n            break\n        end\n        if stretch > 0 then heading = math.deg(math.atan(y - last.y, x - last.x)) % 360 end\n        x, y = targetX, targetY",
+          "reviewed_sha256": "c121cdfde58d31341c86be5b0b67f7cd8a30759945cb977eba6159a5ddfc49d8",
+          "html": "<p><code>share = distance / stretch</code>, capped at 1, gives the fraction to rewind. Reeling 0.1 blocks along 0.25 blocks moves 40% of the segment.</p><p>Check the entire segment for body clearance before moving. Stop at blocked segments, including unsafe paths from older saves.</p>"
+        }
+      ],
+      "experiments": []
+    },
+    {
+      "file": "source/Spikes.lua",
+      "title": "Platforming hazards",
+      "steps": [
+        {
+          "id": "step-17-0",
+          "title": "Leave safe takeoff and landing space",
+          "anchor": "function Spikes.place(maze, puzzle)\n    local spikes = {}\n    local startX, startY = maze:cellCenter(1, 1)\n    local spawnGridX, landingGridY = maze:blockAt(startX, startY)\n    -- Slime cannot steer or throw during this fall; its first landing must be safe.\n    while not maze:isWall(spawnGridX, landingGridY + 1) do\n        landingGridY = landingGridY + 1\n    end\n    for row = 1, maze.rows do\n        for column = 1, maze.columns do\n            local x = maze:cellCenter(column, row)\n            local floorY = row * (maze.corridorWidth + 1)\n            local gridX = math.floor(x) + 1\n            local protected = (column == 1 and (row == 1 or floorY == landingGridY))\n                or (column == maze.columns and row == maze.rows)\n            for _, item in ipairs(puzzle.items) do\n                local itemX, itemY = maze:blockCenter(item.gridX, item.gridY)\n                local itemColumn, itemRow = maze:nearestCell(itemX, itemY)\n                if itemColumn == column and itemRow == row then protected = true end\n            end\n            if not protected and maze:isWall(gridX, floorY + 1) and not maze:isWall(gridX, floorY) then\n                spikes[#spikes + 1] = { x = x, y = floorY }",
+          "reviewed_sha256": "54c41e91fa1a86e61dadc41419564e80df844faa843bd007350d3f415d79a68a",
+          "html": "<p>Place short spike patches on solid floors, leaving the starting cell, its first landing below any open shaft, collectible cells, and exit cell clear. Slime cannot steer while falling, so the first landing remains safe on both entry and respawn. Each run owns its hazards. The triangles rotate with the maze in Tumble.</p>"
+        },
+        {
+          "id": "step-17-1",
+          "title": "Contact sends you back to the start",
+          "anchor": "function Spikes.touches(spikes, x, y)\n    for _, spike in ipairs(spikes) do\n        if\n            math.abs(x - spike.x) < Spikes.HALF_WIDTH + Player.RADIUS\n            and y + Player.RADIUS > spike.y - Spikes.HEIGHT\n            and y - Player.RADIUS < spike.y\n        then\n            return true\n        end\n    end",
+          "reviewed_sha256": "32cc8b41b30de11782480b0e22ffd80cb4cdf2277975d79f0207dd627b1fbb23",
+          "html": "<p>Check the player body against each patch. Tumble and Slime reset movement on contact but retain collected shapes, the open exit, and elapsed time. Slime trajectory previews stop at spikes as well as walls.</p>"
+        }
+      ],
+      "experiments": []
+    },
+    {
+      "file": "source/Tumble.lua",
+      "title": "Rotating gravity",
+      "steps": [
+        {
+          "id": "step-18-0",
+          "title": "Convert screen directions to maze directions",
+          "anchor": "    self.angle = (self.angle + (input.turn or 0)) % 360\n    -- Which way down and right on the screen point inside the maze\n    local radians = math.rad(self.angle)\n    local sine, cosine = math.sin(radians), math.cos(radians)\n    local downX, downY = sine, cosine\n    local rightX, rightY = cosine, -sine\n    self.player:turn(90 - self.angle - self.player.angle)\n\n    local velocityX, velocityY = self.velocityX + downX * Tumble.GRAVITY, self.velocityY + downY * Tumble.GRAVITY",
+          "reviewed_sha256": "a93de38c1c2a7b12b8360e8975ad3e9f1ee3e2ca1e15742a04e7cf636229e130",
+          "html": "<p>The view rotates clockwise by <code>angle</code>. Gravity must still point down the screen.</p><p>In maze coordinates, down = (sin θ, cos θ). At 90°, gravity points east. Right = (cos θ, −sin θ).</p><p>Tumble requests a turn through Player’s existing method to align its heading with gravity.</p>"
+        },
+        {
+          "id": "step-18-1",
+          "title": "Change the sideways velocity",
+          "anchor": "    local along = velocityX * rightX + velocityY * rightY\n    local wanted\n    if move ~= 0 then\n        wanted = along + (move * Tumble.WALK_SPEED - along) * WALK_GRIP\n        self.facing = move > 0 and 1 or -1\n    else\n        wanted = along * (1 - (self.isGrounded and GROUND_FRICTION or AIR_FRICTION))\n    end\n    velocityX, velocityY = velocityX + rightX * (wanted - along), velocityY + rightY * (wanted - along)\n",
+          "reviewed_sha256": "307ffcde989002eebcd7aaede7f47e070ea4155a730c7ea2e074928d3565843d",
+          "html": "<p>The dot product measures velocity along the screen’s right direction: multiply corresponding components and add.</p><p>Walking changes that component toward the desired speed. With no input, friction reduces it.</p>"
+        },
+        {
+          "id": "step-18-2",
+          "title": "Jump, then cap speed",
+          "anchor": "    if input.jump and self.isGrounded then\n        self:emit(\"jump\")\n        local falling = velocityX * downX + velocityY * downY\n        velocityX, velocityY =\n            velocityX - downX * (falling + Tumble.JUMP_SPEED), velocityY - downY * (falling + Tumble.JUMP_SPEED)\n    end\n\n    local speed = math.sqrt(velocityX * velocityX + velocityY * velocityY)\n    if speed > Tumble.MAX_SPEED then\n        velocityX, velocityY = velocityX * Tumble.MAX_SPEED / speed, velocityY * Tumble.MAX_SPEED / speed",
+          "reviewed_sha256": "5f786e5fb288a87efa2150f09bc6fb23dd2552828b7ca3f3228bdc2d37f674d6",
+          "html": "<p>Replace the downward velocity with an upward jump speed. Limit total speed to 0.35 blocks per frame before collision checks.</p>"
+        }
+      ],
+      "experiments": []
+    },
+    {
+      "file": "source/SideView.lua",
+      "title": "2D drawing coordinates",
+      "steps": [
+        {
+          "id": "step-19-0",
+          "title": "Translate, rotate, scale",
+          "anchor": "function SideView.toScreen(worldX, worldY)\n    local offsetX, offsetY = worldX - playerX, worldY - playerY\n    return SideView.CENTER_X + (offsetX * cosine - offsetY * sine) * scale,\n        SideView.CENTER_Y + (offsetX * sine + offsetY * cosine) * scale",
+          "reviewed_sha256": "d6b3864d18bcdc6bd9d3ea9567585b133d4c82099a0ed24c0a54b429cdda748a",
+          "html": "<p>Subtract the player position, rotate the offset, multiply by pixels per block, then add screen center (200, 120).</p><p>The player stays centered while the maze rotates around them.</p>"
+        },
+        {
+          "id": "step-19-1",
+          "title": "A rotated rectangle becomes a polygon",
+          "anchor": "local function fillWorldRect(left, top, right, bottom)\n    local x1, y1 = SideView.toScreen(left, top)\n    local x2, y2 = SideView.toScreen(right, top)\n    local x3, y3 = SideView.toScreen(right, bottom)\n    local x4, y4 = SideView.toScreen(left, bottom)\n    playdate.graphics.fillPolygon(x1, y1, x2, y2, x3, y3, x4, y4)\nend",
+          "reviewed_sha256": "ddaedec998e578f60aac3e914682a9074508ece81284fca57a3a340346388755",
+          "html": "<p>Transform all four corners with the same function. Draw the resulting polygon to show a corridor.</p>"
+        }
+      ],
+      "experiments": []
+    },
+    {
+      "file": "source/Slime.lua",
+      "title": "Throwing and trajectory prediction",
+      "steps": [
+        {
+          "id": "step-20-0",
+          "title": "Convert the crank angle to velocity",
+          "anchor": "local function throwVelocity(angle)\n    local radians = math.rad(angle)\n    return math.sin(radians) * Slime.THROW_SPEED, -math.cos(radians) * Slime.THROW_SPEED\nend",
+          "reviewed_sha256": "e0e77bef3503d9db64c5624f75ca812358f68f22ba56562ec5b5de394a661c61",
+          "html": "<p>Slime uses 0° up, unlike the first-person camera’s 0° east. Its launch direction is (sin θ, −cos θ).</p><p>Multiply by <code>THROW_SPEED</code> to get blocks per frame.</p>"
+        },
+        {
+          "id": "step-20-1",
+          "title": "Simulate one frame",
+          "anchor": "local function fly(maze, body, velocityX, velocityY)\n    velocityY = velocityY + Slime.GRAVITY\n    local speed = math.sqrt(velocityX * velocityX + velocityY * velocityY)\n    if speed > Slime.MAX_SPEED then\n        velocityX, velocityY = velocityX * Slime.MAX_SPEED / speed, velocityY * Slime.MAX_SPEED / speed\n    end\n    local isBlockedX, isBlockedY = body:moveBy(maze, velocityX, velocityY)\n    local surface\n    if isBlockedY and velocityY > 0 then\n        surface = \"floor\"\n    elseif isBlockedX then\n        surface = velocityX > 0 and \"right\" or \"left\"\n    elseif isBlockedY then\n        surface = \"ceiling\"\n    end\n    return velocityX, velocityY, surface\nend",
+          "reviewed_sha256": "55217b16822ec040394320dadc094b35ca9857c99f1a9d6d6556ebfdfa71b1a9",
+          "html": "<p>Add gravity, cap speed, then call the shared collision method. A downward hit is a floor; other blocked directions identify walls or the ceiling.</p>"
+        },
+        {
+          "id": "step-20-2",
+          "title": "Preview with the same simulation",
+          "anchor": "function Slime:arc(result)\n    result = result or { points = {}, landingX = 0, landingY = 0 }\n    local scout, points = self.scout, result.points\n    scout:copyFrom(self.player)\n    local velocityX, velocityY = throwVelocity(self.aimAngle)\n    local count = 0\n    for frame = 1, ARC_FRAMES do\n        local surface\n        velocityX, velocityY, surface = fly(self.maze, scout, velocityX, velocityY)\n        if surface or Spikes.touches(self.spikes, scout.x, scout.y) then break end\n        if frame % ARC_POINT_EVERY == 0 then\n            count = count + 1\n            local point = points[count]\n            if not point then",
+          "reviewed_sha256": "815725226f72357cdc187b45d881cf1a0745f807071dce379cfdd5d7ce2bb324",
+          "html": "<p>A spare player, <code>scout</code>, resets its own pose through <code>copyFrom</code> and repeats <code>fly</code> until collision or 240 frames. The real player stays unchanged, and the spare body is reused. The returned points are fresh unless the view supplies its own output buffer.</p><p>The real flight uses this same function. The preview therefore includes the same gravity, speed cap, and collisions.</p>"
+        }
+      ],
+      "experiments": []
+    },
+    {
+      "file": "source/Puzzle.lua",
+      "title": "Shape states",
+      "steps": [
+        {
+          "id": "step-21-0",
+          "title": "Ground → carried",
+          "anchor": "function Puzzle:pickUp(x, y)\n    local item = self:itemInReach(x, y)\n    if not item then return nil end\n    item.state = Puzzle.STATES.CARRIED\n    self.carried = item\n    return item\nend",
+          "reviewed_sha256": "fe603a7f64fac26d56781bcca9826ed902f72a9abaae7952be2f392fd607ca19",
+          "html": "<p>Find an item within reach, change its state, and remember it in <code>self.carried</code>. Only one item can be carried.</p>"
+        },
+        {
+          "id": "step-21-1",
+          "title": "Carried → placed",
+          "anchor": "    local pedestal = self:pedestalInReach(x, y)\n    if pedestal then\n        pedestal.isFilled = true\n        item.gridX, item.gridY, item.state = pedestal.gridX, pedestal.gridY, Puzzle.STATES.PLACED\n        self.carried = nil\n        return Puzzle.RESULTS.PLACED\n    end\n",
+          "reviewed_sha256": "485c47c7f665fbd68d02cc119c4e9612824014416044ef399bd70aefcb6a4680",
+          "html": "<p>A matching empty pedestal within reach receives the item. Mark both as filled or placed, then empty the player’s hands.</p>"
+        },
+        {
+          "id": "step-21-2",
+          "title": "Check all shapes",
+          "anchor": "function Puzzle:isSolved()\n    for _, item in ipairs(self.items) do\n        if item.state ~= Puzzle.STATES.PLACED then return false end\n    end\n    return true\nend",
+          "reviewed_sha256": "78179146df45d9cb1530c76af0fae563e97c34eb91e36508d1e4b99eb98f776f",
+          "html": "<p>Any shape not placed means the puzzle is unfinished. In first-person play, solving it unlocks the gate; the player must still crank it open.</p>"
+        }
+      ],
+      "experiments": []
+    },
+    {
+      "file": "source/Raycaster.lua",
+      "title": "Rays and perspective",
+      "steps": [
+        {
+          "id": "step-22-0",
+          "title": "Own each scan result",
+          "anchor": "function Raycaster.scan(maze, x, y, angle, screen, result)\n    result = result or { runs = {}, depths = {} }\n    result.runPool = result.runPool or {}",
+          "reviewed_sha256": "cd89aa511828b93d07e7a737280ae64d33fbde50f16671161501e703b9e42bc1",
+          "html": "<p>Without an output buffer, every call returns independent runs and depths. MazeView supplies its private buffer each frame to reuse those tables. Only another scan into that same buffer invalidates its contents. The buffer keeps a pool of run tables even when fewer faces are visible; its runs list contains only the active faces.</p>"
+        },
+        {
+          "id": "step-22-1",
+          "title": "Build the camera directions",
+          "anchor": "    local width, columnWidth = screen.width, screen.columnWidth\n    local radians = math.rad(angle)\n    local forwardX, forwardY = math.cos(radians), math.sin(radians)\n    local planeScale = math.tan(math.rad(screen.fieldOfView / 2))\n    local planeX, planeY = -forwardY * planeScale, forwardX * planeScale",
+          "reviewed_sha256": "50cb87e011c8f6e0c8814abdb7455fa95f22365f7cb60329e71ee6fbde0631ee",
+          "html": "<p>Forward = (cos θ, sin θ). The camera plane is perpendicular to forward and has half-width <code>tan(FOV / 2)</code>.</p><p>For 70° FOV, tan(35°) ≈ 0.700. Tangent is opposite ÷ adjacent: plane half-width divided by one unit forward.</p>"
+        },
+        {
+          "id": "step-22-2",
+          "title": "Aim one ray through the screen",
+          "anchor": "    local function castAt(screenX)\n        local cameraX = 2 * screenX / width - 1\n        return cast(maze, x, y, forwardX + planeX * cameraX, forwardY + planeY * cameraX)\n    end",
+          "reviewed_sha256": "7ecb0ca74fb46f5d9d53b65628b43378093371fe2f91238bfe5f13b22afdf746",
+          "html": "<p><code>cameraX</code> maps screen x to −1 at the left edge, 0 at center, and +1 at the right edge.</p><p>Add that share of the camera plane to forward. The resulting ray direction is deliberately not normalized.</p>"
+        },
+        {
+          "id": "step-22-3",
+          "title": "Calculate grid-crossing intervals",
+          "anchor": "    local gridX, gridY = math.floor(x) + 1, math.floor(y) + 1\n    local deltaX = directionX == 0 and math.huge or math.abs(1 / directionX)\n    local deltaY = directionY == 0 and math.huge or math.abs(1 / directionY)",
+          "reviewed_sha256": "d60d55c50ce5b9243044397ba47076def85bc8b7fa54a54f69ab5dfe728ea846",
+          "html": "<p>Write a ray as position + t × direction. Crossing one block in x takes <code>abs(1 / directionX)</code> units of t.</p><p>A zero component gets infinity: an exactly horizontal ray never crosses a horizontal grid line.</p>"
+        },
+        {
+          "id": "step-22-4",
+          "title": "Find the first boundaries",
+          "anchor": "    if directionX < 0 then\n        stepX, sideDistanceX = -1, (x - (gridX - 1)) * deltaX\n    else\n        stepX, sideDistanceX = 1, (gridX - x) * deltaX\n    end\n    if directionY < 0 then\n        stepY, sideDistanceY = -1, (y - (gridY - 1)) * deltaY\n    else\n        stepY, sideDistanceY = 1, (gridY - y) * deltaY\n    end",
+          "reviewed_sha256": "4f6ef01ecd4e3e14c8c408ee6cba009d4b1cea74a98c598cffb246f4439e2eeb",
+          "html": "<p>Choose −1 or +1 for each grid direction. Multiply the distance to the first boundary by that axis’s interval.</p><p>From x = 1.5 pointing east with directionX = 1, the first x boundary is reached at t = 0.5.</p>"
+        },
+        {
+          "id": "step-22-5",
+          "title": "Visit the next crossed block",
+          "anchor": "        if sideDistanceX < sideDistanceY then\n            sideDistanceX = sideDistanceX + deltaX\n            gridX = gridX + stepX\n            side = Raycaster.SIDES.X\n        else\n            sideDistanceY = sideDistanceY + deltaY\n            gridY = gridY + stepY\n            side = Raycaster.SIDES.Y\n        end",
+          "reviewed_sha256": "6965fef246db73fdc47cb2a06885d2ac59040a4ccd9304995769d12e852d9ecd",
+          "html": "<p>Advance whichever boundary comes first, then schedule its next crossing. This is DDA: digital differential analysis.</p><p>It jumps from boundary to boundary instead of taking tiny steps through empty space.</p>"
+        },
+        {
+          "id": "step-22-6",
+          "title": "Stop at the first nonempty block",
+          "anchor": "        local block = blocks[gridY][gridX]\n        if block ~= OPEN then\n            local distance = side == Raycaster.SIDES.X and sideDistanceX - deltaX or sideDistanceY - deltaY\n            return distance, side, gridX, gridY, block\n        end",
+          "reviewed_sha256": "2596e1e8772b8c6c09350ab34f686d7ade2a62a2384423d986dda41bc6e7dc17",
+          "html": "<p>Return the hit and t. Subtract the delta because the next boundary time was already advanced.</p><p>EXIT also stops a ray, although the player can enter it. The renderer draws it as white light.</p>"
+        },
+        {
+          "id": "step-22-7",
+          "title": "Equal screen spacing, unequal angles",
+          "anchor": "        local cameraX = 2 * screenX / width - 1\n        return cast(maze, x, y, forwardX + planeX * cameraX, forwardY + planeY * cameraX)",
+          "reviewed_sha256": "43b0c109e713f8828663f7ab0ffe45296523d32eb4d6207685618685f0fa3aaa",
+          "html": "<p>Pixels are evenly spaced on a flat camera plane. The angle of a ray is <code>atan(cameraX × tan(FOV / 2))</code> relative to forward.</p><p>At 70° FOV, halfway from center to edge is about 19.3°, not 17.5°. Incrementing the angle by a fixed amount would not match this projection.</p>"
+        },
+        {
+          "id": "step-22-8",
+          "title": "Why t is the correct depth",
+          "anchor": "        return cast(maze, x, y, forwardX + planeX * cameraX, forwardY + planeY * cameraX)",
+          "reviewed_sha256": "9f99f76a9d641f31293231fbc6011c041d0a6d459cc1a66285b73d88fc2bf6e7",
+          "html": "<p>Forward has length 1; the plane is perpendicular to it. Thus dot(forward, ray) = 1, and a hit at t × ray has forward depth t.</p><p>A flat wall ahead keeps the same depth across the screen. Using diagonal travel distance would shrink its edges: the fisheye error.</p>"
+        },
+        {
+          "id": "step-22-9",
+          "title": "Group samples by wall face",
+          "anchor": "        if column <= columnCount then depths[column] = distance end\n        if faceKey(side, gridX, gridY) == run.key then\n            run.endX, run.endDistance = sampleX, distance\n        else\n            local low, high = previousX, sampleX\n            local key = faceKey(side, gridX, gridY)\n            local startDistance = distance",
+          "reviewed_sha256": "563db7a8c15eea1aba726be34f22772532412fc4acc694b906cdd9b38577866a",
+          "html": "<p>Save each column’s depth. Consecutive hits on the same block face form a run, drawn later as one trapezoid.</p><p>At 400 pixels with 4-pixel columns, there are 100 depth samples plus edge and refinement rays.</p>"
+        },
+        {
+          "id": "step-22-10",
+          "title": "Refine the edge by bisection",
+          "anchor": "            for _ = 1, screen.refinements do\n                local middle = (low + high) / 2\n                local middleDistance, middleSide, middleGridX, middleGridY = castAt(middle)\n                local middleKey = faceKey(middleSide, middleGridX, middleGridY)\n                if middleKey == run.key then\n                    low = middle\n                    run.endDistance = middleDistance\n                else\n                    -- A sliver of some third face is treated as the edge of the new run\n                    high = middle\n                    if middleKey == key then startDistance = middleDistance end\n                end\n            end",
+          "reviewed_sha256": "ce9e503c2863b5199af3c17a335b7357d6ad3373c771a876b683aef4ba20117e",
+          "html": "<p>Cast halfway between the two samples. Replace one endpoint, then repeat. Two refinements reduce the search interval to a quarter.</p><p>A thin third face can be folded into the boundary; this is sampled visibility.</p>"
+        },
+        {
+          "id": "step-22-11",
+          "title": "Project an object onto the screen",
+          "anchor": "    local offsetX, offsetY = worldX - x, worldY - y\n    local depth = offsetX * forwardX + offsetY * forwardY\n    if depth <= 0 then return nil end\n    local sideways = -offsetX * forwardY + offsetY * forwardX\n    local planeScale = math.tan(math.rad(screen.fieldOfView / 2))\n    return screen.width / 2 * (1 + sideways / (depth * planeScale)), depth",
+          "reviewed_sha256": "479239fffb941aabb22782bb2f8f8374ce96931c8414e9c06a9a486e1d364015",
+          "html": "<p>Subtract camera position. Dot products measure forward depth and sideways offset. Reject points behind the camera.</p><p>For an object 2 blocks ahead and 0.5 right: screen x = 200 × (1 + 0.5 / (2 × 0.700)) ≈ 271.4.</p>"
+        }
+      ],
+      "experiments": [
+        {
+          "id": "rays",
+          "title": "Ray traversal",
+          "html": "<p>Turn the camera and select a ray. Change the field of view, then compare grid crossings and distances. “Face a flat wall” makes the fisheye error easy to see. Cyan marks the camera plane.</p>",
+          "file": "tools/walkthrough/rays.html"
+        }
+      ]
+    },
+    {
+      "file": "source/MazeView.lua",
+      "title": "Drawing the 3D image",
+      "steps": [
+        {
+          "id": "step-23-0",
+          "title": "Set the perspective scale",
+          "anchor": "local PROJECTION <const> = MazeView.SCREEN.width / 2 / math.tan(math.rad(MazeView.SCREEN.fieldOfView / 2))\n-- Anything nearer than this is drawn as if it were this far away, to keep coordinates sane\nlocal NEAREST <const> = 0.1",
+          "reviewed_sha256": "313aab99d1ee3e27c13153657b27cd156b13f604ca5088c35c921cf719565eb9",
+          "html": "<p><code>PROJECTION = 200 / tan(35°)</code> ≈ 285.63 pixels for a one-block wall one block ahead.</p><p>Clamp very near depths to 0.1 so screen coordinates remain manageable.</p>"
+        },
+        {
+          "id": "step-23-1",
+          "title": "Divide by depth",
+          "anchor": "local function drawRun(run)\n    local startHeight = PROJECTION / math.max(run.startDistance, NEAREST)\n    local endHeight = PROJECTION / math.max(run.endDistance, NEAREST)\n    local startX, endX = run.startX, run.endX\n    local startTop, startBottom = horizon - startHeight / 2, horizon + startHeight / 2\n    local endTop, endBottom = horizon - endHeight / 2, horizon + endHeight / 2\n",
+          "reviewed_sha256": "6c889b16bb6d50306c10fb7afd37fdcc68b5912fb6431b7055f8a7c85ee77b0e",
+          "html": "<p>Wall height = 285.63 ÷ depth. At depth 2, it is 142.81 pixels; at depth 4, 71.41 pixels.</p><p>Center both ends around the horizon. Their top and bottom edges form a trapezoid.</p>"
+        },
+        {
+          "id": "step-23-2",
+          "title": "Shade and fill each face",
+          "anchor": "        local distance = (run.startDistance + run.endDistance) / 2\n        local level = BRIGHTEST_WALL - math.floor(distance * SHADE_PER_BLOCK)\n        if run.side == Raycaster.SIDES.X then level = level - SIDE_X_DARKENING end\n        playdate.graphics.setPattern(Shades.pattern(math.max(DARKEST_WALL, level)))\n    end\n    playdate.graphics.fillPolygon(startX, startTop, endX, endTop, endX, endBottom, startX, startBottom)",
+          "reviewed_sha256": "bedb6d1ca8a0f73f5d97ed22e3b459e88c874bc4b0f94f49f99ec990ec458b38",
+          "html": "<p>Darken with distance and make x-facing walls slightly darker. <code>fillPolygon</code> draws the four projected corners.</p>"
+        },
+        {
+          "id": "step-23-3",
+          "title": "Draw brickwork in world coordinates",
+          "anchor": "local function drawBricks(run, startTop, startHeight, endTop, endHeight)\n    local tallest = math.max(startHeight, endHeight)\n    if tallest < SHORTEST_WALL_WITH_COURSES then return end\n    local startX, endX = run.startX, run.endX\n    for course = 1, COURSES - 1 do\n        local fraction = course / COURSES\n        playdate.graphics.drawLine(startX, startTop + startHeight * fraction, endX, endTop + endHeight * fraction)\n    end\n    if tallest < SHORTEST_WALL_WITH_JOINTS then return end\n\n    for index, along in ipairs(JOINTS) do\n        jointX[index], jointHeight[index] = projectAlongFace(run, along)\n    end\n    for course, joints in ipairs(JOINTS_IN_COURSE) do\n        for _, index in ipairs(joints) do\n            local x, height = jointX[index], jointHeight[index]\n            -- Only the part of the face inside the run is in view",
+          "reviewed_sha256": "f76f508bb093316e7bce79365cff1a1acf728458f6d57931c212470a21b357ff",
+          "html": "<p>Horizontal courses divide the wall’s height. Vertical joints are placed along the block face, then projected onto the screen.</p><p>Bitmap textures instead use the fractional hit position to choose an image column. This game draws lines; it does not sample a wall texture. Distant walls omit small brick details.</p>"
+        },
+        {
+          "id": "step-23-4",
+          "title": "The floor is a cached gradient",
+          "anchor": "local function drawBackground()\n    local image = playdate.graphics.image.new(\n        MazeView.SCREEN.width,\n        MazeView.SCREEN.height + 2 * BOB_ROOM,\n        playdate.graphics.kColorBlack\n    )\n    playdate.graphics.pushContext(image)\n    local bandHeight <const> = 8\n    local middle = HORIZON_AT_REST + BOB_ROOM\n    for band = 0, middle // bandHeight do\n        -- The floor brightens towards the viewer; the ceiling stays nearly black\n        playdate.graphics.setPattern(Shades.pattern(2 + band // 2))\n        playdate.graphics.fillRect(0, middle + band * bandHeight, MazeView.SCREEN.width, bandHeight)\n        playdate.graphics.setPattern(Shades.pattern(band // 5))",
+          "reviewed_sha256": "8d857166b1ce864d4e20f81d1952723f570d181a4ae15bd177322705de4fce1f",
+          "html": "<p>These horizontal bands suggest a floor and ceiling without locating a world point for every pixel.</p><p>A textured floor needs another projection: intersect viewing rays with the floor plane and sample its texture. This renderer only projects individual floor marks.</p>"
+        },
+        {
+          "id": "step-23-5",
+          "title": "Hide sprites behind walls",
+          "anchor": "    local firstColumn = math.max(1, math.floor((centerX - halfWidth) / columnWidth) + 1)\n    local lastColumn = math.min(#depths, math.floor((centerX + halfWidth) / columnWidth) + 1)\n    local firstVisible, lastVisible\n    for column = firstColumn, lastColumn do\n        if depths[column] > depth then\n            firstVisible = firstVisible or column\n            lastVisible = column\n        end\n    end\n    if not firstVisible then return false end\n    playdate.graphics.setClipRect(\n        (firstVisible - 1) * columnWidth,",
+          "reviewed_sha256": "13651be072625ce92c1bac55e495f7edbf93e5ba21630dfcb7c2e4abf7844f11",
+          "html": "<p>Compare the sprite’s depth with each wall-column depth. Clip drawing between the first and last visible columns.</p><p>This single rectangle can include a hidden middle strip. It is approximate occlusion, not a per-pixel depth buffer.</p>"
+        },
+        {
+          "id": "step-23-6",
+          "title": "Draw walls, marks, then sprites",
+          "anchor": "    local scan = Raycaster.scan(game.maze, player.x, player.y, player.angle, MazeView.SCREEN, scanBuffer)\n    local runs = scan.runs\n    for index = 1, #runs do\n        drawRun(runs[index])\n    end\n\n    for _, mark in ipairs(landmarks.marks) do",
+          "reviewed_sha256": "53c442e2c02ec36c4f32fb7a94d1f3390392c6d6ef38d9397597199cd6efd8b6",
+          "html": "<p>Scan from the player’s position into the view’s reusable buffer and draw the wall runs. Add floor and ceiling marks, then sprites sorted farthest first.</p><p>Nearby sprites paint over farther ones. The scene draws the HUD afterward.</p>"
+        }
+      ],
+      "experiments": [
+        {
+          "id": "projection",
+          "title": "Wall height and distance",
+          "html": "<p>Double the depth to halve the projected height.</p>",
+          "file": "tools/walkthrough/projection.html"
+        },
+        {
+          "id": "occlusion",
+          "title": "Which columns hide the sprite?",
+          "html": "<p>Move a sprite behind a nearer wall. Compare testing each column with the game’s single clipping rectangle.</p><p>This reduced model has 16 columns. The real game samples 100. The sprite’s screen width is held fixed to isolate visibility.</p>",
+          "file": "tools/walkthrough/occlusion.html"
+        }
+      ]
+    },
+    {
+      "file": "source/Shades.lua",
+      "title": "Black-and-white shading",
+      "steps": [
+        {
+          "id": "step-24-0",
+          "title": "Use a repeating threshold pattern",
+          "anchor": "local BAYER <const> = {\n    { 0, 8, 2, 10 },\n    { 12, 4, 14, 6 },\n    { 3, 11, 1, 9 },\n    { 15, 7, 13, 5 },\n}",
+          "reviewed_sha256": "64d8fcc4ef38574477b52425bbe6e18ef571e71acacd13a9cf2ad018f62164ff",
+          "html": "<p>Playdate pixels are black or white. The Bayer matrix orders which pixels turn white to imitate gray.</p><p>At level 8, eight of the sixteen pixels are white. At level 16, all are white.</p>"
+        },
+        {
+          "id": "step-24-1",
+          "title": "Build the drawing patterns once",
+          "anchor": "for level = 0, Shades.WHITE do\n    local pattern = {}\n    for row = 1, 8 do\n        local byte = 0\n        for column = 1, 8 do\n            local isWhite = BAYER[(row - 1) % 4 + 1][(column - 1) % 4 + 1] < level\n            byte = byte * 2 + (isWhite and 1 or 0)\n        end\n        pattern[row] = byte\n    end\n    patterns[level] = pattern\nend\n",
+          "reviewed_sha256": "fd762082ebc49e72e4752a5ad27122081771892d99b9b54fa3371fdb61eefd75",
+          "html": "<p>Repeat the matrix over an 8 × 8 tile. A pixel is white when its matrix value is below the shade level.</p><p><code>byte * 2</code> shifts the row’s bits left; adding 0 or 1 appends a pixel. Store the eight rows for <code>playdate.graphics.setPattern</code>.</p>"
+        }
+      ],
+      "experiments": [
+        {
+          "id": "shading",
+          "title": "Dither thresholds",
+          "html": "<p>Change the shade level. Compare the enlarged matrix with the resulting black-and-white pattern.</p>",
+          "file": "tools/walkthrough/shading.html"
+        }
+      ]
+    },
+    {
+      "file": "source/SaveData.lua",
+      "title": "Independent save snapshots",
+      "steps": [
+        {
+          "id": "step-25-0",
+          "title": "Detach nested save data",
+          "anchor": "function SaveData.copy(value)\n    if type(value) ~= \"table\" then return value end\n    local result = {}\n    for key, item in pairs(value) do\n        result[key] = SaveData.copy(item)\n    end\n    return result\nend",
+          "reviewed_sha256": "c55b05a3ab852b4967cd350952665e58c616ec8fdd142223ea09dcc74dcc6779",
+          "html": "<p>Game, Maze, Puzzle, and MapDesign copy mutable nested data when exporting a save. Later gameplay and edits to the exported tables cannot change each other. This helper only copies acyclic plain save data; constructors and SDK objects keep their own ownership rules.</p>"
+        }
+      ],
+      "experiments": []
+    },
+    {
+      "file": "source/Hum.lua",
+      "title": "Owning proximity levels",
+      "steps": [
+        {
+          "id": "step-26-0",
+          "title": "Keep or reuse the result",
+          "anchor": "function Hum.levels(x, y, angle, items, levels)\n    levels = levels or {}\n    for index, item in ipairs(items) do\n        local level = levels[index]\n        if not level then\n            level = {}\n            levels[index] = level\n        end",
+          "reviewed_sha256": "6a25925853d7998edfb0fdb44f805be5b1990b245f347c43ee4cbbcc51b58a8e",
+          "html": "<p>Omitting the output buffer creates independent levels, including each left/right pair. Sounds supplies its private buffer every frame, consuming the values before explicitly overwriting them next frame.</p>"
+        }
+      ],
+      "experiments": []
+    },
+    {
+      "file": "source/Compass.lua",
+      "title": "Owning compass marks",
+      "steps": [
+        {
+          "id": "step-27-0",
+          "title": "Reuse only the caller’s marks",
+          "anchor": "function Compass.marks(angle, width, span, marks)\n    marks = marks or {}\n    local count = 0\n    local first = math.ceil((angle - span / 2) / STEP) * STEP\n    for markAngle = first, angle + span / 2, STEP do\n        local offset = markAngle - angle\n        -- The very ends of the strip are left clear\n        if math.abs(offset) < span / 2 then",
+          "reviewed_sha256": "9918cc756fa60344bca3c1d2036c686741b391c13ad5cde168afecffdc0e20c3",
+          "html": "<p>Each ordinary call returns independent marks. Hud supplies its own reusable list. Only writing into that same buffer changes its nested marks, so separate callers cannot invalidate each other.</p>"
+        }
+      ],
+      "experiments": []
+    },
+    {
+      "file": "source/SoundBook.lua",
+      "title": "Borrowing immutable notes",
+      "steps": [
+        {
+          "id": "step-28-0",
+          "title": "Read shared sheet music",
+          "anchor": "function SoundBook.notes(event) return BOOK[event] or error(\"no sound for the event '\" .. tostring(event) .. \"'\") end",
+          "reviewed_sha256": "b0faf278bd1028b2ada9d8bd259503ee33986e3471c2bcb7f1c9b4b42ab8d50c",
+          "html": "<p>The note book is immutable by contract. Sounds reads it without modifying it, and later calls never rewrite it. Each scheduled note reserves a synth until its release finishes, so long and overlapping effects keep every note. Finite effects continue on the sound clock across scene switches and paused game updates; stopping held hums does not cancel them. Copying these constants would add allocation without fixing an observed ownership violation.</p>"
+        }
+      ],
+      "experiments": []
+    }
+  ]
+}

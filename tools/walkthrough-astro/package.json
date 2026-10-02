@@ -1,0 +1,17 @@
+{
+  "name": "maze-walkthrough-comparison",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": "26.10.0"
+  },
+  "scripts": {
+    "build": ".venv/bin/python scripts/prepare.py && astro build",
+    "verify": ".venv/bin/python scripts/verify.py",
+    "test": ".venv/bin/python -m unittest discover -s scripts -p 'test_*.py'",
+    "setup": "python3 -m venv .venv && .venv/bin/python -m pip install -r requirements.txt"
+  },
+  "dependencies": {
+    "astro": "7.3.5"
+  }
+}

@@ -1,0 +1,11 @@
+---
+const versions = [
+  { title: 'Original maze walkthrough', note: 'Preserved HTML · full maze content', path: '../walkthrough-baselines/maze.html' },
+  { title: 'Original plugin demo', note: 'Preserved HTML · small counter example', path: '../walkthrough-baselines/demo.html' },
+  { title: 'Combined Astro walkthrough', note: 'Full maze content · brighter syntax · six experiments', path: 'maze/' },
+];
+---
+<!doctype html><html lang="en"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/><title>Compare walkthroughs</title>
+<style>
+:global(*){box-sizing:border-box} :global(body){margin:0;background:#101216;color:#e5e8ed;font:15px/1.5 system-ui}header{padding:14px 20px;border-bottom:1px solid #303640}h1{font-size:21px;margin:0}p{color:#a0a9b6;margin:4px 0}main{display:grid;grid-template-columns:repeat(3,minmax(480px,1fr));gap:12px;padding:12px;overflow-x:auto}section{min-width:0}h2{font-size:16px;margin:0}a{color:#8ed3cf}iframe{width:100%;height:calc(100svh - 175px);min-height:500px;border:1px solid #303640;background:#14181e}section p{font-size:12px;margin-bottom:8px}
+</style></head><body><header><h1>Compare walkthroughs</h1><p>Each panel scrolls independently. Scroll sideways on smaller screens, or open a version at full width.</p></header><main>{versions.map(version => <section><h2><a href={version.path} target="_blank" rel="noopener">{version.title} ↗</a></h2><p>{version.note}</p><iframe title={version.title} src={version.path}/></section>)}</main></body></html>

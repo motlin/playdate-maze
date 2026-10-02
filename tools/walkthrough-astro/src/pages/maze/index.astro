@@ -1,0 +1,21 @@
+---
+import SourceSection from '../../components/SourceSection.astro';
+import data from '../../../generated/walkthrough.json';
+import '../../styles/walkthrough.css';
+import '../../../generated/syntax.css';
+import navigation from '../../navigation.js?raw';
+import experiments from '../../../../walkthrough/interactions.js?raw';
+---
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/><meta name="color-scheme" content="dark"/><meta name="generator" content={Astro.generator}/><title>Maze — Astro walkthrough</title></head>
+<body>
+<a class="skip" href="#section-1">Skip to code</a>
+<header class="topbar"><h1>Maze<span>Code walkthrough</span></h1><a class="comparison-link" href="../" target="_top">Compare</a>
+<nav class="navigation" aria-label="Walkthrough"><select id="sections" aria-label="Code section">{data.sections.map((section, index) => <option value={`section-${index + 1}`}>{String(index + 1).padStart(2, '0')} {section.title} — {section.file}</option>)}</select><button id="previous" aria-label="Previous explanation">←</button><button id="next" aria-label="Next explanation">→</button></nav><div class="progress" aria-hidden="true"></div></header>
+<noscript><p class="no-script">Complete source and explanations are readable below. Enable JavaScript for synchronized highlights and experiments.</p></noscript>
+<main>{data.sections.map((section, index) => <SourceSection section={section} index={index}/>)}
+<footer class="references"><Fragment set:html={data.references}/><p>Built with Astro from complete source files and reviewed excerpt anchors. Interactive diagrams are teaching models.</p><p>Rebuild from <code>tools/walkthrough-astro</code>: <code>npm ci &amp;&amp; npm run setup &amp;&amp; npm run build</code>. Requires Node 26.10.0 and Python with <code>Pygments==2.19.2</code>. Run <code>npm run verify</code> to compare two clean builds.</p></footer></main>
+<script is:inline set:html={navigation}/>
+<script is:inline set:html={experiments}/>
+</body></html>
