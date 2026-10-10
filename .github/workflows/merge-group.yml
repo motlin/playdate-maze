@@ -1,0 +1,141 @@
+# Merge group jobs: project-template's language-agnostic checks plus Playdate Lua format, lint, and specs.
+# The Playdate SDK compiler (pdc) is not available in CI, so builds stay local.
+
+on:
+  pull_request:
+  merge_group:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # Run pre-commit hooks to verify basic hygiene; mise provides the
+  # system-language hook tools (pre-commit, vp, markdownlint-cli2)
+  pre-commit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: jdx/mise-action@7a4e45a543138629540c9a1616d08632b893e492 # v5.0.1
+        with:
+          cache: true
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+      - run: pre-commit run --all-files
+
+  # Lint markdown files
+  reviewdog-markdownlint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: reviewdog/action-markdownlint@a223028b797326efe9d3c9b55e24d740480c3352 # v0.31.2
+        with:
+          reporter: github-pr-check
+          fail_on_error: true
+          filter_mode: nofilter
+
+  # Lint YAML files
+  reviewdog-yamllint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: reviewdog/action-yamllint@5dd4640db975e4cac6f4e775a401695bafc28068 # v1.25.1
+        with:
+          reporter: github-pr-check
+          fail_on_error: true
+          filter_mode: nofilter
+
+  # Lint GitHub Actions workflow files
+  reviewdog-actionlint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: reviewdog/action-actionlint@13465d022aa41c282f730be17574b5ce692d0186 # v1.78.1
+        with:
+          reporter: github-pr-check
+          fail_on_error: true
+          filter_mode: nofilter
+
+  # Security-lint GitHub Actions workflow files
+  zizmor:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: zizmorcore/zizmor-action@cc914d7f3750a2d13d75c7f184a1060aa0e9d482 # v0.6.4
+        with:
+          # Audit only this repo's CI config; derived repos may vendor third-party workflows.
+          inputs: .github/
+          # SARIF upload requires GitHub Advanced Security, which derived private repos may lack.
+          advanced-security: false
+
+  # Check Lua formatting
+  stylua:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: jdx/mise-action@7a4e45a543138629540c9a1616d08632b893e492 # v5.0.1
+        with:
+          cache: true
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+      - run: just format-check
+
+  # Lint Lua sources
+  luacheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: jdx/mise-action@7a4e45a543138629540c9a1616d08632b893e492 # v5.0.1
+        with:
+          cache: true
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+      - run: just lua-tools
+      - run: just lint
+
+  # Run host-side Lua specs
+  busted:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: jdx/mise-action@7a4e45a543138629540c9a1616d08632b893e492 # v5.0.1
+        with:
+          cache: true
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+      - run: just lua-tools
+      - run: just test
+
+  # Gate job that requires all checks to pass
+  all-checks:
+    name: All checks
+    if: always()
+    needs:
+      [pre-commit, stylua, luacheck, busted, reviewdog-markdownlint, reviewdog-yamllint, reviewdog-actionlint, zizmor]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: re-actors/alls-green@b5b5b37504aa4183270bd3d855c52a67f212be35 # v1.3.0
+        with:
+          jobs: ${{ toJSON(needs) }}

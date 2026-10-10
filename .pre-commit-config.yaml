@@ -1,18 +1,23 @@
+# Language-agnostic pre-commit hooks from project-template, plus StyLua for Playdate Lua sources.
+
+# Vendored Playdate SDK type stubs stay byte-identical to upstream.
+exclude: ^\.vscode/playdate-luacats/
+
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v5.0.0
+    rev: v6.0.0
     hooks:
       - id: check-yaml
         args: ["--allow-multiple-documents"]
       - id: check-json
-        # TypeScript config files allow comments; package-lock.json is generated.
-        exclude: "tsconfig.*\\.json|package-lock\\.json"
+        # VS Code settings files allow comments.
+        exclude: ^\.vscode/.*\.json$
       - id: check-toml
       - id: check-xml
       - id: end-of-file-fixer
-        exclude: "package-lock\\.json|^\\.idea/"
+        exclude: ^\.idea/
       - id: trailing-whitespace
-        exclude: "package-lock\\.json|^\\.idea/"
+        exclude: ^\.idea/
       - id: check-added-large-files
         args: ["--maxkb=1000"]
       - id: check-case-conflict
@@ -29,23 +34,17 @@ repos:
         language: system
         files: '(?i)(^|/)\.?justfile$|\.just$'
         types: [file]
-      - id: biome
-        name: biome
-        entry: npx biome format --write
+      - id: stylua
+        name: stylua
+        entry: stylua
         language: system
-        types: [file]
-        files: \.(js|jsx|ts|tsx|mjs|cjs|json|json5)$
-        exclude: "package(-lock)?\\.json"
-
-      - id: prettier
-        name: prettier
-        entry: npx prettier --write
+        types: [lua]
+      - id: oxfmt
+        name: vp fmt
+        entry: vp fmt --no-error-on-unmatched-pattern
         language: system
-        types_or: [yaml, markdown, html]
-
-      - id: eslint
-        name: eslint
-        entry: npx eslint --fix
+      - id: markdownlint-cli2
+        name: markdownlint-cli2
+        entry: markdownlint-cli2
         language: system
-        files: \.(js|jsx|ts|tsx|mjs|cjs)$
-        types: [file]
+        types: [markdown]

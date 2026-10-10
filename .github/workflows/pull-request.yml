@@ -1,0 +1,81 @@
+# Language-agnostic pull request jobs.
+# Derived templates should extend this with language-specific jobs
+# (e.g., eslint-fix, biome-fix, prettier-fix).
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # Forbid merge commits in PRs - enforces rebase workflow
+  forbid-merge-commits:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: motlin/forbid-merge-commits-action@e680ef218194e9ba87fc1b44ffd9a3b0486dfc25 # main
+
+  # Auto-merge Dependabot PRs after CI passes
+  automerge-bots:
+    if: contains(fromJSON('["dependabot[bot]", "renovate[bot]"]'), github.event.pull_request.user.login)
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Enable auto-merge for bot PR
+        run: gh pr merge --rebase --auto "${{ github.event.pull_request.number }}"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  pre-commit-fix:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+          persist-credentials: false
+
+      - uses: jdx/mise-action@7a4e45a543138629540c9a1616d08632b893e492 # v5.0.1
+        with:
+          cache: true
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+
+      - name: Configure Git
+        run: |
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "github-actions@github.com"
+
+      - name: Run pre-commit
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          HEAD_REPO: ${{ github.event.pull_request.head.repo.full_name }}
+        run: |
+          pre-commit run --all-files || true
+
+          if [[ -n $(git status --porcelain) ]]; then
+            FIX_BRANCH="fix-${{ github.event.pull_request.number }}-pre-commit"
+            git switch --create $FIX_BRANCH
+
+            git add --all
+            git commit --message "Apply pre-commit fixes."
+            git push --force "https://x-access-token:${GITHUB_TOKEN}@github.com/${HEAD_REPO}" "$FIX_BRANCH"
+
+            echo "pre-commit fixes have been pushed to the $FIX_BRANCH branch."
+            exit 1
+          else
+            echo "No changes needed by pre-commit"
+          fi

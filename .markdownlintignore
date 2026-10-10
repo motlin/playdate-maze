@@ -1,0 +1,2 @@
+# Vendored Playdate SDK type stubs stay byte-identical to upstream.
+.vscode/playdate-luacats/

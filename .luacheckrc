@@ -1,12 +1,18 @@
 std = "lua54"
 include_files = { "source/**/*.lua", "spec/**/*.lua", "tools/screenshots/harness.lua" }
+max_line_length = false
+self = false
+
+-- Playdate SDK globals.
+read_globals = { "import", "kTextAlignment", "playdate" }
+
+-- Each module publishes itself as a global for the Playdate runtime.
 local modules = {
     "Spikes", "SaveData", "PlayInput", "WalkingActions", "TumbleActions", "SlimeActions",
     "Maze", "Raycaster", "Player", "Autopilot", "Puzzle", "Game", "Run", "Tumble", "Slime", "Thread", "TapOrReel", "Landmarks", "Flippers", "SoundBook", "Sounds", "Hum", "ExitDistance", "MusicScore", "Music", "SaveGame", "Settings", "CrankSteps", "MapDesign", "MapSlots", "MapEditor", "DockTimer", "Compass", "Bob", "Shades", "Sizes", "SeededRandom",
     "ShapeArt", "MazeView", "SideView", "MapView", "TumbleView", "SlimeView", "Minimap", "Hud",
     "SceneManager", "SystemMenu",
 }
-read_globals = { "import", "kTextAlignment", "playdate" }
 for _, name in ipairs(modules) do
     read_globals[#read_globals + 1] = name
     files["source/" .. name .. ".lua"] = { globals = { name } }
@@ -27,7 +33,6 @@ files["source/main.lua"] = {
         "playdate.deviceWillLock", "playdate.gameWillTerminate", "SceneManager.onSwitch",
     },
 }
-max_line_length = false
 
 files["spec"] = { std = "+busted", globals = { "playdate", "import" } }
 
