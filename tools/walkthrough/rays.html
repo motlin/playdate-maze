@@ -1,1 +1,24 @@
-<div class="lab"><label for="view-angle">Camera heading <output id="view-angle-label">0°</output></label><input id="view-angle" type="range" min="0" max="359" value="0"><label for="view-fov">Field of view <output id="view-fov-label">70°</output></label><input id="view-fov" type="range" min="40" max="100" value="70"><label for="ray-column">Selected screen column <output id="ray-column-label">200</output></label><input id="ray-column" type="range" min="0" max="400" value="200"><label for="ray-steps">Grid crossings shown <output id="ray-steps-label">1</output></label><input id="ray-steps" type="range" min="1" max="10" value="1"><div class="controls"><button id="flat-wall">Face a flat wall</button><label class="check"><input id="wrong-depth" type="checkbox"> Use travel distance (incorrect)</label></div><canvas id="ray-demo" width="800" height="320" role="img" aria-label="Top-down ray traversal beside a matching first-person wall projection"></canvas><p id="boundary-values" class="readout"></p><p id="crossing-values" class="readout"></p><p id="ray-values" class="readout"></p></div>
+<div class="lab">
+	<label for="view-angle">Camera heading <output id="view-angle-label">0°</output></label
+	><input id="view-angle" type="range" min="0" max="359" value="0" /><label for="view-fov"
+		>Field of view <output id="view-fov-label">70°</output></label
+	><input id="view-fov" type="range" min="40" max="100" value="70" /><label for="ray-column"
+		>Selected screen column <output id="ray-column-label">200</output></label
+	><input id="ray-column" type="range" min="0" max="400" value="200" /><label for="ray-steps"
+		>Grid crossings shown <output id="ray-steps-label">1</output></label
+	><input id="ray-steps" type="range" min="1" max="10" value="1" />
+	<div class="controls">
+		<button id="flat-wall">Face a flat wall</button
+		><label class="check"><input id="wrong-depth" type="checkbox" /> Use travel distance (incorrect)</label>
+	</div>
+	<canvas
+		id="ray-demo"
+		width="800"
+		height="320"
+		role="img"
+		aria-label="Top-down ray traversal beside a matching first-person wall projection"
+	></canvas>
+	<p id="boundary-values" class="readout"></p>
+	<p id="crossing-values" class="readout"></p>
+	<p id="ray-values" class="readout"></p>
+</div>

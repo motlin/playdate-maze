@@ -1,99 +1,180 @@
 <!doctype html>
 <html lang="en">
-<head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="dark">
-<title>Maze — Code walkthrough</title>
-<style>
-:root{color-scheme:dark;--bg:#101216;--panel:#14181e;--ink:#e5e8ed;--muted:#a0a9b6;--rule:#303640;--accent:#e6c273;--cyan:#8ed3cf;--header:62px}*{box-sizing:border-box}html{scroll-padding-top:90px}body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.65 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}a{color:var(--cyan);text-underline-offset:4px}button,select{font:inherit}a,button,input,select,summary{touch-action:manipulation}:focus-visible{outline:2px solid var(--accent);outline-offset:4px}.skip{position:fixed;left:16px;top:-100px;z-index:20;background:var(--bg);padding:8px}.skip:focus{top:8px}.topbar{position:sticky;top:0;z-index:10;background:#101216f5;border-bottom:1px solid var(--rule);min-height:var(--header);padding:12px 28px;display:flex;align-items:center;gap:24px}.topbar h1{font-size:17px;line-height:1.3;font-weight:650;white-space:nowrap;margin:0}.topbar h1 span{font-weight:400;color:var(--muted);margin-left:8px}.navigation{display:flex;gap:10px;align-items:center;margin-left:auto;min-width:0}select{max-width:430px;min-width:0;width:38vw;background:var(--bg);color:var(--ink);border:1px solid var(--rule);border-radius:3px;font-size:13px;padding:7px}button{cursor:pointer;color:var(--ink);background:transparent;border:1px solid var(--rule);border-radius:3px;padding:5px 10px;font-size:13px}button:hover{border-color:var(--muted)}button:disabled{opacity:.35;cursor:default}.progress{height:2px;position:absolute;bottom:-1px;left:0;width:100%;background:var(--accent);transform-origin:left;transform:scaleX(0)}main{max-width:1680px;margin:0 auto}.section{display:grid;grid-template-columns:minmax(270px,32%) minmax(0,1fr);gap:clamp(28px,4vw,70px);padding:28px clamp(22px,4vw,64px) 0;border-bottom:1px solid var(--rule)}.explanations{min-width:0}.explanations h2{font-size:14px;line-height:1.6;font-weight:500;color:var(--muted);margin:0 0 26px}.explanations h2 span{font-family:ui-monospace,monospace;color:var(--accent);margin-right:8px}.step{min-height:65vh;padding:24px 0 110px;scroll-margin-top:30vh;opacity:1;transition:opacity .25s}.js .step{opacity:.4}.js .step.is-active{opacity:1}.step:first-of-type{padding-top:10px}.step:last-child{min-height:80vh}.location{font:12px/1.8 ui-monospace,SFMono-Regular,Consolas,monospace;overflow-wrap:anywhere;color:var(--muted);margin:0 0 16px}.location a{color:var(--accent);text-decoration:none}h3{font-size:25px;letter-spacing:-.025em;line-height:1.25;font-weight:620;margin:0 0 20px}p{margin:0 0 16px}p code{font:0.87em/1.5 ui-monospace,SFMono-Regular,Consolas,monospace;color:#f0d99b;overflow-wrap:anywhere}.code-panel{position:sticky;top:calc(var(--header) + 20px);align-self:start;height:calc(100vh - var(--header) - 42px);min-height:300px;display:flex;flex-direction:column;min-width:0;border:1px solid var(--rule);background:var(--panel);margin-bottom:24px}.file-header{padding:15px 20px 12px;border-bottom:1px solid var(--rule);flex-shrink:0}.file-path{font:15px/1.5 ui-monospace,SFMono-Regular,Consolas,monospace;overflow-wrap:anywhere}.file-path span{color:var(--muted)}.file-path strong{color:#fff;font-weight:600}.file-meta{display:flex;justify-content:space-between;gap:16px;margin-top:6px;font:12px/1.6 ui-monospace,monospace;color:var(--muted)}.range{color:var(--accent);white-space:nowrap}.code-panel pre{position:relative;flex:1;min-height:0;overflow:auto;margin:0;padding:22px 0;font:13px/1.8 ui-monospace,SFMono-Regular,Consolas,monospace;scrollbar-color:#49505a #14181e;overscroll-behavior:auto;tab-size:4}.code-panel code{font:inherit;display:block;width:100%;white-space:normal}.line{position:relative;display:block;width:100%;white-space:pre-wrap;overflow-wrap:anywhere;padding:0 20px 0 4.5em;border-left:3px solid transparent;transition:background .2s,opacity .2s}.line:before{content:attr(data-line);position:absolute;left:0;top:0;display:block;width:4.5em;text-align:right;padding-right:1.5em;color:#77808d;user-select:none;font-size:12px}.js .line{opacity:.5}.js .line.highlight{opacity:1;background:#40382388;border-left-color:var(--accent)}.js .code-panel.reading .line{opacity:1}.line.highlight:before{color:var(--accent)}.k,.kd,.kn,.kc,.kr,.kt{color:#f1a4c5}.s,.s1,.s2,.sb{color:#b9d995}.c,.c1,.cm{color:#98a8b8;font-style:italic}.nb,.nf{color:#8ed3df}.m,.mi,.mf,.mh{color:#e6b785}.o,.ow{color:#c5afe6}.err{color:inherit}.code-footer{display:flex;gap:12px;justify-content:space-between;align-items:center;border-top:1px solid var(--rule);padding:9px 15px;color:var(--muted);font-size:12px;min-height:45px}.follow{font-size:12px;white-space:nowrap}.lab-section{padding:56px clamp(22px,4vw,64px);border-bottom:1px solid var(--rule);display:grid;grid-template-columns:minmax(270px,32%) minmax(0,1fr);gap:clamp(28px,4vw,70px)}.lab-intro h2{font-size:25px;font-weight:620;letter-spacing:-.025em;line-height:1.3;margin:14px 0 20px}.lab-intro p{max-width:34em}.lab{min-width:0;border:1px solid var(--rule);padding:24px;background:var(--panel)}.lab h3{font-size:20px}.lab>p{font-size:14px;color:var(--muted)}.diagram-scroll{overflow:auto}.lab canvas{display:block;width:100%;min-width:560px;height:auto;background:#0b1420;margin:16px 0}.lab label.check{display:flex;align-items:center;justify-content:flex-start;font-size:13px;gap:8px}.lab input[type=checkbox]{accent-color:var(--accent)}.lab label{display:flex;justify-content:space-between;font-size:14px;gap:15px}.lab input[type=range]{width:100%;min-height:24px;accent-color:var(--cyan);margin:8px 0 18px}.lab output{font-family:ui-monospace,monospace;color:var(--accent)}.controls{display:flex;align-items:center;gap:12px;flex-wrap:wrap}.controls button{padding:8px 12px}.controls output{font-size:13px}.readout{font:13px/1.7 ui-monospace,monospace;color:var(--cyan)!important;margin-top:14px}.references{padding:35px clamp(22px,4vw,64px);font-size:14px;color:var(--muted)}.references h2{font-size:17px;color:var(--ink)}.references li{margin:8px 0}.references p{font-size:13px;margin-top:24px}.no-script{padding:20px}.no-script p{margin:0}.no-script~main .step{opacity:1}
-@media(min-width:1600px){.code-panel pre{font-size:15px}.step p{font-size:19px}}
-@media(max-width:900px){.topbar{padding:10px 16px;gap:12px}.topbar h1 span{display:none}.navigation{gap:7px}select{width:45vw}.section,.lab-section{gap:24px;padding-left:20px;padding-right:20px;grid-template-columns:minmax(225px,35%) minmax(0,1fr)}.file-meta{font-size:11px}.focus-label{display:none}.code-footer{justify-content:flex-end}.step p{font-size:16px}h3{font-size:22px}.file-header{padding:12px}.line{padding-left:3.5em}.line:before{width:3.5em}}
-@media(max-width:650px){:root{--header:56px}.topbar{min-height:56px;padding:8px 12px}.topbar h1{font-size:15px}.navigation button{padding:5px 7px}.navigation select{width:40vw;font-size:12px}.section{display:flex;flex-direction:column;padding:18px 16px 0;gap:0}.code-panel{order:-1;top:calc(var(--header) + 8px);height:44vh;min-height:240px;z-index:3;width:100%;margin-bottom:25px;box-shadow:0 12px 20px #101216}.file-header{padding:9px 12px}.file-path{font-size:13px}.file-meta{font-size:11px}.code-panel pre{font-size:12px;padding:12px 0}.code-footer{padding:5px 10px;min-height:32px}.follow{font-size:11px;padding:3px 7px}.explanations h2{margin:5px 0 10px}.step{min-height:65vh;padding:12px 0 80px;scroll-margin-top:calc(44vh + 130px)}.step:last-child{min-height:75vh}.step p{font-size:17px}.location{font-size:12px}h3{font-size:25px}.lab-section{display:block;padding:36px 16px}.lab-intro p{font-size:16px}.lab{padding:14px}.references{padding:25px 16px}}
-@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
-@media print{.topbar,.code-footer,.progress,.navigation{display:none}.section,.lab-section{display:block;break-before:page}.step{opacity:1!important;min-height:0!important;padding:12px 0}.code-panel{position:static;height:auto;min-height:0}.code-panel pre{overflow:visible;white-space:pre-wrap;font-size:8px}.line{opacity:1!important;display:inline}.line:before{display:none}.lab input{display:none}}
-.question-box{margin-top:24px;font-size:14px}.question-box summary{cursor:pointer;color:var(--cyan)}.question-box label{display:block;margin:12px 0 6px}.question-box textarea{display:block;width:100%;min-height:100px;resize:vertical;background:var(--panel);color:var(--ink);border:1px solid var(--rule);border-radius:3px;padding:10px;font:16px/1.5 system-ui}.question-box button{margin:10px 0}.question-status{font-size:13px;color:var(--muted)}
-</style>
-</head>
-<body>
-<a class="skip" href="#section-1">Skip to code</a>
-<header class="topbar"><h1>Maze<span>Code walkthrough</span></h1><div class="navigation"><label for="sections" hidden>Code section</label><select id="sections" aria-label="Code section"><!-- OPTIONS --></select><button id="previous" aria-label="Previous explanation">←</button><button id="next" aria-label="Next explanation">→</button></div><div class="progress" aria-hidden="true"></div></header>
-<noscript><div class="no-script"><p>Enable JavaScript for synchronized highlights and diagrams. Complete source files and explanations remain readable below.</p></div></noscript>
-<main><!-- SECTIONS -->
-<footer class="references"><h2>Related explanations</h2><ul><li><a href="https://help.play.date/developer/designing-for-playdate/">Playdate: refresh rate and performance</a> — source/main.lua</li><li><a href="https://lodev.org/cgtutor/raycasting.html">Lode: camera plane, field of view, and perpendicular depth</a> — source/Raycaster.lua</li><li><a href="https://aaaa.sh/creatures/dda-algorithm-interactive/">Interactive DDA explanation</a> — source/Raycaster.lua</li><li><a href="https://permadi.com/1996/05/ray-casting-tutorial-table-of-contents/">Permadi: projection geometry</a> — source/MazeView.lua</li><li><a href="https://lodev.org/cgtutor/raycasting3.html">Lode: per-column sprite occlusion</a> — compare source/MazeView.lua</li><li><a href="https://lodev.org/cgtutor/raycasting2.html">Lode: textured floors and ceilings</a> — an extension beyond this renderer</li><li><a href="https://www.fabiensanglard.net/doomIphone/doomClassicRenderer.php">Sanglard: Doom’s BSP renderer</a> — unlike this game’s grid traversal, Doom orders and clips wall segments using a spatial tree</li><li><a href="https://www.redblobgames.com/pathfinding/a-star/introduction.html">Red Blob Games: breadth-first search and pathfinding</a> — source/ExitDistance.lua</li><li><a href="https://www.redblobgames.com/coordinates/axes-and-angles/">Red Blob Games: axes, angles, and trigonometry</a> — source/Player.lua, source/Tumble.lua</li><li><a href="https://www.redblobgames.com/articles/visibility/">Red Blob Games: 2D visibility</a> — related to source/Raycaster.lua; a different algorithm</li></ul><p>Complete Lua files are embedded. Diagrams are JavaScript teaching models. Rebuild: <code>python3 tools/walkthrough/build.py</code> (requires Pygments).</p></footer></main>
-<script>
-'use strict';
-document.documentElement.classList.add('js');
-const reduceMotion=matchMedia('(prefers-reduced-motion: reduce)');
-const sections=Array.from(document.querySelectorAll('.section'));
-const steps=Array.from(document.querySelectorAll('.step'));
-const selector=document.getElementById('sections');
-const previous=document.getElementById('previous');
-const next=document.getElementById('next');
-let activeStep=null;
-let activeIndex=0;
-function focusCode(section,step,instant=false){
- const first=Number(step.dataset.first),last=Number(step.dataset.last);
- const lines=Array.from(section.querySelectorAll('.line'));
- for(const row of lines)row.classList.toggle('highlight',Number(row.dataset.line)>=first&&Number(row.dataset.line)<=last);
- section.querySelector('.range').textContent=`Lines ${first}–${last}`;
- if(section.dataset.follow==='off')return;
- const pre=section.querySelector('pre'),start=lines[first-1],end=lines[last-1];
- const top=start.offsetTop,bottom=end.offsetTop+end.offsetHeight;
- const target=top-Math.max(25,(pre.clientHeight-(bottom-top))/2);
- pre.scrollTo({top:Math.max(0,target),behavior:instant||reduceMotion.matches?'instant':'smooth'});
-}
-function activate(step,instant=false){
- if(step===activeStep)return;
- activeStep?.classList.remove('is-active');
- activeStep=step;activeIndex=steps.indexOf(step);step.classList.add('is-active');
- const section=step.closest('.section');focusCode(section,step,instant);
- selector.value=section.id;previous.disabled=activeIndex===0;next.disabled=activeIndex===steps.length-1;
-}
-function activationThreshold(){return innerWidth<=650?innerHeight*.72:innerHeight*.43;}
-function update(){
- const threshold=activationThreshold();
- let candidate=steps[0];
- for(const step of steps){if(step.getBoundingClientRect().top<=threshold)candidate=step;else break;}
- activate(candidate);
- const height=document.documentElement.scrollHeight-innerHeight;
- document.querySelector('.progress').style.transform=`scaleX(${height>0?scrollY/height:0})`;
-}
-let scheduled=false;
-window.addEventListener('scroll',()=>{if(!scheduled){scheduled=true;requestAnimationFrame(()=>{scheduled=false;update();});}},{passive:true});
-window.addEventListener('resize',()=>{update();if(activeStep)focusCode(activeStep.closest('.section'),activeStep,true);});
-function goTo(step){
- const offset=Math.min(innerWidth<=650?Math.max(innerHeight*.52+80,330):innerHeight*.30,activationThreshold()-2);
- window.scrollTo({top:scrollY+step.getBoundingClientRect().top-offset,behavior:reduceMotion.matches?'instant':'smooth'});
-}
-selector.addEventListener('change',()=>goTo(document.getElementById(selector.value).querySelector('.step')));
-previous.addEventListener('click',()=>goTo(steps[Math.max(0,activeIndex-1)]));
-next.addEventListener('click',()=>goTo(steps[Math.min(steps.length-1,activeIndex+1)]));
-for(const section of sections){
- section.dataset.follow='on';focusCode(section,section.querySelector('.step'),true);
- section.querySelector('.follow').addEventListener('click',event=>{const following=section.dataset.follow!=='off';section.dataset.follow=following?'off':'on';section.querySelector('.code-panel').classList.toggle('reading',following);event.currentTarget.setAttribute('aria-pressed',String(!following));event.currentTarget.textContent=`Follow scroll: ${following?'off':'on'}`;if(!following)focusCode(section,section.querySelector('.is-active')||section.querySelector('.step'));});
-}
-activate(steps[0],true);update();
-document.querySelectorAll('.lab canvas').forEach(canvas=>{const wrapper=document.createElement('div');wrapper.className='diagram-scroll';wrapper.tabIndex=0;wrapper.setAttribute('aria-label',canvas.getAttribute('aria-label')+'; scroll horizontally on small screens');canvas.before(wrapper);wrapper.append(canvas);});
-for(const step of steps){
- const box=document.createElement('details');box.className='question-box';
- const identifier=step.id+'-question';
- box.innerHTML=`<summary>Ask about this code</summary><form><label for="${identifier}">Your question</label><textarea id="${identifier}" maxlength="4000" required></textarea><button type="submit">Send question</button><p class="question-status" role="status">I’ll revise this explanation to answer your question. Includes this file and line range; refresh later for the update.</p></form>`;
- step.append(box);
- const form=box.querySelector('form'),input=box.querySelector('textarea'),button=box.querySelector('button'),status=box.querySelector('[role=status]');
- form.addEventListener('submit',async event=>{
-  event.preventDefault();if(!input.value.trim())return;
-  button.disabled=true;status.textContent='Sending…';
-  try{
-   const session=await fetch('/questions/session',{cache:'no-store'});
-   if(!session.ok)throw new Error('Sending requires the walkthrough question server. Your text has been kept.');
-   const {token}=await session.json();
-   const response=await fetch('/questions',{method:'POST',headers:{'Content-Type':'application/json','X-Question-Token':token},body:JSON.stringify({question:input.value,file:step.closest('.section').dataset.file,first:Number(step.dataset.first),last:Number(step.dataset.last)})});
-   const result=await response.json();if(!response.ok)throw new Error(result.error);
-   status.textContent=result.message;input.value='';
-  }catch(error){status.textContent=error instanceof SyntaxError?'Sending requires the walkthrough question server. Your text has been kept.':error.message;}
-  finally{button.disabled=false;}
- });
-}
-<!-- INTERACTIONS -->
-</script>
-</body>
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width,initial-scale=1" />
+		<meta name="color-scheme" content="dark" />
+		<title>Maze — Code walkthrough</title>
+		<style>
+			:root{color-scheme:dark;--bg:#101216;--panel:#14181e;--ink:#e5e8ed;--muted:#a0a9b6;--rule:#303640;--accent:#e6c273;--cyan:#8ed3cf;--header:62px}*{box-sizing:border-box}html{scroll-padding-top:90px}body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.65 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}a{color:var(--cyan);text-underline-offset:4px}button,select{font:inherit}a,button,input,select,summary{touch-action:manipulation}:focus-visible{outline:2px solid var(--accent);outline-offset:4px}.skip{position:fixed;left:16px;top:-100px;z-index:20;background:var(--bg);padding:8px}.skip:focus{top:8px}.topbar{position:sticky;top:0;z-index:10;background:#101216f5;border-bottom:1px solid var(--rule);min-height:var(--header);padding:12px 28px;display:flex;align-items:center;gap:24px}.topbar h1{font-size:17px;line-height:1.3;font-weight:650;white-space:nowrap;margin:0}.topbar h1 span{font-weight:400;color:var(--muted);margin-left:8px}.navigation{display:flex;gap:10px;align-items:center;margin-left:auto;min-width:0}select{max-width:430px;min-width:0;width:38vw;background:var(--bg);color:var(--ink);border:1px solid var(--rule);border-radius:3px;font-size:13px;padding:7px}button{cursor:pointer;color:var(--ink);background:transparent;border:1px solid var(--rule);border-radius:3px;padding:5px 10px;font-size:13px}button:hover{border-color:var(--muted)}button:disabled{opacity:.35;cursor:default}.progress{height:2px;position:absolute;bottom:-1px;left:0;width:100%;background:var(--accent);transform-origin:left;transform:scaleX(0)}main{max-width:1680px;margin:0 auto}.section{display:grid;grid-template-columns:minmax(270px,32%) minmax(0,1fr);gap:clamp(28px,4vw,70px);padding:28px clamp(22px,4vw,64px) 0;border-bottom:1px solid var(--rule)}.explanations{min-width:0}.explanations h2{font-size:14px;line-height:1.6;font-weight:500;color:var(--muted);margin:0 0 26px}.explanations h2 span{font-family:ui-monospace,monospace;color:var(--accent);margin-right:8px}.step{min-height:65vh;padding:24px 0 110px;scroll-margin-top:30vh;opacity:1;transition:opacity .25s}.js .step{opacity:.4}.js .step.is-active{opacity:1}.step:first-of-type{padding-top:10px}.step:last-child{min-height:80vh}.location{font:12px/1.8 ui-monospace,SFMono-Regular,Consolas,monospace;overflow-wrap:anywhere;color:var(--muted);margin:0 0 16px}.location a{color:var(--accent);text-decoration:none}h3{font-size:25px;letter-spacing:-.025em;line-height:1.25;font-weight:620;margin:0 0 20px}p{margin:0 0 16px}p code{font:0.87em/1.5 ui-monospace,SFMono-Regular,Consolas,monospace;color:#f0d99b;overflow-wrap:anywhere}.code-panel{position:sticky;top:calc(var(--header) + 20px);align-self:start;height:calc(100vh - var(--header) - 42px);min-height:300px;display:flex;flex-direction:column;min-width:0;border:1px solid var(--rule);background:var(--panel);margin-bottom:24px}.file-header{padding:15px 20px 12px;border-bottom:1px solid var(--rule);flex-shrink:0}.file-path{font:15px/1.5 ui-monospace,SFMono-Regular,Consolas,monospace;overflow-wrap:anywhere}.file-path span{color:var(--muted)}.file-path strong{color:#fff;font-weight:600}.file-meta{display:flex;justify-content:space-between;gap:16px;margin-top:6px;font:12px/1.6 ui-monospace,monospace;color:var(--muted)}.range{color:var(--accent);white-space:nowrap}.code-panel pre{position:relative;flex:1;min-height:0;overflow:auto;margin:0;padding:22px 0;font:13px/1.8 ui-monospace,SFMono-Regular,Consolas,monospace;scrollbar-color:#49505a #14181e;overscroll-behavior:auto;tab-size:4}.code-panel code{font:inherit;display:block;width:100%;white-space:normal}.line{position:relative;display:block;width:100%;white-space:pre-wrap;overflow-wrap:anywhere;padding:0 20px 0 4.5em;border-left:3px solid transparent;transition:background .2s,opacity .2s}.line:before{content:attr(data-line);position:absolute;left:0;top:0;display:block;width:4.5em;text-align:right;padding-right:1.5em;color:#77808d;user-select:none;font-size:12px}.js .line{opacity:.5}.js .line.highlight{opacity:1;background:#40382388;border-left-color:var(--accent)}.js .code-panel.reading .line{opacity:1}.line.highlight:before{color:var(--accent)}.k,.kd,.kn,.kc,.kr,.kt{color:#f1a4c5}.s,.s1,.s2,.sb{color:#b9d995}.c,.c1,.cm{color:#98a8b8;font-style:italic}.nb,.nf{color:#8ed3df}.m,.mi,.mf,.mh{color:#e6b785}.o,.ow{color:#c5afe6}.err{color:inherit}.code-footer{display:flex;gap:12px;justify-content:space-between;align-items:center;border-top:1px solid var(--rule);padding:9px 15px;color:var(--muted);font-size:12px;min-height:45px}.follow{font-size:12px;white-space:nowrap}.lab-section{padding:56px clamp(22px,4vw,64px);border-bottom:1px solid var(--rule);display:grid;grid-template-columns:minmax(270px,32%) minmax(0,1fr);gap:clamp(28px,4vw,70px)}.lab-intro h2{font-size:25px;font-weight:620;letter-spacing:-.025em;line-height:1.3;margin:14px 0 20px}.lab-intro p{max-width:34em}.lab{min-width:0;border:1px solid var(--rule);padding:24px;background:var(--panel)}.lab h3{font-size:20px}.lab>p{font-size:14px;color:var(--muted)}.diagram-scroll{overflow:auto}.lab canvas{display:block;width:100%;min-width:560px;height:auto;background:#0b1420;margin:16px 0}.lab label.check{display:flex;align-items:center;justify-content:flex-start;font-size:13px;gap:8px}.lab input[type=checkbox]{accent-color:var(--accent)}.lab label{display:flex;justify-content:space-between;font-size:14px;gap:15px}.lab input[type=range]{width:100%;min-height:24px;accent-color:var(--cyan);margin:8px 0 18px}.lab output{font-family:ui-monospace,monospace;color:var(--accent)}.controls{display:flex;align-items:center;gap:12px;flex-wrap:wrap}.controls button{padding:8px 12px}.controls output{font-size:13px}.readout{font:13px/1.7 ui-monospace,monospace;color:var(--cyan)!important;margin-top:14px}.references{padding:35px clamp(22px,4vw,64px);font-size:14px;color:var(--muted)}.references h2{font-size:17px;color:var(--ink)}.references li{margin:8px 0}.references p{font-size:13px;margin-top:24px}.no-script{padding:20px}.no-script p{margin:0}.no-script~main .step{opacity:1}
+			@media(min-width:1600px){.code-panel pre{font-size:15px}.step p{font-size:19px}}
+			@media(max-width:900px){.topbar{padding:10px 16px;gap:12px}.topbar h1 span{display:none}.navigation{gap:7px}select{width:45vw}.section,.lab-section{gap:24px;padding-left:20px;padding-right:20px;grid-template-columns:minmax(225px,35%) minmax(0,1fr)}.file-meta{font-size:11px}.focus-label{display:none}.code-footer{justify-content:flex-end}.step p{font-size:16px}h3{font-size:22px}.file-header{padding:12px}.line{padding-left:3.5em}.line:before{width:3.5em}}
+			@media(max-width:650px){:root{--header:56px}.topbar{min-height:56px;padding:8px 12px}.topbar h1{font-size:15px}.navigation button{padding:5px 7px}.navigation select{width:40vw;font-size:12px}.section{display:flex;flex-direction:column;padding:18px 16px 0;gap:0}.code-panel{order:-1;top:calc(var(--header) + 8px);height:44vh;min-height:240px;z-index:3;width:100%;margin-bottom:25px;box-shadow:0 12px 20px #101216}.file-header{padding:9px 12px}.file-path{font-size:13px}.file-meta{font-size:11px}.code-panel pre{font-size:12px;padding:12px 0}.code-footer{padding:5px 10px;min-height:32px}.follow{font-size:11px;padding:3px 7px}.explanations h2{margin:5px 0 10px}.step{min-height:65vh;padding:12px 0 80px;scroll-margin-top:calc(44vh + 130px)}.step:last-child{min-height:75vh}.step p{font-size:17px}.location{font-size:12px}h3{font-size:25px}.lab-section{display:block;padding:36px 16px}.lab-intro p{font-size:16px}.lab{padding:14px}.references{padding:25px 16px}}
+			@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
+			@media print{.topbar,.code-footer,.progress,.navigation{display:none}.section,.lab-section{display:block;break-before:page}.step{opacity:1!important;min-height:0!important;padding:12px 0}.code-panel{position:static;height:auto;min-height:0}.code-panel pre{overflow:visible;white-space:pre-wrap;font-size:8px}.line{opacity:1!important;display:inline}.line:before{display:none}.lab input{display:none}}
+			.question-box{margin-top:24px;font-size:14px}.question-box summary{cursor:pointer;color:var(--cyan)}.question-box label{display:block;margin:12px 0 6px}.question-box textarea{display:block;width:100%;min-height:100px;resize:vertical;background:var(--panel);color:var(--ink);border:1px solid var(--rule);border-radius:3px;padding:10px;font:16px/1.5 system-ui}.question-box button{margin:10px 0}.question-status{font-size:13px;color:var(--muted)}
+		</style>
+	</head>
+	<body>
+		<a class="skip" href="#section-1">Skip to code</a>
+		<header class="topbar">
+			<h1>Maze<span>Code walkthrough</span></h1>
+			<div class="navigation">
+				<label for="sections" hidden>Code section</label
+				><select id="sections" aria-label="Code section">
+					<!-- OPTIONS --></select
+				><button id="previous" aria-label="Previous explanation">←</button
+				><button id="next" aria-label="Next explanation">→</button>
+			</div>
+			<div class="progress" aria-hidden="true"></div>
+		</header>
+		<noscript
+			><div class="no-script">
+				<p>
+					Enable JavaScript for synchronized highlights and diagrams. Complete source files and explanations
+					remain readable below.
+				</p>
+			</div></noscript
+		>
+		<main>
+			<!-- SECTIONS -->
+			<footer class="references">
+				<h2>Related explanations</h2>
+				<ul>
+					<li>
+						<a href="https://help.play.date/developer/designing-for-playdate/"
+							>Playdate: refresh rate and performance</a
+						>
+						— source/main.lua
+					</li>
+					<li>
+						<a href="https://lodev.org/cgtutor/raycasting.html"
+							>Lode: camera plane, field of view, and perpendicular depth</a
+						>
+						— source/Raycaster.lua
+					</li>
+					<li>
+						<a href="https://aaaa.sh/creatures/dda-algorithm-interactive/">Interactive DDA explanation</a> —
+						source/Raycaster.lua
+					</li>
+					<li>
+						<a href="https://permadi.com/1996/05/ray-casting-tutorial-table-of-contents/"
+							>Permadi: projection geometry</a
+						>
+						— source/MazeView.lua
+					</li>
+					<li>
+						<a href="https://lodev.org/cgtutor/raycasting3.html">Lode: per-column sprite occlusion</a> —
+						compare source/MazeView.lua
+					</li>
+					<li>
+						<a href="https://lodev.org/cgtutor/raycasting2.html">Lode: textured floors and ceilings</a> — an
+						extension beyond this renderer
+					</li>
+					<li>
+						<a href="https://www.fabiensanglard.net/doomIphone/doomClassicRenderer.php"
+							>Sanglard: Doom’s BSP renderer</a
+						>
+						— unlike this game’s grid traversal, Doom orders and clips wall segments using a spatial tree
+					</li>
+					<li>
+						<a href="https://www.redblobgames.com/pathfinding/a-star/introduction.html"
+							>Red Blob Games: breadth-first search and pathfinding</a
+						>
+						— source/ExitDistance.lua
+					</li>
+					<li>
+						<a href="https://www.redblobgames.com/coordinates/axes-and-angles/"
+							>Red Blob Games: axes, angles, and trigonometry</a
+						>
+						— source/Player.lua, source/Tumble.lua
+					</li>
+					<li>
+						<a href="https://www.redblobgames.com/articles/visibility/">Red Blob Games: 2D visibility</a> —
+						related to source/Raycaster.lua; a different algorithm
+					</li>
+				</ul>
+				<p>
+					Complete Lua files are embedded. Diagrams are JavaScript teaching models. Rebuild:
+					<code>python3 tools/walkthrough/build.py</code> (requires Pygments).
+				</p>
+			</footer>
+		</main>
+		<script>
+			'use strict';
+			document.documentElement.classList.add('js');
+			const reduceMotion=matchMedia('(prefers-reduced-motion: reduce)');
+			const sections=Array.from(document.querySelectorAll('.section'));
+			const steps=Array.from(document.querySelectorAll('.step'));
+			const selector=document.getElementById('sections');
+			const previous=document.getElementById('previous');
+			const next=document.getElementById('next');
+			let activeStep=null;
+			let activeIndex=0;
+			function focusCode(section,step,instant=false){
+			 const first=Number(step.dataset.first),last=Number(step.dataset.last);
+			 const lines=Array.from(section.querySelectorAll('.line'));
+			 for(const row of lines)row.classList.toggle('highlight',Number(row.dataset.line)>=first&&Number(row.dataset.line)<=last);
+			 section.querySelector('.range').textContent=`Lines ${first}–${last}`;
+			 if(section.dataset.follow==='off')return;
+			 const pre=section.querySelector('pre'),start=lines[first-1],end=lines[last-1];
+			 const top=start.offsetTop,bottom=end.offsetTop+end.offsetHeight;
+			 const target=top-Math.max(25,(pre.clientHeight-(bottom-top))/2);
+			 pre.scrollTo({top:Math.max(0,target),behavior:instant||reduceMotion.matches?'instant':'smooth'});
+			}
+			function activate(step,instant=false){
+			 if(step===activeStep)return;
+			 activeStep?.classList.remove('is-active');
+			 activeStep=step;activeIndex=steps.indexOf(step);step.classList.add('is-active');
+			 const section=step.closest('.section');focusCode(section,step,instant);
+			 selector.value=section.id;previous.disabled=activeIndex===0;next.disabled=activeIndex===steps.length-1;
+			}
+			function activationThreshold(){return innerWidth<=650?innerHeight*.72:innerHeight*.43;}
+			function update(){
+			 const threshold=activationThreshold();
+			 let candidate=steps[0];
+			 for(const step of steps){if(step.getBoundingClientRect().top<=threshold)candidate=step;else break;}
+			 activate(candidate);
+			 const height=document.documentElement.scrollHeight-innerHeight;
+			 document.querySelector('.progress').style.transform=`scaleX(${height>0?scrollY/height:0})`;
+			}
+			let scheduled=false;
+			window.addEventListener('scroll',()=>{if(!scheduled){scheduled=true;requestAnimationFrame(()=>{scheduled=false;update();});}},{passive:true});
+			window.addEventListener('resize',()=>{update();if(activeStep)focusCode(activeStep.closest('.section'),activeStep,true);});
+			function goTo(step){
+			 const offset=Math.min(innerWidth<=650?Math.max(innerHeight*.52+80,330):innerHeight*.30,activationThreshold()-2);
+			 window.scrollTo({top:scrollY+step.getBoundingClientRect().top-offset,behavior:reduceMotion.matches?'instant':'smooth'});
+			}
+			selector.addEventListener('change',()=>goTo(document.getElementById(selector.value).querySelector('.step')));
+			previous.addEventListener('click',()=>goTo(steps[Math.max(0,activeIndex-1)]));
+			next.addEventListener('click',()=>goTo(steps[Math.min(steps.length-1,activeIndex+1)]));
+			for(const section of sections){
+			 section.dataset.follow='on';focusCode(section,section.querySelector('.step'),true);
+			 section.querySelector('.follow').addEventListener('click',event=>{const following=section.dataset.follow!=='off';section.dataset.follow=following?'off':'on';section.querySelector('.code-panel').classList.toggle('reading',following);event.currentTarget.setAttribute('aria-pressed',String(!following));event.currentTarget.textContent=`Follow scroll: ${following?'off':'on'}`;if(!following)focusCode(section,section.querySelector('.is-active')||section.querySelector('.step'));});
+			}
+			activate(steps[0],true);update();
+			document.querySelectorAll('.lab canvas').forEach(canvas=>{const wrapper=document.createElement('div');wrapper.className='diagram-scroll';wrapper.tabIndex=0;wrapper.setAttribute('aria-label',canvas.getAttribute('aria-label')+'; scroll horizontally on small screens');canvas.before(wrapper);wrapper.append(canvas);});
+			for(const step of steps){
+			 const box=document.createElement('details');box.className='question-box';
+			 const identifier=step.id+'-question';
+			 box.innerHTML=`<summary>Ask about this code</summary><form><label for="${identifier}">Your question</label><textarea id="${identifier}" maxlength="4000" required></textarea><button type="submit">Send question</button><p class="question-status" role="status">I’ll revise this explanation to answer your question. Includes this file and line range; refresh later for the update.</p></form>`;
+			 step.append(box);
+			 const form=box.querySelector('form'),input=box.querySelector('textarea'),button=box.querySelector('button'),status=box.querySelector('[role=status]');
+			 form.addEventListener('submit',async event=>{
+			  event.preventDefault();if(!input.value.trim())return;
+			  button.disabled=true;status.textContent='Sending…';
+			  try{
+			   const session=await fetch('/questions/session',{cache:'no-store'});
+			   if(!session.ok)throw new Error('Sending requires the walkthrough question server. Your text has been kept.');
+			   const {token}=await session.json();
+			   const response=await fetch('/questions',{method:'POST',headers:{'Content-Type':'application/json','X-Question-Token':token},body:JSON.stringify({question:input.value,file:step.closest('.section').dataset.file,first:Number(step.dataset.first),last:Number(step.dataset.last)})});
+			   const result=await response.json();if(!response.ok)throw new Error(result.error);
+			   status.textContent=result.message;input.value='';
+			  }catch(error){status.textContent=error instanceof SyntaxError?'Sending requires the walkthrough question server. Your text has been kept.':error.message;}
+			  finally{button.disabled=false;}
+			 });
+			}
+			<!-- INTERACTIONS -->
+		</script>
+	</body>
 </html>

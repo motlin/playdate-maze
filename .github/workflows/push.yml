@@ -1,0 +1,27 @@
+# Language-agnostic push jobs.
+# Derived templates should extend this with language-specific build/deploy jobs.
+
+on:
+  push:
+    branches:
+      - main
+      - master
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # Placeholder job - derived templates should replace with actual build
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Verify push
+        run: echo "Push to main branch verified"

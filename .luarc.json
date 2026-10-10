@@ -1,38 +1,20 @@
 {
-    "$comment": "Keep the editor nil-check exemption for SDK resources that return optional objects. Duplicate-field hints allow SDK callbacks and inherited method overrides; argument and field diagnostics remain enabled.",
-    "diagnostics.globals": [
-        "import"
-    ],
-    "diagnostics.severity": {
-        "duplicate-set-field": "Hint"
-    },
-    "diagnostics.disable": [
-        "need-check-nil"
-    ],
-    "format.defaultConfig": {
-        "indent_style": "space",
-        "indent_size": "4"
-    },
-    "runtime.builtin": {
-        "io": "disable",
-        "os": "disable",
-        "package": "disable"
-    },
-    "runtime.nonstandardSymbol": [
-        "+=",
-        "-=",
-        "*=",
-        "/=",
-        "//=",
-        "%=",
-        "<<=",
-        ">>=",
-        "&=",
-        "|=",
-        "^="
-    ],
-    "runtime.version": "Lua 5.4",
-    "workspace.library": [
-        ".vscode/playdate-luacats/library"
-    ]
+	"$comment": "Keep the editor nil-check exemption for SDK resources that return optional objects. Duplicate-field hints allow SDK callbacks and inherited method overrides; argument and field diagnostics remain enabled.",
+	"diagnostics.globals": ["import"],
+	"diagnostics.severity": {
+		"duplicate-set-field": "Hint"
+	},
+	"diagnostics.disable": ["need-check-nil"],
+	"format.defaultConfig": {
+		"indent_style": "space",
+		"indent_size": "4"
+	},
+	"runtime.builtin": {
+		"io": "disable",
+		"os": "disable",
+		"package": "disable"
+	},
+	"runtime.nonstandardSymbol": ["+=", "-=", "*=", "/=", "//=", "%=", "<<=", ">>=", "&=", "|=", "^="],
+	"runtime.version": "Lua 5.4",
+	"workspace.library": [".vscode/playdate-luacats/library"]
 }

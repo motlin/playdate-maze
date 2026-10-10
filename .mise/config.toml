@@ -1,3 +1,11 @@
 [tools]
-pre-commit = "4.6.2"
 just = "1.58.0"
+pre-commit = "4.6.2"
+node = "26.3.0"
+"npm:markdownlint-cli2" = "0.22.1"
+"npm:vite-plus" = "0.1.24"
+lua = "5.4.9"
+"aqua:JohnnyMorganz/StyLua" = "2.5.2"
+
+[env]
+TERM = 'xterm-256color'
