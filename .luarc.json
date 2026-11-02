@@ -1,15 +1,18 @@
 {
 	"$comment": "Keep the editor nil-check exemption for SDK resources that return optional objects. Duplicate-field hints allow SDK callbacks and inherited method overrides; argument and field diagnostics remain enabled.",
 	"diagnostics.globals": ["import"],
-	"diagnostics.severity": {
+	"diagnostics.severity":
+	{
 		"duplicate-set-field": "Hint"
 	},
 	"diagnostics.disable": ["need-check-nil"],
-	"format.defaultConfig": {
+	"format.defaultConfig":
+	{
 		"indent_style": "space",
 		"indent_size": "4"
 	},
-	"runtime.builtin": {
+	"runtime.builtin":
+	{
 		"io": "disable",
 		"os": "disable",
 		"package": "disable"

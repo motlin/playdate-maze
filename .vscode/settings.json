@@ -5,19 +5,22 @@
 	"Lua.diagnostics.globals": ["import"],
 	// Sumneko Lua type definition doesn't support callbacks/overrides yet,
 	// so do this to make playdate.update() override not complain as much
-	"Lua.diagnostics.severity": {
+	"Lua.diagnostics.severity":
+	{
 		"duplicate-set-field": "Hint"
 	},
 	// Personal preference: Disable nil check warnings - any function that creates a new object from a resource,
 	// like gfx.image.new("path"), always triggers it so it gets annoying, but could miss real nil errors
 	"Lua.diagnostics.disable": ["need-check-nil"],
 	// Personal preference: Set default indent style to 4 spaces
-	"Lua.format.defaultConfig": {
+	"Lua.format.defaultConfig":
+	{
 		"indent_style": "space",
 		"indent_size": "4"
 	},
 	// The Playdate Lua runtime does not use the io, os, or package libraries
-	"Lua.runtime.builtin": {
+	"Lua.runtime.builtin":
+	{
 		"io": "disable",
 		"os": "disable",
 		"package": "disable"
