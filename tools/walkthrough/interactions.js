@@ -1,15 +1,28 @@
-const colors = {cyan: "#73ddd4", gold: "#ffd479", muted: "#a9b8cd", wall: "#354c63", ink: "#e4ecf5"};
+const colors =
+{
+	cyan: "#73ddd4",
+	gold: "#ffd479",
+	muted: "#a9b8cd",
+	wall: "#354c63",
+	ink: "#e4ecf5",
+};
 const element = (id) => document.getElementById(id);
-function surface(id) {
+function surface(id)
+{
 	const canvas = element(id);
-	return {canvas, context: canvas.getContext("2d")};
+	return {
+		canvas,
+		context: canvas.getContext("2d"),
+	};
 }
-function clear(context, canvas) {
+function clear(context, canvas)
+{
 	context.clearRect(0, 0, canvas.width, canvas.height);
 	context.font = "16px system-ui";
 	context.lineWidth = 2;
 }
-function line(context, x1, y1, x2, y2, color, width = 2) {
+function line(context, x1, y1, x2, y2, color, width = 2)
+{
 	context.strokeStyle = color;
 	context.lineWidth = width;
 	context.beginPath();
@@ -17,30 +30,35 @@ function line(context, x1, y1, x2, y2, color, width = 2) {
 	context.lineTo(x2, y2);
 	context.stroke();
 }
-function dot(context, x, y, color, radius = 5) {
+function dot(context, x, y, color, radius = 5)
+{
 	context.fillStyle = color;
 	context.beginPath();
 	context.arc(x, y, radius, 0, Math.PI * 2);
 	context.fill();
 }
-function label(context, text, x, y, color = colors.ink) {
+function label(context, text, x, y, color = colors.ink)
+{
 	context.fillStyle = color;
 	context.fillText(text, x, y);
 }
-function bindRange(id, draw) {
+function bindRange(id, draw)
+{
 	element(id).addEventListener("input", draw);
 	draw();
 }
 const mazeSurface = surface("maze-demo");
 let mazeStack, mazeVisited, mazePassages, mazeMessage;
-function drawMaze() {
+function drawMaze()
+{
 	const {canvas, context} = mazeSurface;
 	clear(context, canvas);
 	const size = 65,
 		left = 36,
 		top = 45;
 	for (let row = 0; row < 3; row++)
-		for (let column = 0; column < 4; column++) {
+		for (let column = 0; column < 4; column++)
+		{
 			const key = row * 4 + column;
 			context.fillStyle = mazeStack.includes(key) ? "#244e55" : mazeVisited.has(key) ? "#22313f" : "#111d2c";
 			context.fillRect(left + column * size, top + row * size, size, size);
@@ -49,7 +67,8 @@ function drawMaze() {
 			context.strokeRect(left + column * size, top + row * size, size, size);
 			label(context, String(key + 1), left + column * size + 24, top + row * size + 38);
 		}
-	for (const [from, to] of mazePassages) {
+	for (const [from, to] of mazePassages)
+	{
 		const x1 = left + ((from % 4) + 0.5) * size,
 			y1 = top + (Math.floor(from / 4) + 0.5) * size,
 			x2 = left + ((to % 4) + 0.5) * size,
@@ -64,7 +83,8 @@ function drawMaze() {
 			7,
 		);
 	}
-	if (mazeStack.length) {
+	if (mazeStack.length)
+	{
 		const key = mazeStack.at(-1);
 		dot(context, left + ((key % 4) + 0.5) * size, top + (Math.floor(key / 4) + 0.5) * size, colors.gold, 8);
 	}
@@ -77,14 +97,16 @@ function drawMaze() {
 	element("maze-status").textContent = mazeMessage;
 	element("maze-step").disabled = !mazeStack.length;
 }
-function resetMaze() {
+function resetMaze()
+{
 	mazeStack = [0];
 	mazeVisited = new Set([0]);
 	mazePassages = [];
 	mazeMessage = "Start in room 1.";
 	drawMaze();
 }
-function stepMaze() {
+function stepMaze()
+{
 	const current = mazeStack.at(-1),
 		column = current % 4,
 		row = Math.floor(current / 4);
@@ -98,13 +120,16 @@ function stepMaze() {
 		.filter(([x, y]) => x >= 0 && x < 4 && y >= 0 && y < 3)
 		.map(([x, y]) => y * 4 + x)
 		.filter((key) => !mazeVisited.has(key));
-	if (options.length) {
+	if (options.length)
+	{
 		const next = options[(mazeVisited.size * 7) % options.length];
 		mazePassages.push([current, next]);
 		mazeVisited.add(next);
 		mazeStack.push(next);
 		mazeMessage = `Carve ${current + 1} → ${next + 1}; push ${next + 1}.`;
-	} else {
+	}
+	else
+	{
 		mazeStack.pop();
 		mazeMessage = mazeStack.length
 			? `No unvisited neighbor; pop ${current + 1}.`
@@ -116,7 +141,8 @@ element("maze-step").addEventListener("click", stepMaze);
 element("maze-reset").addEventListener("click", resetMaze);
 resetMaze();
 const trigSurface = surface("trig-demo");
-function drawTrig() {
+function drawTrig()
+{
 	const {canvas, context} = trigSurface;
 	clear(context, canvas);
 	const degrees = Number(element("angle").value),
@@ -147,8 +173,13 @@ function drawTrig() {
 bindRange("angle", drawTrig);
 const raySurface = surface("ray-demo");
 const room = ["11111111", "10000001", "10001001", "10001001", "10000001", "11111111"];
-const camera = {x: 2.5, y: 2.5};
-function cast(directionX, directionY) {
+const camera =
+{
+	x: 2.5,
+	y: 2.5,
+};
+function cast(directionX, directionY)
+{
 	let gridX = Math.floor(camera.x),
 		gridY = Math.floor(camera.y);
 	const deltaX = directionX === 0 ? Infinity : Math.abs(1 / directionX),
@@ -158,16 +189,20 @@ function cast(directionX, directionY) {
 	let nextX = (directionX < 0 ? camera.x - gridX : gridX + 1 - camera.x) * deltaX,
 		nextY = (directionY < 0 ? camera.y - gridY : gridY + 1 - camera.y) * deltaY;
 	const cells = [];
-	while (true) {
+	while (true)
+	{
 		const beforeX = nextX,
 			beforeY = nextY;
 		let depth, side;
-		if (nextX < nextY) {
+		if (nextX < nextY)
+		{
 			depth = nextX;
 			nextX += deltaX;
 			gridX += stepX;
 			side = 0;
-		} else {
+		}
+		else
+		{
 			depth = nextY;
 			nextY += deltaY;
 			gridY += stepY;
@@ -175,10 +210,17 @@ function cast(directionX, directionY) {
 		}
 		cells.push([gridX, gridY, depth, side, beforeX, beforeY, nextX, nextY]);
 		if (room[gridY][gridX] === "1")
-			return {depth, side, x: camera.x + depth * directionX, y: camera.y + depth * directionY, cells};
+			return {
+				depth,
+				side,
+				x: camera.x + depth * directionX,
+				y: camera.y + depth * directionY,
+				cells,
+			};
 	}
 }
-function drawRays() {
+function drawRays()
+{
 	const {canvas, context} = raySurface;
 	clear(context, canvas);
 	const degrees = Number(element("view-angle").value),
@@ -195,7 +237,8 @@ function drawRays() {
 	label(context, "THE MAP", 15, 25, colors.cyan);
 	label(context, "THE CAMERA · 400 × 240", 370, 25, colors.cyan);
 	for (let y = 0; y < 6; y++)
-		for (let x = 0; x < 8; x++) {
+		for (let x = 0; x < 8; x++)
+		{
 			context.fillStyle = room[y][x] === "1" ? colors.wall : "#142231";
 			context.fillRect(left + x * size, top + y * size, size - 1, size - 1);
 		}
@@ -203,7 +246,8 @@ function drawRays() {
 	context.fillRect(370, 45, 400, 120);
 	context.fillStyle = "#27323d";
 	context.fillRect(370, 165, 400, 120);
-	for (let screenX = 0; screenX < 400; screenX += 4) {
+	for (let screenX = 0; screenX < 400; screenX += 4)
+	{
 		const cameraX = (2 * (screenX + 2)) / 400 - 1,
 			rayX = forwardX - forwardY * plane * cameraX,
 			rayY = forwardY + forwardX * plane * cameraX,
@@ -234,7 +278,8 @@ function drawRays() {
 	crossingSlider.max = hit.cells.length;
 	crossingSlider.value = crossingCount;
 	const crossings = hit.cells.slice(0, crossingCount);
-	for (const [index, [x, y]] of crossings.entries()) {
+	for (const [index, [x, y]] of crossings.entries())
+	{
 		context.fillStyle = "#ffd47933";
 		context.fillRect(left + x * size, top + y * size, size - 1, size - 1);
 		label(context, String(index + 1), left + x * size + 15, top + y * size + 26, colors.gold);
@@ -270,7 +315,8 @@ function drawRays() {
 }
 bindRange("view-fov", drawRays);
 element("wrong-depth").addEventListener("change", drawRays);
-element("flat-wall").addEventListener("click", () => {
+element("flat-wall").addEventListener("click", () =>
+{
 	element("view-angle").value = 180;
 	element("view-fov").value = 70;
 	drawRays();
@@ -279,7 +325,8 @@ bindRange("view-angle", drawRays);
 bindRange("ray-column", drawRays);
 bindRange("ray-steps", drawRays);
 const projectionSurface = surface("projection-demo");
-function drawProjection() {
+function drawProjection()
+{
 	const {canvas, context} = projectionSurface;
 	clear(context, canvas);
 	const depth = Number(element("depth").value),
@@ -307,7 +354,8 @@ function drawProjection() {
 }
 bindRange("depth", drawProjection);
 const shadeSurface = surface("shade-demo");
-function drawShade() {
+function drawShade()
+{
 	const {canvas, context} = shadeSurface;
 	clear(context, canvas);
 	const level = Number(element("shade").value),
@@ -318,14 +366,16 @@ function drawShade() {
 			[15, 7, 13, 5],
 		];
 	for (let y = 0; y < 4; y++)
-		for (let x = 0; x < 4; x++) {
+		for (let x = 0; x < 4; x++)
+		{
 			const white = bayer[y][x] < level;
 			context.fillStyle = white ? "#fff" : "#000";
 			context.fillRect(20 + x * 36, 20 + y * 36, 34, 34);
 			label(context, String(bayer[y][x]), 27 + x * 36, 44 + y * 36, white ? "#000" : "#c7d4df");
 		}
 	for (let y = 0; y < 64; y++)
-		for (let x = 0; x < 80; x++) {
+		for (let x = 0; x < 80; x++)
+		{
 			context.fillStyle = bayer[y % 4][x % 4] < level ? "#fff" : "#000";
 			context.fillRect(240 + x * 2, 25 + y * 2, 2, 2);
 		}
@@ -337,11 +387,17 @@ function drawShade() {
 bindRange("shade", drawShade);
 
 const occlusionSurface = surface("occlusion-demo");
-function drawOcclusion() {
+function drawOcclusion()
+{
 	const {canvas, context} = occlusionSurface;
 	clear(context, canvas);
 	const depth = Number(element("sprite-depth").value),
-		walls = Array.from({length: 16}, (_, index) => (index >= 6 && index <= 9 ? 2 : 6));
+		walls = Array.from(
+			{
+				length: 16,
+			},
+			(_, index) => (index >= 6 && index <= 9 ? 2 : 6),
+		);
 	const visible = walls.map((wall, index) => index >= 2 && index <= 13 && wall > depth);
 	const first = visible.indexOf(true),
 		last = visible.lastIndexOf(true);
@@ -349,7 +405,8 @@ function drawOcclusion() {
 	label(context, "Wall depth by screen column", 20, 30, colors.muted);
 	label(context, "Per-column check: wall depth > sprite depth", 20, 140, colors.cyan);
 	label(context, "Game: one rectangle from first to last visible column", 20, 250, colors.gold);
-	for (let column = 0; column < 16; column++) {
+	for (let column = 0; column < 16; column++)
+	{
 		const x = 20 + column * 47,
 			rectangle = first >= 0 && column >= first && column <= last;
 		context.fillStyle = colors.wall;

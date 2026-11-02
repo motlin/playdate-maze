@@ -8,7 +8,8 @@
 			"type": "pdc",
 			// Look for build problems that match a specific format and output it to the "problems" window
 			"problemMatcher": ["$pdc-lua", "$pdc-external"],
-			"presentation": {
+			"presentation":
+			{
 				// Switch to problems tab on error
 				"revealProblems": "onProblem",
 				// Share same terminal window as other tasks
@@ -25,7 +26,8 @@
 			"problemMatcher": ["$pdc-external"],
 			// Close any existing simulator windows before launching a new one
 			"kill": true,
-			"presentation": {
+			"presentation":
+			{
 				// Switch to problems tab on error
 				"revealProblems": "onProblem",
 				// Share same terminal window as other tasks
@@ -40,7 +42,8 @@
 			"dependsOn": ["Playdate: Build", "Playdate: Run"],
 			"dependsOrder": "sequence",
 			// Set as our default built task under Terminal->Run Build Task, or with ctrl/cmd+shift+B
-			"group": {
+			"group":
+			{
 				"kind": "build",
 				"isDefault": true
 			}
